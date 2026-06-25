@@ -86,6 +86,50 @@
     }
   }
 
+  /* =======================================================================
+     PALMARÈS — vainqueurs de la Coupe d'Europe / Ligue des Champions
+     (données historiques vérifiées ; PSG sacré en 2025 et 2026)
+     ======================================================================= */
+  var UCL_PALMARES = [
+    { keys: ['real madrid'],            n: 15, years: [1956,1957,1958,1959,1960,1966,1998,2000,2002,2014,2016,2017,2018,2022,2024] },
+    { keys: ['ac milan'],               n: 7,  years: [1963,1969,1989,1990,1994,2003,2007] },
+    { keys: ['bayern'],                 n: 6,  years: [1974,1975,1976,2001,2013,2020] },
+    { keys: ['liverpool'],              n: 6,  years: [1977,1978,1981,1984,2005,2019] },
+    { keys: ['barcelona'],              n: 5,  years: [1992,2006,2009,2011,2015] },
+    { keys: ['ajax'],                   n: 4,  years: [1971,1972,1973,1995] },
+    { keys: ['inter','internazionale'], n: 3,  years: [1964,1965,2010] },
+    { keys: ['manchester united'],      n: 3,  years: [1968,1999,2008] },
+    { keys: ['juventus'],               n: 2,  years: [1985,1996] },
+    { keys: ['benfica'],                n: 2,  years: [1961,1962] },
+    { keys: ['nottingham forest'],      n: 2,  years: [1979,1980] },
+    { keys: ['porto'],                  n: 2,  years: [1987,2004] },
+    { keys: ['chelsea'],                n: 2,  years: [2012,2021] },
+    { keys: ['paris saint-germain'],    n: 2,  years: [2025,2026] },
+    { keys: ['celtic'],                 n: 1,  years: [1967] },
+    { keys: ['feyenoord'],              n: 1,  years: [1970] },
+    { keys: ['aston villa'],            n: 1,  years: [1982] },
+    { keys: ['hamburg'],                n: 1,  years: [1983] },
+    { keys: ['steaua','fcsb'],          n: 1,  years: [1986] },
+    { keys: ['psv'],                    n: 1,  years: [1988] },
+    { keys: ['red star','crvena'],      n: 1,  years: [1991] },
+    { keys: ['marseille'],              n: 1,  years: [1993] },
+    { keys: ['borussia dortmund'],      n: 1,  years: [1997] },
+    { keys: ['manchester city'],        n: 1,  years: [2023] }
+  ];
+
+  /* Renvoie { n, years } si le club a gagné la C1/LDC, sinon null. */
+  function clubTitles(name) {
+    if (!name) return null;
+    var nm = ('' + name).toLowerCase();
+    for (var i = 0; i < UCL_PALMARES.length; i++) {
+      var e = UCL_PALMARES[i];
+      for (var k = 0; k < e.keys.length; k++) {
+        if (nm.indexOf(e.keys[k]) !== -1) return { n: e.n, years: e.years };
+      }
+    }
+    return null;
+  }
+
   /* Liste des saisons : { year, current }. Actuelle d'abord, puis archives. */
   function seasonOptions() {
     var opts = [{ year: CURRENT_SEASON, current: true }];
@@ -596,6 +640,7 @@
     seasonLabel: seasonLabel,
     seasonOptions: seasonOptions,
     mountSeasonMenu: mountSeasonMenu,
+    clubTitles: clubTitles,
     preserveSeasonLinks: preserveSeasonLinks,
     // fetch
     fetchJSON: fetchJSON,
