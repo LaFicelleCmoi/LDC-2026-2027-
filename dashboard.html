@@ -118,6 +118,8 @@ a{ text-decoration:none; color:inherit; }
 .live-card-footer{ display:flex; align-items:center; justify-content:space-between; font-size:0.7em; color:var(--muted); padding-top:8px; border-top:1px solid var(--border); }
 .live-kickoff{ font-weight:700; color:var(--white); }
 .live-pen{ color:var(--blue); font-weight:700; }
+.pen-sub{ font-family:var(--font-b); font-size:0.4em; color:var(--blue); font-weight:800; vertical-align:0.45em; margin-left:3px; }
+.live-card.size-featured .pen-sub{ font-size:0.32em; }
 .live-empty,.live-error{ grid-column:1 / -1; text-align:center; padding:30px 20px; color:var(--muted); font-size:0.85em; border:1px dashed var(--border); border-radius:16px; background:rgba(0,0,0,0.2); }
 .live-error{ color:rgba(255,71,87,0.8); border-color:rgba(255,71,87,0.3); }
 @media (max-width:900px){ .live-cards-grid{ grid-template-columns:repeat(2,1fr); } .live-card.size-featured{ grid-column:span 2; grid-row:span 1; } }
@@ -334,7 +336,7 @@ a{ text-decoration:none; color:inherit; }
 </footer>
 
 <script src="i18n.js?v=4"></script>
-<script src="espn.js?v=3"></script>
+<script src="espn.js?v=4"></script>
 <script>
 (function(){
   'use strict';
@@ -411,7 +413,10 @@ a{ text-decoration:none; color:inherit; }
     var clockPart = state==='pre'
       ? '<span class="live-card-clock live-countdown" data-kickoff="'+(m.dateObj?m.dateObj.getTime():'')+'">'+countdown(m.dateObj)+'</span>'
       : '<span class="live-card-clock">'+clockHTML(m)+'</span>';
-    var pen = (m.home.shootout!=null && m.away.shootout!=null) ? '<span class="live-pen">('+I18N.t('common.pen')+' '+m.home.shootout+'–'+m.away.shootout+')</span>' : '';
+    var hasPen = (m.home.shootout!=null && m.away.shootout!=null);
+    var homePen = hasPen ? ' <span class="pen-sub">('+m.home.shootout+')</span>' : '';
+    var awayPen = hasPen ? ' <span class="pen-sub">('+m.away.shootout+')</span>' : '';
+    var penFoot = hasPen ? '<span class="live-pen">'+esc(I18N.t('common.pen'))+' '+m.home.shootout+'–'+m.away.shootout+'</span>' : '';
     card.innerHTML =
       '<div class="live-shimmer"></div>'+
       '<div><div class="live-card-status">'+
@@ -419,10 +424,10 @@ a{ text-decoration:none; color:inherit; }
         clockPart+
       '</div></div>'+
       '<div class="live-card-teams">'+
-        '<div class="live-team-row '+(hWin?'winner':'')+'">'+teamLogo(m.home)+'<span class="live-team-name">'+esc(m.home.name)+'</span><span class="live-team-score" data-side="home">'+(state==='pre'?'–':m.home.score)+'</span></div>'+
-        '<div class="live-team-row '+(aWin?'winner':'')+'">'+teamLogo(m.away)+'<span class="live-team-name">'+esc(m.away.name)+'</span><span class="live-team-score" data-side="away">'+(state==='pre'?'–':m.away.score)+'</span></div>'+
+        '<div class="live-team-row '+(hWin?'winner':'')+'">'+teamLogo(m.home)+'<span class="live-team-name">'+esc(m.home.name)+'</span><span class="live-team-score" data-side="home">'+(state==='pre'?'–':m.home.score)+homePen+'</span></div>'+
+        '<div class="live-team-row '+(aWin?'winner':'')+'">'+teamLogo(m.away)+'<span class="live-team-name">'+esc(m.away.name)+'</span><span class="live-team-score" data-side="away">'+(state==='pre'?'–':m.away.score)+awayPen+'</span></div>'+
       '</div>'+
-      '<div class="live-card-footer"><span>'+pen+'</span><span class="live-kickoff">'+(state==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>';
+      '<div class="live-card-footer"><span>'+penFoot+'</span><span class="live-kickoff">'+(state==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>';
 
     // détection but -> bump + confettis
     var key=m.home.score+'-'+m.away.score, prev=lastScores[m.id];
