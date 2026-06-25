@@ -18,6 +18,7 @@
   .standings td.club{ text-align:left; }
   .standings .club-cell{ display:flex; align-items:center; gap:9px; }
   .standings .club-cell .nm{ font-weight:700; }
+  .standings .tbl-cup{ font-size:11px; font-weight:800; color:var(--upcoming); margin-left:7px; white-space:nowrap; }
   .standings td.pts{ font-weight:900; }
   .standings td.pos{ font-weight:800; position:relative; padding-left:14px; }
   .standings td.pos::before{ content:""; position:absolute; left:0; top:6px; bottom:6px; width:4px; border-radius:3px; background:transparent; }
@@ -204,8 +205,8 @@
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=5"></script>
-<script src="espn.js?v=5"></script>
+<script src="i18n.js?v=8"></script>
+<script src="espn.js?v=6"></script>
 <script src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.js"></script>
 <script>
 (function(){
@@ -261,7 +262,9 @@
         '<td class="live-dot">'+(t.live?'<span class="dot live"></span>':'')+'</td>'+
         '<td class="club"><span class="club-cell">'+
           (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
-          '<span class="nm">'+esc(t.name)+'</span></span></td>'+
+          '<span class="nm">'+esc(t.name)+'</span>'+
+          (function(){ var c=ESPN.clubTitles(t.name); return c?'<span class="tbl-cup" title="'+c.n+' '+esc(I18N.t('pal.titlesN'))+' — LDC">🏆'+c.n+'</span>':''; })()+
+          '</span></td>'+
         '<td>'+t.pld+'</td><td>'+t.w+'</td><td>'+t.d+'</td><td>'+t.l+'</td>'+
         '<td>'+t.gf+'</td><td>'+t.ga+'</td>'+
         '<td class="gd '+gdCls+'">'+gd+'</td>'+
