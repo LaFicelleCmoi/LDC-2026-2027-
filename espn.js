@@ -33,23 +33,55 @@
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
   function ymd(d) { return '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); }
 
-  /* Saison UEFA : août (année N) -> juillet (N+1).
-     Surcharge possible via ?season=YYYY (année de DÉBUT). */
-  function seasonStartYear() {
+  /* Saison "actuelle" du projet = 2026-27 (année de DÉBUT 2026).
+     Surcharge possible via ?season=YYYY (utilisé pour l'onglet « Souvenir »). */
+  var CURRENT_SEASON = 2026;
+
+  function seasonParam() {
     try {
       var p = new URLSearchParams(global.location.search);
       var s = parseInt(p.get('season'), 10);
       if (!isNaN(s) && s > 2000 && s < 2100) return s;
     } catch (e) {}
-    var now = new Date();
-    var y = now.getFullYear();
-    // À partir d'août on bascule sur la nouvelle saison
-    return now.getMonth() >= 7 ? y : y - 1;
+    return null;
+  }
+
+  function seasonStartYear() {
+    var s = seasonParam();
+    return s != null ? s : CURRENT_SEASON;
+  }
+
+  /* True si on consulte une saison archivée (≠ saison actuelle). */
+  function isArchive() {
+    var s = seasonParam();
+    return s != null && s !== CURRENT_SEASON;
+  }
+
+  /* "2026–27" */
+  function seasonLabel(y) {
+    if (y == null) y = seasonStartYear();
+    return y + '–' + String(y + 1).slice(2);
   }
 
   function seasonRange() {
     var y = seasonStartYear();
     return { start: y + '0801', end: (y + 1) + '0731', startYear: y };
+  }
+
+  /* En mode archive, propage ?season=N sur les liens internes (.html). */
+  function preserveSeasonLinks(root) {
+    var s = seasonParam();
+    if (s == null) return;
+    root = root || document;
+    var links = root.querySelectorAll('a[href]');
+    for (var i = 0; i < links.length; i++) {
+      if (links[i].hasAttribute('data-noseason')) continue;
+      var href = links[i].getAttribute('href');
+      if (!href || /^(https?:|#|mailto:)/.test(href)) continue;
+      if (!/\.html(\?|#|$)/.test(href) && href !== '') continue;
+      if (/[?&]season=/.test(href)) continue;
+      links[i].setAttribute('href', href + (href.indexOf('?') === -1 ? '?' : '&') + 'season=' + s);
+    }
   }
 
   /* ---- fetch avec timeout robuste --------------------------------------- */
@@ -500,6 +532,11 @@
     ymd: ymd,
     seasonRange: seasonRange,
     seasonStartYear: seasonStartYear,
+    CURRENT_SEASON: CURRENT_SEASON,
+    seasonParam: seasonParam,
+    isArchive: isArchive,
+    seasonLabel: seasonLabel,
+    preserveSeasonLinks: preserveSeasonLinks,
     // fetch
     fetchJSON: fetchJSON,
     fetchScoreboard: fetchScoreboard,
