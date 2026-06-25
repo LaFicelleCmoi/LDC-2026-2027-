@@ -7,10 +7,24 @@
 <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml" />
 <link rel="stylesheet" href="styles.css?v=2" />
 <style>
-  .legal-card{ max-width:760px; }
-  .legal-card h2{ font-size:15px; margin:20px 0 6px; }
-  .legal-card p{ color:var(--muted); font-size:13.5px; margin:0 0 6px; }
-  .legal-card .lead{ color:var(--txt); font-weight:700; font-size:15px; }
+  .legal-wrap{ max-width:860px; }
+  .legal-sub{ color:var(--muted); font-size:13.5px; margin:0 0 4px; }
+  .legal-date{ color:var(--muted-2); font-size:12px; margin:0 0 18px; }
+
+  /* Sommaire (table des matières) */
+  .legal-toc{ margin-bottom:22px; }
+  .legal-toc .toc-title{ display:block; font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .legal-toc .toc-links{ display:flex; flex-wrap:wrap; gap:8px; }
+  .legal-toc a{ font-size:12.5px; font-weight:600; color:var(--muted); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:6px 12px; transition:.15s; }
+  .legal-toc a:hover{ color:#fff; border-color:rgba(245,181,10,.5); }
+
+  .legal-card section{ scroll-margin-top:84px; padding:16px 0; border-top:1px solid var(--line); }
+  .legal-card section:first-of-type{ border-top:none; padding-top:4px; }
+  .legal-card h2{ font-size:16px; margin:0 0 8px; color:var(--upcoming); letter-spacing:.01em; }
+  .legal-card p{ color:#c7cfe6; font-size:14px; line-height:1.65; margin:0; }
+  .legal-card p a{ color:var(--upcoming); text-decoration:underline; }
+  .legal-card .lead{ color:var(--txt); font-weight:700; font-size:15px; margin-bottom:14px; }
+  .back-top{ display:inline-block; margin-top:22px; font-size:12px; }
 </style>
 </head>
 <body>
@@ -33,25 +47,43 @@
 </header>
 
 <div class="container">
-  <h1 class="page-title" data-i18n="legal.title">Mentions légales</h1>
+  <h1 class="page-title"><span class="shiny" data-i18n="legal.title">Mentions légales</span></h1>
+  <p class="legal-sub" data-i18n="legal.subtitle">Projet de fan non officiel — transparence totale.</p>
+  <p class="legal-date" data-i18n="legal.updatedAt">Dernière mise à jour : juin 2026</p>
 
-  <div class="card pad legal-card">
+  <div class="card pad legal-card legal-wrap">
     <p class="lead" data-i18n="legal.intro">Projet de fan, non officiel.</p>
 
-    <h2>UEFA</h2>
-    <p data-i18n="legal.uefa">Ce site n’est ni affilié, ni approuvé, ni soutenu par l’UEFA. « UEFA Champions League », « Ligue des Champions » et les logos associés sont des marques de l’UEFA, utilisées ici uniquement à des fins descriptives. Aucune licence n’est détenue.</p>
+    <nav class="legal-toc">
+      <span class="toc-title" data-i18n="legal.toc">Sommaire</span>
+      <div class="toc-links">
+        <a href="#projet" data-i18n="legal.h.project">1 · Le projet</a>
+        <a href="#uefa" data-i18n="legal.h.uefa">2 · UEFA & marques</a>
+        <a href="#data" data-i18n="legal.h.data">3 · Données</a>
+        <a href="#logos" data-i18n="legal.h.logos">4 · Logos</a>
+        <a href="#ip" data-i18n="legal.h.ip">5 · Propriété intellectuelle</a>
+        <a href="#privacy" data-i18n="legal.h.privacy">6 · Données personnelles</a>
+        <a href="#cookies" data-i18n="legal.h.cookies">7 · Stockage local & cookies</a>
+        <a href="#cgu" data-i18n="legal.h.cgu">8 · Conditions d’utilisation</a>
+        <a href="#liability" data-i18n="legal.h.liability">9 · Responsabilité</a>
+        <a href="#credits" data-i18n="legal.h.credits">10 · Crédits</a>
+        <a href="#contact" data-i18n="legal.h.contact">11 · Contact</a>
+      </div>
+    </nav>
 
-    <h2>Données</h2>
-    <p data-i18n="legal.data">Les données (scores, événements, logos) proviennent de l’API publique non officielle d’ESPN. Elles sont fournies à titre purement indicatif, sans garantie d’exactitude ni de disponibilité, et peuvent comporter des erreurs ou des retards.</p>
+    <section id="projet"><h2 data-i18n="legal.h.project">1 · Le projet</h2><p data-i18n="legal.b.project">Tracker et simulateur live de la Ligue des Champions, réalisé par un fan, à but non lucratif.</p></section>
+    <section id="uefa"><h2 data-i18n="legal.h.uefa">2 · UEFA & marques</h2><p data-i18n="legal.uefa">Ce site n’est ni affilié, ni approuvé, ni soutenu par l’UEFA.</p></section>
+    <section id="data"><h2 data-i18n="legal.h.data">3 · Données</h2><p data-i18n="legal.data">Les données proviennent de l’API publique non officielle d’ESPN, à titre indicatif.</p></section>
+    <section id="logos"><h2 data-i18n="legal.h.logos">4 · Logos</h2><p data-i18n="legal.logos">Les logos sont servis par ESPN et restent la propriété de leurs détenteurs.</p></section>
+    <section id="ip"><h2 data-i18n="legal.h.ip">5 · Propriété intellectuelle</h2><p data-i18n="legal.b.ip">Marques, noms et logos appartiennent à leurs détenteurs respectifs.</p></section>
+    <section id="privacy"><h2 data-i18n="legal.h.privacy">6 · Données personnelles</h2><p data-i18n="legal.b.privacy">Aucune donnée personnelle n’est collectée. Seule la langue est stockée localement.</p></section>
+    <section id="cookies"><h2 data-i18n="legal.h.cookies">7 · Stockage local & cookies</h2><p data-i18n="legal.b.cookies">Aucun cookie de suivi. Uniquement le stockage local pour la langue.</p></section>
+    <section id="cgu"><h2 data-i18n="legal.h.cgu">8 · Conditions d’utilisation</h2><p data-i18n="legal.b.cgu">Service fourni « tel quel », sans garantie. Usage personnel et non commercial.</p></section>
+    <section id="liability"><h2 data-i18n="legal.h.liability">9 · Responsabilité</h2><p data-i18n="legal.b.liability">L’auteur n’est pas responsable des dommages liés à l’utilisation du site.</p></section>
+    <section id="credits"><h2 data-i18n="legal.h.credits">10 · Crédits</h2><p data-i18n-html="legal.b.credits">Données : ESPN. Polices : Google Fonts. Effets inspirés de ReactBits et Uiverse.</p></section>
+    <section id="contact"><h2 data-i18n="legal.h.contact">11 · Contact</h2><p data-i18n="legal.contact">Pour toute demande de retrait, contactez l’auteur du projet.</p></section>
 
-    <h2>Logos</h2>
-    <p data-i18n="legal.logos">Les logos des clubs et de la compétition sont servis par ESPN et restent la propriété de leurs détenteurs respectifs.</p>
-
-    <h2>Objet</h2>
-    <p data-i18n="legal.purpose">Ce projet est réalisé à but non lucratif, éducatif et de divertissement (overlay de stream).</p>
-
-    <h2>Contact</h2>
-    <p data-i18n="legal.contact">Pour toute demande de retrait, contactez l’auteur du projet.</p>
+    <a class="btn back-top" href="dashboard.html" data-i18n="common.back">← Retour</a>
   </div>
 </div>
 
@@ -60,7 +92,7 @@
   <a href="dashboard.html" data-i18n="common.back">← Retour</a>
 </footer>
 
-<script src="i18n.js?v=3"></script>
+<script src="i18n.js?v=4"></script>
 <script src="espn.js?v=3"></script>
 <script>
   if(window.I18N) I18N.mountToggle('#langSwitch');
@@ -68,8 +100,8 @@
   (function starfield(){
     var c=document.getElementById('starfield'); if(!c||!c.getContext) return; var ctx=c.getContext('2d'); var stars=[], W=0, H=0;
     function resize(){ var dpr=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight; c.width=W*dpr; c.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); build(); }
-    function build(){ stars=[]; var n=Math.min(120,Math.floor(W*H/13000)); for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+0.3,vy:0.05+Math.random()*0.18,tw:Math.random()*6.28,gold:Math.random()<0.16}); }
-    function loop(){ if(document.visibilityState==='hidden'){ setTimeout(function(){requestAnimationFrame(loop);},700); return; } ctx.clearRect(0,0,W,H); for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y+=s.vy; s.tw+=0.03; if(s.y>H+2){ s.y=-2; s.x=Math.random()*W; } var a=0.35+0.5*Math.sin(s.tw); if(a<0)a=0; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28); ctx.fillStyle=(s.gold?'rgba(245,181,10,':'rgba(170,190,230,')+a.toFixed(2)+')'; ctx.fill(); } requestAnimationFrame(loop); }
+    function build(){ stars=[]; var n=Math.min(110,Math.floor(W*H/14000)); for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+0.3,vy:0.04+Math.random()*0.16,tw:Math.random()*6.28}); }
+    function loop(){ if(document.visibilityState==='hidden'){ setTimeout(function(){requestAnimationFrame(loop);},700); return; } ctx.clearRect(0,0,W,H); for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y+=s.vy; s.tw+=0.03; if(s.y>H+2){ s.y=-2; s.x=Math.random()*W; } var a=0.16+0.28*Math.sin(s.tw); if(a<0)a=0; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28); ctx.fillStyle='rgba(150,170,210,'+a.toFixed(2)+')'; ctx.fill(); } requestAnimationFrame(loop); }
     window.addEventListener('resize',resize); resize(); requestAnimationFrame(loop);
   })();
 </script>
