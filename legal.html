@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mentions légales — Tracker Ligue des Champions</title>
+<link rel="stylesheet" href="styles.css?v=1" />
+<style>
+  .legal-card{ max-width:760px; }
+  .legal-card h2{ font-size:15px; margin:20px 0 6px; }
+  .legal-card p{ color:var(--muted); font-size:13.5px; margin:0 0 6px; }
+  .legal-card .lead{ color:var(--txt); font-weight:700; font-size:15px; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="dashboard.html">
+    <span class="star">★</span>
+    <span><span class="t1" data-i18n="app.title">Tracker Ligue des Champions</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="dashboard.html" data-i18n="nav.dashboard">Accueil</a>
+    <a href="tracker.html" data-i18n="nav.tracker">Classement</a>
+    <a href="overlay.html" data-i18n="nav.overlay">Overlay OBS</a>
+    <a href="legal.html" class="active" data-i18n="nav.legal">Mentions légales</a>
+  </nav>
+  <div class="header-right">
+    <div class="lang-switch" id="langSwitch"></div>
+  </div>
+</header>
+
+<div class="container">
+  <h1 class="page-title" data-i18n="legal.title">Mentions légales</h1>
+
+  <div class="card pad legal-card">
+    <p class="lead" data-i18n="legal.intro">Projet de fan, non officiel.</p>
+
+    <h2>UEFA</h2>
+    <p data-i18n="legal.uefa">Ce site n’est ni affilié, ni approuvé, ni soutenu par l’UEFA. « UEFA Champions League », « Ligue des Champions » et les logos associés sont des marques de l’UEFA, utilisées ici uniquement à des fins descriptives. Aucune licence n’est détenue.</p>
+
+    <h2>Données</h2>
+    <p data-i18n="legal.data">Les données (scores, événements, logos) proviennent de l’API publique non officielle d’ESPN. Elles sont fournies à titre purement indicatif, sans garantie d’exactitude ni de disponibilité, et peuvent comporter des erreurs ou des retards.</p>
+
+    <h2>Logos</h2>
+    <p data-i18n="legal.logos">Les logos des clubs et de la compétition sont servis par ESPN et restent la propriété de leurs détenteurs respectifs.</p>
+
+    <h2>Objet</h2>
+    <p data-i18n="legal.purpose">Ce projet est réalisé à but non lucratif, éducatif et de divertissement (overlay de stream).</p>
+
+    <h2>Contact</h2>
+    <p data-i18n="legal.contact">Pour toute demande de retrait, contactez l’auteur du projet.</p>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="dashboard.html" data-i18n="common.back">← Retour</a>
+</footer>
+
+<script src="i18n.js?v=1"></script>
+<script>
+  if(window.I18N) I18N.mountToggle('#langSwitch');
+</script>
+</body>
+</html>
