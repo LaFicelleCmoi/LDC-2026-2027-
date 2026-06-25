@@ -228,6 +228,9 @@
       btns[j].classList.toggle('active', btns[j].getAttribute('data-lang-btn') === lang);
       btns[j].setAttribute('aria-pressed', btns[j].getAttribute('data-lang-btn') === lang ? 'true' : 'false');
     }
+    // Position du curseur de l'interrupteur de langue
+    var toggles = root.querySelectorAll('.lang-toggle');
+    for (var u = 0; u < toggles.length; u++) toggles[u].setAttribute('data-active', lang);
   }
 
   function applyAttr(root, dataAttr, targetAttr) {
@@ -253,20 +256,31 @@
     setLang(getLang() === 'fr' ? 'en' : 'fr');
   }
 
-  /* Crée un petit toggle FR/EN et l'insère dans `container` (élément ou sélecteur). */
+  /* Crée un interrupteur FR/EN (toggle coulissant) dans `container`. */
   function mountToggle(container) {
     var host = typeof container === 'string' ? document.querySelector(container) : container;
     if (!host) return;
     host.innerHTML = '';
+    var wrap = document.createElement('div');
+    wrap.className = 'lang-toggle';
+    wrap.setAttribute('role', 'group');
+    wrap.setAttribute('aria-label', 'FR / EN');
+    wrap.setAttribute('data-active', getLang());
     SUPPORTED.forEach(function (lng) {
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'lang-btn';
+      b.className = 'lt-opt';
       b.setAttribute('data-lang-btn', lng);
+      b.setAttribute('aria-label', lng === 'fr' ? 'Français' : 'English');
       b.textContent = lng.toUpperCase();
       b.addEventListener('click', function () { setLang(lng); });
-      host.appendChild(b);
+      wrap.appendChild(b);
     });
+    var knob = document.createElement('span');
+    knob.className = 'lt-knob';
+    knob.setAttribute('aria-hidden', 'true');
+    wrap.appendChild(knob);
+    host.appendChild(wrap);
     apply(host.ownerDocument || document);
   }
 
