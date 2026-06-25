@@ -84,6 +84,8 @@ a{ text-decoration:none; color:inherit; }
   .zones-title{ font-size:1.45em; }
   .live-section-header{ padding:10px 14px; }
   .nav-forward,.nav-ghost,.season-dd .season-dd-btn{ padding:8px 13px; }
+  /* le menu des saisons s'ouvre vers la droite et reste dans l'écran */
+  .season-dd-menu{ left:0; right:auto; min-width:0; max-width:calc(100vw - 32px); }
 }
 @media (max-width:380px){
   .stats-strip{ grid-template-columns:1fr 1fr; }
