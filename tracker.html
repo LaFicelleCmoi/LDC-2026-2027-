@@ -4,7 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Classement & Phase finale — Ligue des Champions</title>
-<link rel="stylesheet" href="styles.css?v=1" />
+<link rel="icon" href="favicon.svg?v=1" type="image/svg+xml" />
+<link rel="stylesheet" href="styles.css?v=2" />
 <!-- brackets-viewer (CDN) pour la vue arbre -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.css" />
 <style>
@@ -93,6 +94,7 @@
 </style>
 </head>
 <body>
+<canvas id="starfield"></canvas>
 <header class="site-header">
   <a class="brand" href="dashboard.html">
     <span class="star">★</span>
@@ -101,6 +103,7 @@
   <nav class="nav">
     <a href="dashboard.html" data-i18n="nav.dashboard">Accueil</a>
     <a href="tracker.html" class="active" data-i18n="nav.tracker">Classement</a>
+    <a href="tracker.html?season=2025" class="souvenir-link" data-i18n="nav.souvenir">Souvenir</a>
     <a href="overlay.html" data-i18n="nav.overlay">Overlay OBS</a>
     <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
   </nav>
@@ -111,7 +114,11 @@
 </header>
 
 <div class="container">
-  <h1 class="page-title" data-i18n="nav.tracker">Classement</h1>
+  <div class="souvenir-banner" id="souvenir-banner">
+    <span class="sb-label" id="souvenir-banner-label">Souvenir</span>
+    <a href="tracker.html" data-noseason data-i18n="souvenir.back">← Saison actuelle</a>
+  </div>
+  <h1 class="page-title"><span class="shiny" data-i18n="nav.tracker">Classement</span><span class="season-chip" id="season-chip"></span></h1>
   <p class="page-sub" data-i18n="trk.leaguePhaseSub">Classement unique — 36 clubs</p>
 
   <div id="offlineNotice" class="notice" style="display:none;">
@@ -158,8 +165,8 @@
     <div class="section-head">
       <h2 data-i18n="trk.knockout">Phase finale</h2>
       <div class="view-toggle" style="margin-left:auto">
-        <button class="btn active" id="btnCards" data-i18n="trk.viewCards">Vue cartes</button>
-        <button class="btn" id="btnTree" data-i18n="trk.viewTree">Vue arbre</button>
+        <button class="btn active star-border" id="btnCards" data-i18n="trk.viewCards">Vue cartes</button>
+        <button class="btn star-border" id="btnTree" data-i18n="trk.viewTree">Vue arbre</button>
       </div>
     </div>
 
@@ -196,8 +203,8 @@
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=1"></script>
-<script src="espn.js?v=1"></script>
+<script src="i18n.js?v=3"></script>
+<script src="espn.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.js"></script>
 <script>
 (function(){
@@ -209,11 +216,38 @@
 
   var lastStandings=null, lastBracket=null, lastChampion=null;
 
+  /* ---- Starfield (ReactBits Particles) ---- */
+  (function starfield(){
+    var c=el('starfield'); if(!c) return; var ctx=c.getContext('2d'); var stars=[], W=0, H=0;
+    function resize(){ var dpr=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight; c.width=W*dpr; c.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); build(); }
+    function build(){ stars=[]; var n=Math.min(140,Math.floor(W*H/12000)); for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+0.3,vy:0.05+Math.random()*0.2,tw:Math.random()*6.28,gold:Math.random()<0.16}); }
+    function loop(){ if(document.visibilityState==='hidden'){ setTimeout(function(){requestAnimationFrame(loop);},600); return; } ctx.clearRect(0,0,W,H); for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y+=s.vy; s.tw+=0.03; if(s.y>H+2){ s.y=-2; s.x=Math.random()*W; } var a=0.35+0.5*Math.sin(s.tw); if(a<0)a=0; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28); ctx.fillStyle=(s.gold?'rgba(245,181,10,':'rgba(170,190,230,')+a.toFixed(2)+')'; ctx.fill(); } requestAnimationFrame(loop); }
+    window.addEventListener('resize',resize); resize(); requestAnimationFrame(loop);
+  })();
+
+  /* ---- Saison / Souvenir ---- */
+  function applySeasonUI(){
+    var label=ESPN.seasonLabel();
+    var chip=el('season-chip'), banner=el('souvenir-banner');
+    if(ESPN.isArchive()){
+      if(chip) chip.textContent=label;
+      if(banner){ banner.classList.add('show'); el('souvenir-banner-label').textContent=I18N.t('souvenir.badge')+' '+label; }
+    } else {
+      if(chip) chip.textContent=label;
+      if(banner) banner.classList.remove('show');
+    }
+    ESPN.preserveSeasonLinks(document);
+  }
+  applySeasonUI();
+
   /* ================= PHASE DE LIGUE ================= */
   function renderStandings(rows){
     var body=el('standingsBody');
     if(!rows || !rows.length){
-      body.innerHTML='<tr><td colspan="11" class="empty-state">'+esc(I18N.t('common.noMatch')||'—')+'</td></tr>';
+      var msg = (!ESPN.isArchive())
+        ? esc(I18N.t('dash.notStarted'))+' <a class="souvenir-link" href="tracker.html?season=2025" style="text-decoration:underline">'+esc(I18N.t('dash.seeSouvenir'))+'</a>'
+        : esc(I18N.t('common.noMatch')||'—');
+      body.innerHTML='<tr><td colspan="11" class="empty-state">'+msg+'</td></tr>';
       return;
     }
     body.innerHTML = rows.map(function(t){
@@ -467,6 +501,7 @@
 
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'){ loadSeason(); loadToday(); } });
   window.addEventListener('ldc:langchange',function(){
+    applySeasonUI();
     if(lastStandings) renderStandings(lastStandings);
     if(lastBracket){ renderBracketCards(lastBracket); if(el('btnTree').classList.contains('active')) renderBracketTree(lastBracket); }
     renderWidget();
