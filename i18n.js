@@ -72,6 +72,8 @@
     'souvenir.badge':      { fr: 'Souvenir · Saison',    en: 'Memories · Season' },
     'souvenir.back':       { fr: '← Saison actuelle',    en: '← Current season' },
     'season.label':        { fr: 'Saison',               en: 'Season' },
+    'season.current':      { fr: 'Actuelle',             en: 'Current' },
+    'nav.seasons':         { fr: 'Saisons',              en: 'Seasons' },
     'dash.notStarted':     { fr: 'La saison 2026-27 n’a pas encore commencé. En attendant, replonge dans le Souvenir 2025-26.', en: 'The 2026-27 season hasn’t started yet. Meanwhile, dive back into the 2025-26 Memories.' },
     'dash.seeSouvenir':    { fr: 'Voir le Souvenir 2025-26 →', en: 'See the 2025-26 Memories →' },
     'stats.clubs':         { fr: 'Clubs',                en: 'Clubs' },
