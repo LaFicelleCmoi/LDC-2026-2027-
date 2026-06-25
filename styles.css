@@ -145,11 +145,12 @@ footer.site-footer{
 
 /* ===== ReactBits / Uiverse — interactifs partagés (thème LDC) ===== */
 #starfield{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
-#cl-ball{ position:fixed; top:-14%; right:-12%; width:min(74vw,820px); height:min(74vw,820px); z-index:0; pointer-events:none;
-  background:url("starball.svg?v=1") center/contain no-repeat; opacity:.4; filter:blur(1.2px);
-  -webkit-mask-image:radial-gradient(closest-side, #000 38%, rgba(0,0,0,.34) 70%, transparent 100%);
-  mask-image:radial-gradient(closest-side, #000 38%, rgba(0,0,0,.34) 70%, transparent 100%); }
-@media (max-width:700px){ #cl-ball{ width:135vw; height:135vw; right:-34%; top:-4%; opacity:.38; } }
+#cl-ball{ position:fixed; top:-22%; right:-15%; width:min(96vw,1000px); height:min(96vw,1000px); z-index:0; pointer-events:none;
+  background:url("starball.svg?v=2") center/contain no-repeat; opacity:.6; filter:blur(1.4px); mix-blend-mode:screen;
+  -webkit-mask-image:radial-gradient(closest-side, #000 28%, rgba(0,0,0,.4) 60%, transparent 100%);
+  mask-image:radial-gradient(closest-side, #000 28%, rgba(0,0,0,.4) 60%, transparent 100%); animation:ballDrift 70s ease-in-out infinite alternate; }
+@keyframes ballDrift{ from{ transform:translate(0,0) scale(1); } to{ transform:translate(-2.5%,2%) scale(1.05); } }
+@media (max-width:700px){ #cl-ball{ width:155vw; height:155vw; right:-40%; top:-8%; opacity:.48; } }
 .container, .site-footer{ position:relative; z-index:1; }
 
 @property --sb-a{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
