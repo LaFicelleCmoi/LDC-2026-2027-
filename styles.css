@@ -35,6 +35,7 @@ body{
   color:var(--txt);
   font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   min-height:100vh;
+  overflow-x:hidden;            /* le ballon de fond ne crée pas de scroll horizontal */
   -webkit-font-smoothing:antialiased;
   line-height:1.45;
 }
@@ -150,10 +151,34 @@ footer.site-footer{
 .match .score .pen{ display:block; font-size:10px; color:var(--accent); font-weight:700; }
 .match .when{ font-size:11px; color:var(--muted); min-width:54px; text-align:center; }
 
+/* ===================== Responsive (mobile / tablette) ===================== */
+/* En dessous de 860px : le header passe sur 2 rangées —
+   marque + langue sur la 1re, navigation pleine largeur en dessous. */
+@media (max-width:860px){
+  /* header non collant : la nav sur 2-3 rangées ne mange pas l'écran au scroll */
+  .site-header{ position:static; flex-wrap:wrap; gap:10px 12px; padding:10px 14px; }
+  .brand{ flex:1 1 auto; min-width:0; }
+  .brand .t1{ font-size:14px; }
+  .header-right{ margin-left:auto; }
+  .nav{ order:3; flex-basis:100%; width:100%; margin-left:0; gap:6px 8px; }
+  .nav a{ padding:7px 11px; }
+}
 @media (max-width:720px){
   .nav a{ padding:6px 10px; font-size:12px; }
   .brand .t2{ display:none; }
+  .brand .star{ width:30px; height:30px; font-size:16px; }
   .container{ padding:16px; }
+}
+@media (max-width:560px){
+  .container{ padding:13px 13px 26px; }
+  .pad{ padding:13px; }
+  .page-title{ font-size:21px; }
+  .page-sub{ font-size:12.5px; }
+  .section{ margin:20px 0; }
+  .section-head h2{ font-size:16px; }
+  .season-dd-menu{ max-width:calc(100vw - 26px); }
+  .souvenir-banner{ font-size:12px; }
+  footer.site-footer{ padding:16px; gap:10px; font-size:11.5px; }
 }
 
 /* ===== ReactBits / Uiverse — interactifs partagés (thème LDC) ===== */
