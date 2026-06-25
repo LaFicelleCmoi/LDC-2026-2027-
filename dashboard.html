@@ -25,13 +25,16 @@
 }
 *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
 body{
-  font-family:var(--font-b); background:var(--pitch); color:var(--white);
+  font-family:var(--font-b); background:#070c20; color:var(--white);
   min-height:100vh; overflow-x:hidden; padding:40px 20px;
   background-image:
-    radial-gradient(1100px 600px at 12% -8%, rgba(59,123,255,0.16), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, rgba(245,181,10,0.10), transparent 55%),
-    repeating-linear-gradient(0deg, transparent, transparent 79px, rgba(255,255,255,0.02) 79px, rgba(255,255,255,0.02) 80px),
-    repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,0.015) 79px, rgba(255,255,255,0.015) 80px);
+    radial-gradient(135% 96% at 50% 40%, transparent 44%, rgba(2,4,12,0.62) 100%),
+    radial-gradient(1000px 560px at 50% -12%, rgba(86,134,255,0.22), transparent 58%),
+    radial-gradient(780px 430px at 50% 2%, rgba(245,181,10,0.07), transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0 79px, rgba(255,255,255,0.016) 79px 80px),
+    repeating-linear-gradient(90deg, transparent 0 79px, rgba(255,255,255,0.012) 79px 80px),
+    linear-gradient(180deg, #0b1538 0%, #070c20 55%, #04060f 100%);
+  background-attachment:fixed;
 }
 a{ text-decoration:none; color:inherit; }
 
