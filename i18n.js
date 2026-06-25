@@ -58,6 +58,7 @@
     'dash.goals':          { fr: 'buts',                 en: 'goals' },
     'dash.subtitle2':      { fr: 'Scores en direct · Classement · Phase finale', en: 'Live scores · Standings · Knockouts' },
     'dash.liveToday':      { fr: "AUJOURD'HUI",          en: 'TODAY' },
+    'dash.lastMatch':      { fr: 'Dernier match',        en: 'Last match' },
     'dash.liveNoMatch':    { fr: 'Pas de match en direct', en: 'No live match' },
     'dash.zonesTitle':     { fr: '🏆 Le classement par zone', en: '🏆 Standings by zone' },
     'dash.zonesTitle2':    { fr: 'Le classement par zone', en: 'Standings by zone' },
