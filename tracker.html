@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Classement & Phase finale — Ligue des Champions</title>
 <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml" />
-<link rel="stylesheet" href="styles.css?v=10" />
+<link rel="stylesheet" href="styles.css?v=11" />
 <!-- brackets-viewer (CDN) pour la vue arbre -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.css" />
 <style>
@@ -91,7 +91,24 @@
 
   #confetti{ position:fixed; inset:0; pointer-events:none; z-index:70; display:none; }
 
-  @media (max-width:720px){ #liveWidget{ width:calc(100vw - 36px); } }
+  @media (max-width:720px){
+    #liveWidget{ width:calc(100vw - 28px); right:14px; bottom:14px; }
+    #widgetReopen{ right:14px; bottom:14px; }
+    .view-toggle{ flex-wrap:wrap; }
+  }
+  @media (max-width:560px){
+    .standings{ font-size:12px; }
+    .standings th, .standings td{ padding:7px 5px; }
+    .standings td.pos{ padding-left:11px; }
+    .standings .club-cell{ gap:7px; }
+    .standings .club-cell .nm{ font-weight:700; }
+    .standings .tbl-cup{ margin-left:5px; font-size:10px; }
+    .legend{ gap:8px 14px; font-size:11px; }
+    .champion{ padding:12px 14px; gap:11px; }
+    .champion img{ width:38px; height:38px; }
+    .champion .nm{ font-size:18px; }
+    .round-col{ min-width:200px; }
+  }
 </style>
 </head>
 <body>
