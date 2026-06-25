@@ -63,7 +63,7 @@ a{ text-decoration:none; color:inherit; }
 .season-dd.open .season-dd-btn{ border-color:rgba(245,181,10,0.6); color:#fff; }
 .season-dd .sdd-caret{ font-size:0.85em; opacity:.85; transition:transform .15s; }
 .season-dd.open .sdd-caret{ transform:rotate(180deg); }
-.season-dd-menu{ position:absolute; top:calc(100% + 8px); right:0; min-width:215px; background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:0 18px 50px rgba(0,0,0,.55); padding:7px; display:none; z-index:80; text-align:left; }
+.season-dd-menu{ position:absolute; top:calc(100% + 8px); right:0; min-width:215px; max-height:min(64vh,380px); overflow-y:auto; background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:0 18px 50px rgba(0,0,0,.55); padding:7px; display:none; z-index:80; text-align:left; }
 .season-dd.open .season-dd-menu{ display:block; }
 .season-dd-menu a{ display:block; padding:10px 13px; border-radius:9px; font-size:0.78em; font-weight:600; color:var(--muted); white-space:nowrap; }
 .season-dd-menu a:hover{ background:rgba(255,255,255,0.06); color:#fff; }
@@ -155,6 +155,9 @@ a{ text-decoration:none; color:inherit; }
 .zone-card.z-q .zone-head{ color:var(--green); background:rgba(46,213,115,0.08); }
 .zone-card.z-po .zone-head{ color:var(--blue); background:rgba(59,123,255,0.08); }
 .zone-card.z-out .zone-head{ color:var(--red); background:rgba(255,71,87,0.07); }
+.zone-card.full{ grid-column:1/-1; }
+.zone-card.z-all .zone-head{ color:var(--gold); background:rgba(245,181,10,0.06); }
+.zone-card.z-all .zone-list{ max-height:440px; }
 .zone-list{ max-height:360px; overflow-y:auto; }
 .zone-team{ display:flex; align-items:center; gap:9px; padding:8px 14px; cursor:pointer; transition:background 0.15s; }
 .zone-team + .zone-team{ border-top:1px solid rgba(255,255,255,0.05); }
@@ -374,8 +377,8 @@ a{ text-decoration:none; color:inherit; }
   </p>
 </footer>
 
-<script src="i18n.js?v=8"></script>
-<script src="espn.js?v=6"></script>
+<script src="i18n.js?v=9"></script>
+<script src="espn.js?v=7"></script>
 <script>
 (function(){
   'use strict';
@@ -438,12 +441,15 @@ a{ text-decoration:none; color:inherit; }
   /* Match(s) en vedette pour la SAISON SÉLECTIONNÉE : live > à venir > dernier joué. */
   function pickFeatured(){
     if(!seasonMatches.length) return [];
-    var live=seasonMatches.filter(function(m){return m.state==='in';});
+    var live=seasonMatches.filter(function(m){return m.state==='in' && m.round!=='qualifying';});
     if(live.length) return live;
-    var up=seasonMatches.filter(function(m){return m.state==='pre';}).sort(function(a,b){return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0);});
+    var up=seasonMatches.filter(function(m){return m.state==='pre' && m.round!=='qualifying';}).sort(function(a,b){return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0);});
     if(up.length) return up.slice(0,4);
-    var fin=seasonMatches.filter(function(m){return m.state==='post';}).sort(function(a,b){return (b.dateObj?b.dateObj.getTime():0)-(a.dateObj?a.dateObj.getTime():0);});
-    return fin.length?[fin[0]]:[];   // le DERNIER match de la saison (la finale)
+    // le DERNIER match de la saison : la finale si disponible, sinon le dernier joué (hors qualifs)
+    var fin=seasonMatches.filter(function(m){return m.round==='final' && m.state==='post';}).sort(function(a,b){return (b.dateObj?b.dateObj.getTime():0)-(a.dateObj?a.dateObj.getTime():0);});
+    if(fin.length) return [fin[0]];
+    var post=seasonMatches.filter(function(m){return m.state==='post' && m.round!=='qualifying';}).sort(function(a,b){return (b.dateObj?b.dateObj.getTime():0)-(a.dateObj?a.dateObj.getTime():0);});
+    return post.length?[post[0]]:[];
   }
   function renderFeatured(){ todayMatches=pickFeatured(); renderLive(); }
 
@@ -545,6 +551,8 @@ a{ text-decoration:none; color:inherit; }
 
   function renderZones(){
     var grid=el('zones-grid');
+    var nf=ESPN.isLeaguePhaseFormat();
+    var ts=document.querySelector('.zones-title .shiny'); if(ts) ts.textContent=I18N.t(nf?'dash.zonesTitle2':'dash.rankingAll');
     if(!standings.length){
       if(!ESPN.isArchive() && seasonLoaded){
         grid.innerHTML='<div class="season-hint" style="grid-column:1/-1"><p>'+esc(I18N.t('dash.notStarted'))+'</p>'+
@@ -554,7 +562,9 @@ a{ text-decoration:none; color:inherit; }
       return;
     }
     buildStats();
-    var defs=[{cls:'z-q',key:'dash.zoneQ',from:0,to:8},{cls:'z-po',key:'dash.zonePO',from:8,to:24},{cls:'z-out',key:'dash.zoneOut',from:24,to:36}];
+    var defs = nf
+      ? [{cls:'z-q',key:'dash.zoneQ',from:0,to:8},{cls:'z-po',key:'dash.zonePO',from:8,to:24},{cls:'z-out',key:'dash.zoneOut',from:24,to:36}]
+      : [{cls:'z-all full',key:'dash.rankingAll',from:0,to:standings.length}];
     grid.innerHTML=defs.map(function(d){
       var rows=standings.slice(d.from,d.to).map(function(t){
         var tit=ESPN.clubTitles(t.name);
@@ -600,8 +610,8 @@ a{ text-decoration:none; color:inherit; }
       return '';
     }
     // Parcours sous forme de TABLEAU, groupé par tour, avec colonne Manche (Aller/Retour)
-    var ROUND_ORDER=['league','po','r16','qf','sf','final'];
-    var ROUND_KEY={league:'trk.leaguePhase',po:'trk.round.po',r16:'trk.round.r16',qf:'trk.round.qf',sf:'trk.round.sf',final:'trk.round.final'};
+    var ROUND_ORDER=['qualifying','league','po','r16','qf','sf','final'];
+    var ROUND_KEY={qualifying:'trk.round.qualif',league:(ESPN.isLeaguePhaseFormat()?'trk.leaguePhase':'trk.round.league'),po:'trk.round.po',r16:'trk.round.r16',qf:'trk.round.qf',sf:'trk.round.sf',final:'trk.round.final'};
     var byRound={}; played.forEach(function(m){ (byRound[m.round]=byRound[m.round]||[]).push(m); });
     var rows='';
     ROUND_ORDER.forEach(function(rk){
