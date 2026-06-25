@@ -1,0 +1,49 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <radialGradient id="glow" cx="42%" cy="36%" r="64%">
+      <stop offset="0%"  stop-color="#4f8bff" stop-opacity="0.60"/>
+      <stop offset="42%" stop-color="#1f4ec2" stop-opacity="0.40"/>
+      <stop offset="78%" stop-color="#0c1c4e" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#070f28" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="st" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eaf1ff"/>
+      <stop offset="55%" stop-color="#9cc2ff"/>
+      <stop offset="100%" stop-color="#5b93ff"/>
+    </linearGradient>
+    <radialGradient id="rim" cx="50%" cy="50%" r="50%">
+      <stop offset="80%" stop-color="#a9caff" stop-opacity="0"/>
+      <stop offset="93%" stop-color="#a9caff" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#a9caff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- étoile 5 branches centrée en 0,0 (R≈50) -->
+    <path id="star5" d="M0,-50 L12.3,-17 L47.6,-15.5 L20,6.5 L29.4,40.5 L0,21 L-29.4,40.5 L-20,6.5 L-47.6,-15.5 L-12.3,-17 Z"/>
+  </defs>
+
+  <!-- volume du ballon (lueur bleue dégradée) -->
+  <circle cx="300" cy="292" r="288" fill="url(#glow)"/>
+  <!-- liseré lumineux du bord -->
+  <circle cx="300" cy="292" r="286" fill="url(#rim)"/>
+
+  <!-- méridiens de la sphère, très discrets -->
+  <g fill="none" stroke="#9cc2ff" stroke-opacity="0.18" stroke-width="1.4">
+    <ellipse cx="300" cy="292" rx="286" ry="118"/>
+    <ellipse cx="300" cy="292" rx="118" ry="286"/>
+    <path d="M22 292 Q300 96 578 292"/>
+    <path d="M22 292 Q300 488 578 292"/>
+    <path d="M300 6 Q120 292 300 578"/>
+    <path d="M300 6 Q480 292 300 578"/>
+  </g>
+
+  <!-- étoiles réparties sur la sphère (la grande au centre) -->
+  <g fill="url(#st)">
+    <use href="#star5" transform="translate(298,306) scale(2.65)"/>
+    <use href="#star5" transform="translate(150,168) scale(1.05)" opacity="0.85"/>
+    <use href="#star5" transform="translate(452,176) scale(1.25)" opacity="0.9"/>
+    <use href="#star5" transform="translate(500,330) scale(0.85)" opacity="0.7"/>
+    <use href="#star5" transform="translate(150,430) scale(1.0)" opacity="0.8"/>
+    <use href="#star5" transform="translate(440,452) scale(1.15)" opacity="0.85"/>
+    <use href="#star5" transform="translate(300,78) scale(0.8)" opacity="0.7"/>
+    <use href="#star5" transform="translate(86,300) scale(0.8)" opacity="0.7"/>
+  </g>
+</svg>
