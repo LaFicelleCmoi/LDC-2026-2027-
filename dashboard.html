@@ -163,6 +163,7 @@ a{ text-decoration:none; color:inherit; }
 .zone-team img{ width:22px; height:22px; object-fit:contain; flex-shrink:0; }
 .zone-team .nm{ flex:1; font-size:0.84em; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .zone-team .pts{ font-family:var(--font-d); color:#fff; }
+.zt-cup{ font-size:0.82em; font-weight:800; color:var(--gold); white-space:nowrap; margin-left:2px; }
 @media (max-width:900px){ .zones-grid{ grid-template-columns:1fr; } }
 
 /* ---- Crest marquee ---- */
@@ -191,6 +192,12 @@ a{ text-decoration:none; color:inherit; }
 .cc-crest{ width:96px; height:96px; object-fit:contain; margin-top:8px; filter:drop-shadow(0 8px 24px rgba(0,0,0,0.6)); }
 .cc-name{ font-family:var(--font-d); font-size:2.4em; line-height:1; color:#fff; letter-spacing:0.03em; text-shadow:0 4px 20px rgba(0,0,0,0.5); }
 .cc-sub{ font-size:0.7em; color:var(--muted); letter-spacing:0.12em; text-transform:uppercase; }
+.club-card.is-winner{ border-color:rgba(245,181,10,.55); box-shadow:0 30px 80px rgba(0,0,0,.7), 0 0 60px rgba(245,181,10,.22), inset 0 1px 0 rgba(255,255,255,.1); }
+.cc-pal{ width:100%; text-align:center; padding:13px 14px; margin:4px 0; border-radius:14px; background:linear-gradient(135deg, rgba(245,181,10,.18), rgba(245,181,10,.05)); border:1px solid rgba(245,181,10,.42); }
+.cc-pal-count{ font-family:var(--font-d); font-size:2em; color:var(--gold); line-height:1; }
+.cc-pal-count span{ font-family:var(--font-b); font-size:0.38em; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#ffe2a0; vertical-align:middle; margin-left:3px; }
+.cc-pal-sub{ font-size:0.64em; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#ffd97a; margin-top:5px; }
+.cc-pal-years{ font-size:0.7em; color:var(--muted); margin-top:8px; line-height:1.7; }
 .cc-block{ width:100%; }
 .cc-label{ font-size:0.66em; font-weight:800; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
 .cc-res-row{ display:flex; justify-content:center; flex-wrap:wrap; gap:8px; }
@@ -367,8 +374,8 @@ a{ text-decoration:none; color:inherit; }
   </p>
 </footer>
 
-<script src="i18n.js?v=7"></script>
-<script src="espn.js?v=5"></script>
+<script src="i18n.js?v=8"></script>
+<script src="espn.js?v=6"></script>
 <script>
 (function(){
   'use strict';
@@ -550,10 +557,12 @@ a{ text-decoration:none; color:inherit; }
     var defs=[{cls:'z-q',key:'dash.zoneQ',from:0,to:8},{cls:'z-po',key:'dash.zonePO',from:8,to:24},{cls:'z-out',key:'dash.zoneOut',from:24,to:36}];
     grid.innerHTML=defs.map(function(d){
       var rows=standings.slice(d.from,d.to).map(function(t){
+        var tit=ESPN.clubTitles(t.name);
+        var cup=tit?'<span class="zt-cup" title="'+tit.n+' '+esc(I18N.t('pal.titlesN'))+'">🏆'+tit.n+'</span>':'';
         return '<div class="zone-team" data-team="'+esc(t.teamId)+'">'+
           '<span class="rk">'+t.pos+'</span>'+
           (t.logo?'<img src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span style="width:22px"></span>')+
-          '<span class="nm">'+esc(t.name)+'</span><span class="pts">'+t.pts+'</span></div>';
+          '<span class="nm">'+esc(t.name)+'</span>'+cup+'<span class="pts">'+t.pts+'</span></div>';
       }).join('') || '<div class="zone-team"><span class="nm muted">—</span></div>';
       return '<div class="zone-card '+d.cls+'"><div class="zone-head">'+esc(I18N.t(d.key))+'</div><div class="zone-list">'+rows+'</div></div>';
     }).join('');
@@ -618,14 +627,23 @@ a{ text-decoration:none; color:inherit; }
       return '<span class="cc-chip res-d">'+legBadge(m)+(opp.logo?'<img src="'+esc(opp.logo)+'">':'')+esc(opp.abbr||opp.name)+'</span>';
     }).join('') || '<span class="cc-sub">—</span>';
 
+    var titles=ESPN.clubTitles(me.name);
+    var palBlock = titles ?
+      '<div class="cc-pal">'+
+        '<div class="cc-pal-count">🏆 <b>'+titles.n+'</b><span>'+esc(titles.n>1?I18N.t('pal.titlesN'):I18N.t('pal.title1'))+'</span></div>'+
+        '<div class="cc-pal-sub">'+esc(I18N.t('pal.label'))+'</div>'+
+        '<div class="cc-pal-years">'+titles.years.join(' · ')+'</div>'+
+      '</div>' : '';
+
     var bd=el('modal-backdrop');
-    bd.innerHTML='<div class="club-card" data-club="'+esc(teamId)+'">'+
+    bd.innerHTML='<div class="club-card'+(titles?' is-winner':'')+'" data-club="'+esc(teamId)+'">'+
       '<button class="cc-close" id="cc-close">×</button>'+
       '<div class="cc-inner">'+
         '<span class="cc-badge">'+esc(row?('#'+row.pos):I18N.t('nav.tracker'))+'</span>'+
         (me.logo?'<img class="cc-crest" src="'+esc(me.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
         '<div class="cc-name">'+esc(me.name)+'</div>'+
         '<div class="cc-sub">'+esc(zoneSub)+'</div>'+
+        palBlock+
         '<div class="cc-block"><div class="cc-label" data-i18n="dash.clubPath">Parcours du club</div>'+journeyTable+'</div>'+
         '<div class="cc-block"><div class="cc-label" data-i18n="dash.clubScorers">Buteurs du club</div><div class="cc-scorers" id="cc-scorers">'+esc(I18N.t('common.loading'))+'</div></div>'+
         (upcoming.length?'<div class="cc-block"><div class="cc-label" data-i18n="dash.nextOpponents">Prochains adversaires</div><div class="cc-res-row">'+nextChips+'</div></div>':'')+
