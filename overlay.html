@@ -176,6 +176,13 @@
     border-radius:6px; font-size:10px; font-weight:800; padding:3px 7px; cursor:pointer;
   }
   #langToggle button.active{ background:var(--accent); color:#fff; }
+
+  /* Garde-fou : sur un écran de téléphone (aperçu hors OBS), le scorebug
+     s'adapte à la largeur. N'affecte pas un canvas OBS classique (≥1280px). */
+  @media (max-width:480px){
+    #wrap{ max-width:calc(100vw - 24px); }
+    .scorebug{ width:min(410px, calc(100vw - 24px)); }
+  }
 </style>
 </head>
 <body>
