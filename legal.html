@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Mentions légales — Tracker Ligue des Champions</title>
 <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml" />
-<link rel="stylesheet" href="styles.css?v=10" />
+<link rel="stylesheet" href="styles.css?v=11" />
 <style>
   .legal-wrap{ max-width:860px; }
   .legal-sub{ color:var(--muted); font-size:13.5px; margin:0 0 4px; }
@@ -25,6 +25,12 @@
   .legal-card p a{ color:var(--upcoming); text-decoration:underline; }
   .legal-card .lead{ color:var(--txt); font-weight:700; font-size:15px; margin-bottom:14px; }
   .back-top{ display:inline-block; margin-top:22px; font-size:12px; }
+  @media (max-width:860px){ .legal-card section{ scroll-margin-top:18px; } }
+  @media (max-width:560px){
+    .legal-card h2{ font-size:15px; }
+    .legal-card p{ font-size:13.5px; }
+    .legal-toc a{ font-size:12px; padding:5px 10px; }
+  }
 </style>
 </head>
 <body>
