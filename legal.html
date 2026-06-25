@@ -25,6 +25,13 @@
   .legal-card p a{ color:var(--upcoming); text-decoration:underline; }
   .legal-card .lead{ color:var(--txt); font-weight:700; font-size:15px; margin-bottom:14px; }
   .back-top{ display:inline-block; margin-top:22px; font-size:12px; }
+  /* Crédits — liste structurée des ressources (style référence) */
+  .legal-credits{ color:#c7cfe6; font-size:14px; line-height:1.65; }
+  .credits-list{ list-style:none; margin:13px 0 0; padding:0; display:flex; flex-direction:column; gap:9px; }
+  .credits-list li{ position:relative; padding:10px 14px 10px 30px; background:var(--card); border:1px solid var(--line); border-radius:10px; font-size:13.5px; line-height:1.55; }
+  .credits-list li::before{ content:"›"; position:absolute; left:13px; top:8px; color:var(--upcoming); font-weight:900; font-size:15px; }
+  .credits-list li b{ color:var(--txt); }
+  .credits-list li a{ color:var(--upcoming); text-decoration:underline; }
   @media (max-width:860px){ .legal-card section{ scroll-margin-top:18px; } }
   @media (max-width:560px){
     .legal-card h2{ font-size:15px; }
@@ -88,7 +95,7 @@
     <section id="cookies"><h2 data-i18n="legal.h.cookies">7 · Stockage local & cookies</h2><p data-i18n="legal.b.cookies">Aucun cookie de suivi. Uniquement le stockage local pour la langue.</p></section>
     <section id="cgu"><h2 data-i18n="legal.h.cgu">8 · Conditions d’utilisation</h2><p data-i18n="legal.b.cgu">Service fourni « tel quel », sans garantie. Usage personnel et non commercial.</p></section>
     <section id="liability"><h2 data-i18n="legal.h.liability">9 · Responsabilité</h2><p data-i18n="legal.b.liability">L’auteur n’est pas responsable des dommages liés à l’utilisation du site.</p></section>
-    <section id="credits"><h2 data-i18n="legal.h.credits">10 · Crédits</h2><p data-i18n-html="legal.b.credits">Données : ESPN. Polices : Google Fonts. Effets inspirés de ReactBits et Uiverse.</p></section>
+    <section id="credits"><h2 data-i18n="legal.h.credits">10 · Crédits</h2><div class="legal-credits" data-i18n-html="legal.b.credits">Données : ESPN. Polices : Google Fonts. Effets inspirés de ReactBits et Uiverse.</div></section>
     <section id="contact"><h2 data-i18n="legal.h.contact">11 · Contact</h2><p data-i18n="legal.contact">Pour toute demande de retrait, contactez l’auteur du projet.</p></section>
 
     <a class="btn back-top" href="dashboard.html" data-i18n="common.back">← Retour</a>
@@ -100,7 +107,7 @@
   <a href="dashboard.html" data-i18n="common.back">← Retour</a>
 </footer>
 
-<script src="i18n.js?v=12"></script>
+<script src="i18n.js?v=13"></script>
 <script src="espn.js?v=8"></script>
 <script>
   if(window.I18N) I18N.mountToggle('#langSwitch');
