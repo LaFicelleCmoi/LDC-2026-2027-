@@ -180,7 +180,7 @@ footer.site-footer{
 .season-dd.open .season-dd-btn{ background:rgba(245,181,10,.18); color:#fff; }
 .season-dd .sdd-caret{ font-size:10px; opacity:.8; transition:transform .15s; }
 .season-dd.open .sdd-caret{ transform:rotate(180deg); }
-.season-dd-menu{ position:absolute; top:calc(100% + 6px); left:0; min-width:200px; background:var(--card-2); border:1px solid var(--line-2); border-radius:12px; box-shadow:var(--shadow); padding:6px; display:none; z-index:80; }
+.season-dd-menu{ position:absolute; top:calc(100% + 6px); left:0; min-width:200px; max-height:min(62vh,360px); overflow-y:auto; background:var(--card-2); border:1px solid var(--line-2); border-radius:12px; box-shadow:var(--shadow); padding:6px; display:none; z-index:80; }
 .season-dd.open .season-dd-menu{ display:block; }
 .season-dd-menu a{ display:block; padding:9px 12px; border-radius:8px; font-size:13px; font-weight:600; color:var(--muted); white-space:nowrap; }
 .season-dd-menu a:hover{ background:var(--card); color:#fff; }
