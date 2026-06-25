@@ -26,10 +26,15 @@
 *{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; }
 body{
-  background:
-    radial-gradient(1200px 700px at 12% -10%, rgba(27,104,255,.18), transparent 60%),
-    radial-gradient(1000px 600px at 100% 0%, rgba(111,91,255,.16), transparent 55%),
-    var(--bg);
+  background:#070c20;
+  background-image:
+    radial-gradient(135% 96% at 50% 40%, transparent 44%, rgba(2,4,12,0.62) 100%),
+    radial-gradient(1000px 560px at 50% -12%, rgba(86,134,255,0.20), transparent 58%),
+    radial-gradient(780px 430px at 50% 2%, rgba(245,181,10,0.06), transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0 79px, rgba(255,255,255,0.014) 79px 80px),
+    repeating-linear-gradient(90deg, transparent 0 79px, rgba(255,255,255,0.011) 79px 80px),
+    linear-gradient(180deg, #0b1538 0%, #070c20 55%, #04060f 100%);
+  background-attachment:fixed;
   color:var(--txt);
   font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   min-height:100vh;
