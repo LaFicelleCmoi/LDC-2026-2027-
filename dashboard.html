@@ -345,7 +345,7 @@ a{ text-decoration:none; color:inherit; }
   </p>
 </footer>
 
-<script src="i18n.js?v=5"></script>
+<script src="i18n.js?v=6"></script>
 <script src="espn.js?v=5"></script>
 <script>
 (function(){
@@ -404,7 +404,28 @@ a{ text-decoration:none; color:inherit; }
   })();
 
   /* ================= LIVE (bento) ================= */
-  var todayMatches=[], lastScores={}, glowBound=false;
+  var todayMatches=[], lastScores={}, glowBound=false, lastRenderSig='';
+
+  /* Match(s) en vedette pour la SAISON SÉLECTIONNÉE : live > à venir > dernier joué. */
+  function pickFeatured(){
+    if(!seasonMatches.length) return [];
+    var live=seasonMatches.filter(function(m){return m.state==='in';});
+    if(live.length) return live;
+    var up=seasonMatches.filter(function(m){return m.state==='pre';}).sort(function(a,b){return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0);});
+    if(up.length) return up.slice(0,4);
+    var fin=seasonMatches.filter(function(m){return m.state==='post';}).sort(function(a,b){return (b.dateObj?b.dateObj.getTime():0)-(a.dateObj?a.dateObj.getTime():0);});
+    return fin.length?[fin[0]]:[];   // le DERNIER match de la saison (la finale)
+  }
+  function renderFeatured(){ todayMatches=pickFeatured(); renderLive(); }
+
+  /* Le match appartient-il à la saison actuelle ? (par plage de dates) */
+  function inCurrentSeason(m){
+    if(!m.dateObj) return false;
+    var r=ESPN.seasonRange();
+    var s=new Date(+r.start.slice(0,4), +r.start.slice(4,6)-1, +r.start.slice(6,8));
+    var e=new Date(+r.end.slice(0,4), +r.end.slice(4,6)-1, +r.end.slice(6,8));
+    return m.dateObj>=s && m.dateObj<=e;
+  }
 
   function sizeForIndex(idx,total){ if(total===1) return 'size-full'; if(total===2) return 'size-wide'; if(idx===0) return 'size-featured'; if(idx===1||idx===2) return 'size-wide'; return 'size-small'; }
 
@@ -458,11 +479,17 @@ a{ text-decoration:none; color:inherit; }
     var order={in:0,pre:1,post:2};
     var list=todayMatches.slice().sort(function(a,b){ if(order[a.state]!==order[b.state]) return order[a.state]-order[b.state]; return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0); });
     var liveCount=list.filter(function(m){return m.state==='in';}).length;
+    var archive=ESPN.isArchive();
 
     if(liveCount>0){ badge.style.display=''; var lbl=I18N.t('common.live'); glitch.dataset.text=lbl; glitch.textContent=lbl; } else { badge.style.display='none'; }
-    if(liveCount>1) titleText.textContent='· '+liveCount; else if(liveCount===1) titleText.textContent=I18N.t('common.live'); else titleText.textContent=I18N.t('dash.liveToday');
+    if(archive) titleText.textContent=I18N.t('dash.lastMatch');
+    else if(liveCount>1) titleText.textContent='· '+liveCount; else if(liveCount===1) titleText.textContent=I18N.t('common.live'); else titleText.textContent=I18N.t('dash.liveToday');
 
-    if(!list.length){ grid.innerHTML='<div class="live-empty">'+esc(I18N.t('dash.empersToday'))+'</div>'; stamp(); return; }
+    var sig=list.map(function(m){return m.id+m.state+m.home.score+'-'+m.away.score+'/'+m.home.shootout+'-'+m.away.shootout;}).join('|')+'|'+lang()+'|'+archive;
+    if(sig===lastRenderSig){ stamp(); return; }
+    lastRenderSig=sig;
+
+    if(!list.length){ grid.innerHTML='<div class="live-empty">'+esc(I18N.t(archive?'common.noMatch':'dash.empersToday'))+'</div>'; stamp(); return; }
     grid.innerHTML='';
     list.forEach(function(m,idx){ var c=buildLiveCard(m,idx,sizeForIndex(idx,list.length)); grid.appendChild(c); bindTilt(c,5); });
     bindGlow(); stamp();
@@ -470,7 +497,7 @@ a{ text-decoration:none; color:inherit; }
   function stamp(){ el('live-last-update').textContent=(I18N.t('common.updated')||'')+' '+hm(new Date()); }
   function renderLiveError(){ var grid=el('live-cards-grid'); if(grid.querySelector('.live-card')) return; grid.innerHTML='<div class="live-error">'+esc(I18N.t('common.offline'))+'</div>'; }
 
-  el('live-refresh-btn').addEventListener('click',function(){ var b=this; b.classList.add('spinning'); loadToday().then(function(){ setTimeout(function(){b.classList.remove('spinning');},400); }); });
+  el('live-refresh-btn').addEventListener('click',function(){ var b=this; b.classList.add('spinning'); try{ loadSeason(); }catch(e){} loadToday().then(function(){ setTimeout(function(){b.classList.remove('spinning');},400); }); });
 
   /* ================= SEASON: zones + marquee + modal ================= */
   var seasonMatches=[], standings=[], clubIndex={}, championDone=false, seasonLoaded=false;
@@ -649,10 +676,13 @@ a{ text-decoration:none; color:inherit; }
   /* ================= POLLING ================= */
   function loadToday(){
     if(document.visibilityState==='hidden') return Promise.resolve();
+    if(ESPN.isArchive()){ return Promise.resolve(); }   // saison archivée : vedette = dernier match de la saison (via loadSeason)
     return ESPN.fetchScoreboard().then(function(events){
-      todayMatches=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
-      renderLive();
-    }).catch(function(){ renderLiveError(); });
+      var all=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
+      var cur=all.filter(inCurrentSeason);               // uniquement la saison actuelle
+      if(cur.length){ todayMatches=cur; renderLive(); }
+      else { renderFeatured(); }                          // hors-saison : dernier match de la saison actuelle (souvent aucun)
+    }).catch(function(){ if(!todayMatches.length) renderFeatured(); });
   }
   function loadSeason(){
     if(document.visibilityState==='hidden') return;
@@ -661,6 +691,7 @@ a{ text-decoration:none; color:inherit; }
       seasonMatches=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
       standings=ESPN.computeStandings(events);
       indexClubs(); renderZones(); renderMarquee();
+      if(ESPN.isArchive() || !todayMatches.length) renderFeatured();  // dernier match de la saison sélectionnée
       if(!championDone){ var champ=ESPN.findChampion(ESPN.buildBracket(events)); if(champ){ championDone=true; Confetti.champion(); } }
     }).catch(function(){ seasonLoaded=true; renderZones(); });
   }
