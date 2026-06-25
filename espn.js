@@ -36,6 +36,8 @@
   /* Saison "actuelle" du projet = 2026-27 (année de DÉBUT 2026).
      Surcharge possible via ?season=YYYY (utilisé pour l'onglet « Souvenir »). */
   var CURRENT_SEASON = 2026;
+  // Saisons archivées (année de DÉBUT), de la plus récente à la plus ancienne.
+  var ARCHIVE_SEASONS = [2025, 2024];
 
   function seasonParam() {
     try {
@@ -81,6 +83,60 @@
       if (!/\.html(\?|#|$)/.test(href) && href !== '') continue;
       if (/[?&]season=/.test(href)) continue;
       links[i].setAttribute('href', href + (href.indexOf('?') === -1 ? '?' : '&') + 'season=' + s);
+    }
+  }
+
+  /* Liste des saisons : { year, current }. Actuelle d'abord, puis archives. */
+  function seasonOptions() {
+    var opts = [{ year: CURRENT_SEASON, current: true }];
+    for (var i = 0; i < ARCHIVE_SEASONS.length; i++) opts.push({ year: ARCHIVE_SEASONS[i], current: false });
+    return opts;
+  }
+
+  /* Monte un menu déroulant de saisons dans `host`. basePage = page cible (ex. 'tracker.html'). */
+  function mountSeasonMenu(host, basePage) {
+    host = (typeof host === 'string') ? document.querySelector(host) : host;
+    if (!host) return;
+    function t(k, f) { try { var v = global.I18N && global.I18N.t(k); return v != null ? v : f; } catch (e) { return f; } }
+
+    var activeYear = (seasonParam() != null) ? seasonParam() : CURRENT_SEASON;
+    var items = seasonOptions().map(function (o) {
+      var href = o.current ? basePage : basePage + '?season=' + o.year;
+      var attrs = (o.current ? ' data-noseason' : '') + (o.year === activeYear ? ' class="active"' : '');
+      var tag = o.current ? t('season.current', 'Actuelle') : t('nav.souvenir', 'Souvenir');
+      return '<a href="' + href + '"' + attrs + ' role="menuitem">' + seasonLabel(o.year) + ' · ' + tag + '</a>';
+    }).join('');
+
+    host.classList.add('season-dd');
+    host.innerHTML =
+      '<button type="button" class="season-dd-btn" aria-haspopup="true" aria-expanded="false">' +
+        '🏆 <span class="sdd-cur">' + seasonLabel(activeYear) + '</span> <span class="sdd-caret">▾</span>' +
+      '</button>' +
+      '<div class="season-dd-menu" role="menu">' + items + '</div>';
+
+    var btn = host.querySelector('.season-dd-btn');
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = host.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    // Fermeture au clic extérieur (un seul listener global, partagé)
+    if (!mountSeasonMenu._bound) {
+      mountSeasonMenu._bound = true;
+      document.addEventListener('click', function () {
+        var open = document.querySelectorAll('.season-dd.open');
+        for (var i = 0; i < open.length; i++) {
+          open[i].classList.remove('open');
+          var b = open[i].querySelector('.season-dd-btn');
+          if (b) b.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          var open = document.querySelectorAll('.season-dd.open');
+          for (var i = 0; i < open.length; i++) open[i].classList.remove('open');
+        }
+      });
     }
   }
 
@@ -534,9 +590,12 @@
     seasonRange: seasonRange,
     seasonStartYear: seasonStartYear,
     CURRENT_SEASON: CURRENT_SEASON,
+    ARCHIVE_SEASONS: ARCHIVE_SEASONS,
     seasonParam: seasonParam,
     isArchive: isArchive,
     seasonLabel: seasonLabel,
+    seasonOptions: seasonOptions,
+    mountSeasonMenu: mountSeasonMenu,
     preserveSeasonLinks: preserveSeasonLinks,
     // fetch
     fetchJSON: fetchJSON,
