@@ -38,7 +38,25 @@
   .pal-titles .cup{ opacity:.85; }
   .pal-years{ text-align:right; color:var(--muted); font-size:12px; line-height:1.5; }
   .pal-row.top td{ background:linear-gradient(90deg, rgba(245,181,10,.10), transparent 60%); }
-  @media (max-width:640px){ .pal-years{ display:none; } .pal-titles{ width:72px; } }
+
+  /* Détail "années de victoire" — repliable, révélé au clic sur mobile
+     (là où la colonne Années est masquée). */
+  .pal-chev{ display:none; }
+  .pal-detail{ display:none; }
+  .pal-detail > td{ padding:0 12px 12px; }
+  .pal-detail-in{ background:rgba(245,181,10,.07); border:1px solid rgba(245,181,10,.28); border-radius:10px; padding:9px 12px; color:#cdd6e0; font-size:12.5px; line-height:1.75; }
+  .pal-detail-in .pdl{ display:block; font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--upcoming); margin-bottom:3px; }
+
+  @media (max-width:640px){
+    .pal-years, .pal-table th.r{ display:none; }
+    .pal-titles{ width:72px; }
+    .pal-row.has-detail{ cursor:pointer; }
+    .pal-row.has-detail td{ -webkit-user-select:none; user-select:none; }
+    .pal-chev{ display:inline-block; margin-left:7px; color:var(--muted); font-size:10px; vertical-align:middle; transition:transform .2s, color .2s; }
+    .pal-row.open .pal-chev{ transform:rotate(180deg); color:var(--upcoming); }
+    .pal-row.open td{ border-bottom-color:transparent; }
+    .pal-row.open + .pal-detail{ display:table-row; }
+  }
 </style>
 </head>
 <body>
@@ -115,19 +133,30 @@
       pod.innerHTML=block(2,'p2','🥈')+block(1,'p1','👑')+block(3,'p3','🥉');
     }
     var body=document.getElementById('palBody'); if(!body) return;
+    var yearsLbl=(window.I18N&&I18N.t('pal.colYears'))||'Années';
     body.innerHTML=rows.map(function(e){
       var medal = e.rank===1?'m1':(e.rank===2?'m2':(e.rank===3?'m3':''));
-      return '<tr class="pal-row'+(e.rank<=3?' top':'')+'">'+
+      var yrs=e.years.join(' · ');
+      return '<tr class="pal-row has-detail'+(e.rank<=3?' top':'')+'">'+
         '<td class="pal-rank '+medal+'">'+e.rank+'</td>'+
-        '<td class="pal-club"><span class="star">★</span>'+esc(e.name)+'</td>'+
+        '<td class="pal-club"><span class="star">★</span>'+esc(e.name)+'<span class="pal-chev" aria-hidden="true">▼</span></td>'+
         '<td class="pal-titles"><span class="cup">🏆</span> <b>'+e.n+'</b></td>'+
-        '<td class="pal-years">'+e.years.join(' · ')+'</td>'+
-      '</tr>';
+        '<td class="pal-years">'+yrs+'</td>'+
+      '</tr>'+
+      '<tr class="pal-detail"><td colspan="4"><div class="pal-detail-in"><span class="pdl">'+esc(yearsLbl)+'</span>'+yrs+'</div></td></tr>';
     }).join('');
     var cnt=document.getElementById('palCount');
     if(cnt) cnt.textContent=rows.length+' '+((window.I18N&&I18N.t('pal.total'))||'clubs');
   }
   render();
+  // Mobile : révéler les années de victoire au clic sur la ligne d'un club
+  (function bindExpand(){
+    var body=document.getElementById('palBody'); if(!body) return;
+    body.addEventListener('click', function(ev){
+      var row=ev.target.closest('.pal-row.has-detail');
+      if(row && body.contains(row)) row.classList.toggle('open');
+    });
+  })();
   if(window.I18N) window.addEventListener('ldc:langchange',function(){ render(); if(window.ESPN) ESPN.mountSeasonMenu('#seasonDD','tracker.html'); });
 
   /* Starfield (fond étoilé partagé) */
