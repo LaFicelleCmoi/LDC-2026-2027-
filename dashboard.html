@@ -76,7 +76,20 @@ a{ text-decoration:none; color:inherit; }
 .season-dd-menu a{ display:block; padding:10px 13px; border-radius:9px; font-size:0.78em; font-weight:600; color:var(--muted); white-space:nowrap; }
 .season-dd-menu a:hover{ background:rgba(255,255,255,0.06); color:#fff; }
 .season-dd-menu a.active{ color:var(--gold); background:rgba(245,181,10,.1); font-weight:800; }
-@media (max-width:600px){ .topbar{ justify-content:center; } .header{ margin-top:4px; } }
+@media (max-width:600px){
+  .topbar{ justify-content:center; }
+  .header{ margin-top:4px; margin-bottom:28px; }
+  body{ padding:24px 14px; }
+  .live-section-title{ font-size:1.45em; }
+  .zones-title{ font-size:1.45em; }
+  .live-section-header{ padding:10px 14px; }
+  .nav-forward,.nav-ghost,.season-dd .season-dd-btn{ padding:8px 13px; }
+}
+@media (max-width:380px){
+  .stats-strip{ grid-template-columns:1fr 1fr; }
+  .header h1{ font-size:clamp(2.4em,13vw,4em); }
+  body{ padding:20px 11px; }
+}
 
 /* ---- Glass surface (ReactBits) ---- */
 .glass-surface{ position:relative; background:#111a36; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
