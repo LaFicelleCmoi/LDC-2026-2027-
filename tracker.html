@@ -377,7 +377,7 @@
       el('championLogo').src=champ.logo||'';
       banner.classList.add('show');
       var key=champ.id||champ.name;
-      if(lastChampion!==key){ lastChampion=key; burstConfetti(); }
+      if(lastChampion!==key){ lastChampion=key; if(!ESPN.isArchive()) burstConfetti(); }
     } else {
       banner.classList.remove('show');
     }
