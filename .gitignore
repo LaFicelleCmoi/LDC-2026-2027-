@@ -1,0 +1,7 @@
+# Config locale Claude Code + échafaudage de prévisualisation (non versionné)
+.claude/
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+*.local.json
