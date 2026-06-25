@@ -74,13 +74,17 @@ a{ color:inherit; text-decoration:none; }
 .lang-btn:hover{ color:var(--txt); }
 .lang-btn.active{ background:var(--accent); color:#fff; border-color:transparent; }
 
-/* Interrupteur FR / EN (toggle coulissant, thème LDC) */
-.lang-toggle{ position:relative; display:inline-flex; align-items:center; background:#0e1736; border:1px solid var(--line-2); border-radius:999px; padding:3px; }
-.lang-toggle .lt-opt{ position:relative; z-index:2; min-width:34px; text-align:center; border:none; background:none; cursor:pointer; font-family:inherit; font-weight:800; font-size:12px; letter-spacing:.04em; color:var(--muted); padding:5px 12px; border-radius:999px; transition:color .2s; }
-.lang-toggle .lt-opt.active{ color:#1a1300; }
+/* Interrupteur FR / EN — le curseur est un ballon qui roule (thème LDC) */
+.lang-toggle{ position:relative; display:inline-flex; align-items:center; background:#0e1736; border:1px solid var(--line-2); border-radius:999px; padding:4px; }
+.lang-toggle .lt-opt{ position:relative; z-index:2; width:32px; text-align:center; border:none; background:none; cursor:pointer; font-family:inherit; font-weight:800; font-size:12px; line-height:18px; letter-spacing:.03em; color:var(--muted); padding:5px 0; transition:color .2s; }
+.lang-toggle .lt-opt.active{ color:#13203f; }
 .lang-toggle .lt-opt:not(.active):hover{ color:var(--txt); }
-.lang-toggle .lt-knob{ position:absolute; z-index:1; top:3px; bottom:3px; left:3px; width:calc(50% - 3px); border-radius:999px; background:var(--upcoming); transition:transform .22s cubic-bezier(.4,1.25,.5,1); }
-.lang-toggle[data-active="en"] .lt-knob{ transform:translateX(100%); }
+.lang-toggle .lt-knob{ position:absolute; z-index:1; top:4px; left:6px; width:28px; height:28px; border-radius:50%;
+  background:radial-gradient(circle at 38% 30%, #ffffff, #dbe2ef 58%, #aab4ca);
+  box-shadow:inset -2px -3px 4px rgba(0,0,0,.2), 0 0 0 1px rgba(245,181,10,.35);
+  transition:left .38s cubic-bezier(.5,1.35,.5,1), transform .38s ease; }
+.lang-toggle .lt-knob::before{ content:''; position:absolute; top:50%; left:50%; width:9px; height:9px; transform:translate(-50%,-50%); background:#13203f; clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%); }
+.lang-toggle[data-active="en"] .lt-knob{ left:38px; transform:rotate(360deg); }
 
 .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
 .dot.live{ background:var(--live); box-shadow:0 0 0 0 rgba(255,59,70,.6); animation:ping 1.4s infinite; }
