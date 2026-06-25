@@ -36,8 +36,16 @@
   /* Saison "actuelle" du projet = 2026-27 (année de DÉBUT 2026).
      Surcharge possible via ?season=YYYY (utilisé pour l'onglet « Souvenir »). */
   var CURRENT_SEASON = 2026;
-  // Saisons archivées (année de DÉBUT), de la plus récente à la plus ancienne.
-  var ARCHIVE_SEASONS = [2025, 2024];
+  // ESPN fournit les saisons depuis 2001-02 (endpoint /seasons). Année de DÉBUT.
+  var EARLIEST_SEASON = 2001;
+  // Saisons archivées, de la plus récente à la plus ancienne.
+  var ARCHIVE_SEASONS = (function () {
+    var a = [];
+    for (var y = CURRENT_SEASON - 1; y >= EARLIEST_SEASON; y--) a.push(y);
+    return a;
+  })();
+  // Format « phase de ligue » à 36 (à partir de 2024-25). Avant : phase de groupes.
+  function isLeaguePhaseFormat(year) { return (year == null ? seasonStartYear() : year) >= 2024; }
 
   function seasonParam() {
     try {
@@ -246,7 +254,14 @@
   /* Tous les matchs de la saison courante (plage de dates). */
   function fetchSeasonEvents(opts) {
     var r = seasonRange();
-    return fetchScoreboard(r.start + '-' + r.end, Object.assign({ limit: 500, ttl: 20000 }, opts || {}));
+    return fetchScoreboard(r.start + '-' + r.end, Object.assign({ limit: 500, ttl: 20000 }, opts || {}))
+      .then(function (events) {
+        // La plage de dates récupère parfois les qualifs de la saison SUIVANTE (juin-juillet).
+        // On ne garde que les matchs de la saison demandée (ev.season.year).
+        return (events || []).filter(function (e) {
+          return !e || !e.season || e.season.year == null || e.season.year === r.startYear;
+        });
+      });
   }
 
   /* ---- Summary (buteurs, cartons, etc.) --------------------------------- */
@@ -350,25 +365,30 @@
   /* Mapping fiable depuis ev.season.slug (signal officiel ESPN). */
   var SLUG_ROUND = {
     'league-phase': 'league',
+    'group-stage': 'league',
     'knockout-round-playoffs': 'po',
     'round-of-16': 'r16',
     'quarterfinals': 'qf',
+    'quarter-finals': 'qf',
     'semifinals': 'sf',
+    'semi-finals': 'sf',
     'final': 'final'
   };
 
-  /* Classe un match : 'league' (phase de ligue) ou 'po'/'r16'/'qf'/'sf'/'final' */
+  /* Classe un match : 'qualifying' / 'league' (poule ou phase de ligue) / 'po'/'r16'/'qf'/'sf'/'final'.
+     Couvre toutes les ères ESPN (phase de ligue 2024+, phase de groupes 2003-2024, first/second-phase 2001-2003). */
   function classifyRound(comp, ev) {
     // 1) Signal fiable : le slug de saison ESPN
     var slug = (ev && ev.season && ev.season.slug) ? String(ev.season.slug).toLowerCase() : '';
     if (SLUG_ROUND[slug]) return SLUG_ROUND[slug];
     if (slug) {
-      if (/playoff|barrage|knockout/.test(slug)) return 'po';
-      if (/round-of-16|eighth|1-8/.test(slug)) return 'r16';
+      if (/qualif|play-?off-round|preliminary/.test(slug)) return 'qualifying'; // tours préliminaires : exclus
+      if (/knockout.*play|knockout-round/.test(slug)) return 'po';              // barrages (nouveau format)
+      if (/league-phase|group|first-phase|second-phase|league/.test(slug)) return 'league';
+      if (/round-of-16|round-of-32|eighth|1-8/.test(slug)) return 'r16';
       if (/quarter/.test(slug)) return 'qf';
       if (/semi/.test(slug)) return 'sf';
       if (/final/.test(slug)) return 'final';
-      if (/league|group/.test(slug)) return 'league';
     }
 
     // 2) Repli : titres de notes / nom du match
@@ -638,6 +658,8 @@
     seasonParam: seasonParam,
     isArchive: isArchive,
     seasonLabel: seasonLabel,
+    isLeaguePhaseFormat: isLeaguePhaseFormat,
+    EARLIEST_SEASON: EARLIEST_SEASON,
     seasonOptions: seasonOptions,
     mountSeasonMenu: mountSeasonMenu,
     clubTitles: clubTitles,
