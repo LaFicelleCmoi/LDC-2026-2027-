@@ -22,6 +22,15 @@
   .pod.p2 .ptitles{ color:#e3eaf7; }
   .pod.p3{ min-height:146px; background:rgba(224,160,106,.10); border-color:rgba(224,160,106,.35); border-top-color:#e0a06a; }
   .pod.p3 .ptitles{ color:#eab27e; }
+  /* Podium cliquable : années de victoire repliées */
+  .pod.has-detail{ cursor:pointer; transition:transform .15s; }
+  .pod.has-detail:hover{ transform:translateY(-2px); }
+  .pod-years{ display:none; margin-top:10px; padding-top:9px; border-top:1px solid rgba(255,255,255,.16); font-size:11px; line-height:1.65; color:#eef2fb; }
+  .pod-years .pdl{ display:block; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--upcoming); margin-bottom:4px; }
+  .pod-years .py-club{ display:block; font-weight:800; color:#fff; margin-top:5px; }
+  .pod.open{ z-index:2; }
+  .pod.open .pod-years{ display:block; }
+  .pod.open .prank{ display:none; }
   @media (max-width:560px){ .podium{ gap:7px; } .pod{ padding:13px 7px 12px; } .pod .pname{ font-size:.78em; } .pod .ptitles{ font-size:2em; } .pod .medal{ font-size:1.4em; } }
   .pal-wrap{ max-width:820px; }
   .pal-table{ width:100%; border-collapse:collapse; }
@@ -117,7 +126,8 @@
 
   function render(){
     var rows=(window.ESPN&&ESPN.palmaresRanking)?ESPN.palmaresRanking():[];
-    // Podium des 3 premiers (égalités regroupées)
+    var yearsLbl=(window.I18N&&I18N.t('pal.colYears'))||'Années';
+    // Podium des 3 premiers (égalités regroupées) — cliquable pour révéler les années
     var pod=document.getElementById('podium');
     if(pod){
       var byRank={};
@@ -126,15 +136,21 @@
       function block(rk,cls,medal){
         var cl=byRank[rk]; if(!cl||!cl.length) return '';
         var names=cl.map(function(c){return '<div class="pname">'+esc(c.name)+'</div>';}).join('');
-        return '<div class="pod '+cls+'"><div class="medal">'+medal+'</div>'+names+
+        var years=cl.map(function(c){
+          var nm=cl.length>1?'<span class="py-club">'+esc(c.name)+'</span>':'';
+          return '<div class="py-line">'+nm+c.years.join(' · ')+'</div>';
+        }).join('');
+        return '<div class="pod '+cls+' has-detail" role="button" tabindex="0" aria-expanded="false">'+
+          '<div class="medal">'+medal+'</div>'+names+
           '<div class="ptitles">🏆 '+cl[0].n+' <small>'+esc(lbl)+'</small></div>'+
+          '<div class="pod-years"><span class="pdl">'+esc(yearsLbl)+'</span>'+years+'</div>'+
           '<div class="prank">'+rk+'</div></div>';
       }
       pod.innerHTML=block(2,'p2','🥈')+block(1,'p1','👑')+block(3,'p3','🥉');
     }
     var body=document.getElementById('palBody'); if(!body) return;
-    var yearsLbl=(window.I18N&&I18N.t('pal.colYears'))||'Années';
-    body.innerHTML=rows.map(function(e){
+    // Le tableau exclut le podium (top 3) — aucune répétition
+    body.innerHTML=rows.filter(function(e){ return e.rank>3; }).map(function(e){
       var medal = e.rank===1?'m1':(e.rank===2?'m2':(e.rank===3?'m3':''));
       var yrs=e.years.join(' · ');
       return '<tr class="pal-row has-detail'+(e.rank<=3?' top':'')+'">'+
@@ -155,6 +171,14 @@
     body.addEventListener('click', function(ev){
       var row=ev.target.closest('.pal-row.has-detail');
       if(row && body.contains(row)) row.classList.toggle('open');
+    });
+  })();
+  // Podium cliquable : révéler les années de victoire des 3 premiers
+  (function bindPodium(){
+    var pod=document.getElementById('podium'); if(!pod) return;
+    pod.addEventListener('click', function(ev){
+      var b=ev.target.closest('.pod.has-detail');
+      if(b && pod.contains(b)){ var op=b.classList.toggle('open'); b.setAttribute('aria-expanded', op?'true':'false'); }
     });
   })();
   if(window.I18N) window.addEventListener('ldc:langchange',function(){ render(); if(window.ESPN) ESPN.mountSeasonMenu('#seasonDD','tracker.html'); });
