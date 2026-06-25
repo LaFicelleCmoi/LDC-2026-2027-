@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Classement & Phase finale — Ligue des Champions</title>
 <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml" />
-<link rel="stylesheet" href="styles.css?v=6" />
+<link rel="stylesheet" href="styles.css?v=7" />
 <!-- brackets-viewer (CDN) pour la vue arbre -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.css" />
 <style>
@@ -38,7 +38,7 @@
   .round-col{ min-width:230px; flex:1; }
   .round-col h3{ font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:0 0 10px; text-align:center; }
   .tie{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:12px; position:relative; }
-  .tie.live{ border-color:var(--live); box-shadow:0 0 0 1px rgba(255,59,70,.4); }
+  .tie.live{ border-color:var(--live); }
   .tie.decided{ border-color:rgba(40,199,111,.4); }
   .tie .row{ display:flex; align-items:center; gap:8px; padding:4px 0; }
   .tie .row .nm{ flex:1; font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -59,8 +59,8 @@
   /* ---- Champion ---------------------------------------------------------- */
   .champion{
     display:none; align-items:center; gap:14px; margin-bottom:16px; padding:16px 18px;
-    background:linear-gradient(120deg,rgba(245,181,10,.18),rgba(27,104,255,.12));
-    border:1px solid rgba(245,181,10,.4); border-radius:14px;
+    background:rgba(245,181,10,.08);
+    border:1px solid rgba(245,181,10,.4); border-top:3px solid var(--upcoming); border-radius:12px;
   }
   .champion.show{ display:flex; }
   .champion img{ width:48px; height:48px; object-fit:contain; }
@@ -70,8 +70,8 @@
   /* ---- Widget live ------------------------------------------------------- */
   #liveWidget{
     position:fixed; right:18px; bottom:18px; width:300px; z-index:60;
-    background:linear-gradient(170deg,var(--card),var(--card-2)); border:1px solid var(--line-2);
-    border-radius:14px; box-shadow:var(--shadow); overflow:hidden; transition:transform .2s;
+    background:var(--card); border:1px solid var(--line-2);
+    border-radius:12px; overflow:hidden; transition:transform .2s;
   }
   #liveWidget.hidden{ transform:translateY(140%); }
   #liveWidget .whead{ display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:1px solid var(--line); font-size:11px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); }
