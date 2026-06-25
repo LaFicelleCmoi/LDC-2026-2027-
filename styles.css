@@ -74,6 +74,14 @@ a{ color:inherit; text-decoration:none; }
 .lang-btn:hover{ color:var(--txt); }
 .lang-btn.active{ background:var(--accent); color:#fff; border-color:transparent; }
 
+/* Interrupteur FR / EN (toggle coulissant, thème LDC) */
+.lang-toggle{ position:relative; display:inline-flex; align-items:center; background:#0e1736; border:1px solid var(--line-2); border-radius:999px; padding:3px; }
+.lang-toggle .lt-opt{ position:relative; z-index:2; min-width:34px; text-align:center; border:none; background:none; cursor:pointer; font-family:inherit; font-weight:800; font-size:12px; letter-spacing:.04em; color:var(--muted); padding:5px 12px; border-radius:999px; transition:color .2s; }
+.lang-toggle .lt-opt.active{ color:#1a1300; }
+.lang-toggle .lt-opt:not(.active):hover{ color:var(--txt); }
+.lang-toggle .lt-knob{ position:absolute; z-index:1; top:3px; bottom:3px; left:3px; width:calc(50% - 3px); border-radius:999px; background:var(--upcoming); transition:transform .22s cubic-bezier(.4,1.25,.5,1); }
+.lang-toggle[data-active="en"] .lt-knob{ transform:translateX(100%); }
+
 .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
 .dot.live{ background:var(--live); box-shadow:0 0 0 0 rgba(255,59,70,.6); animation:ping 1.4s infinite; }
 @keyframes ping{ 0%{box-shadow:0 0 0 0 rgba(255,59,70,.55)} 70%{box-shadow:0 0 0 8px rgba(255,59,70,0)} 100%{box-shadow:0 0 0 0 rgba(255,59,70,0)} }
