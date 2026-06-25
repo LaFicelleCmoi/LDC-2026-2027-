@@ -217,6 +217,7 @@
       score: toInt(c.score),
       scoreRaw: c.score,
       shootoutScore: (c.shootoutScore != null && c.shootoutScore !== '') ? toInt(c.shootoutScore) : null,
+      shootout: (c.shootoutScore != null && c.shootoutScore !== '') ? toInt(c.shootoutScore) : null,
       winner: !!c.winner,
       name: team.displayName || team.name || team.shortDisplayName || '—',
       shortName: team.shortDisplayName || team.name || team.displayName || '—',
