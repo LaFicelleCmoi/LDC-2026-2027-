@@ -75,7 +75,10 @@
 
   function seasonRange() {
     var y = seasonStartYear();
-    return { start: y + '0801', end: (y + 1) + '0731', startYear: y };
+    // Fenêtre sept -> août suivant (~365 j, max autorisé par ESPN). La phase de poules/ligue
+    // commence toujours mi-septembre ; cette fenêtre capte aussi les finales décalées
+    // (ex. 2019-20, finale en août 2020 — COVID). Le filtre par season.year écarte la saison voisine.
+    return { start: y + '0901', end: (y + 1) + '0831', startYear: y };
   }
 
   /* En mode archive, propage ?season=N sur les liens internes (.html). */
@@ -99,31 +102,56 @@
      (données historiques vérifiées ; PSG sacré en 2025 et 2026)
      ======================================================================= */
   var UCL_PALMARES = [
-    { keys: ['real madrid'],            n: 15, years: [1956,1957,1958,1959,1960,1966,1998,2000,2002,2014,2016,2017,2018,2022,2024] },
-    { keys: ['ac milan'],               n: 7,  years: [1963,1969,1989,1990,1994,2003,2007] },
-    { keys: ['bayern'],                 n: 6,  years: [1974,1975,1976,2001,2013,2020] },
-    { keys: ['liverpool'],              n: 6,  years: [1977,1978,1981,1984,2005,2019] },
-    { keys: ['barcelona'],              n: 5,  years: [1992,2006,2009,2011,2015] },
-    { keys: ['ajax'],                   n: 4,  years: [1971,1972,1973,1995] },
-    { keys: ['inter','internazionale'], n: 3,  years: [1964,1965,2010] },
-    { keys: ['manchester united'],      n: 3,  years: [1968,1999,2008] },
-    { keys: ['juventus'],               n: 2,  years: [1985,1996] },
-    { keys: ['benfica'],                n: 2,  years: [1961,1962] },
-    { keys: ['nottingham forest'],      n: 2,  years: [1979,1980] },
-    { keys: ['porto'],                  n: 2,  years: [1987,2004] },
-    { keys: ['chelsea'],                n: 2,  years: [2012,2021] },
-    { keys: ['paris saint-germain'],    n: 2,  years: [2025,2026] },
-    { keys: ['celtic'],                 n: 1,  years: [1967] },
-    { keys: ['feyenoord'],              n: 1,  years: [1970] },
-    { keys: ['aston villa'],            n: 1,  years: [1982] },
-    { keys: ['hamburg'],                n: 1,  years: [1983] },
-    { keys: ['steaua','fcsb'],          n: 1,  years: [1986] },
-    { keys: ['psv'],                    n: 1,  years: [1988] },
-    { keys: ['red star','crvena'],      n: 1,  years: [1991] },
-    { keys: ['marseille'],              n: 1,  years: [1993] },
-    { keys: ['borussia dortmund'],      n: 1,  years: [1997] },
-    { keys: ['manchester city'],        n: 1,  years: [2023] }
+    { name: 'Real Madrid',            keys: ['real madrid'],            n: 15, years: [1956,1957,1958,1959,1960,1966,1998,2000,2002,2014,2016,2017,2018,2022,2024] },
+    { name: 'AC Milan',               keys: ['ac milan'],               n: 7,  years: [1963,1969,1989,1990,1994,2003,2007] },
+    { name: 'Bayern Munich',          keys: ['bayern'],                 n: 6,  years: [1974,1975,1976,2001,2013,2020] },
+    { name: 'Liverpool FC',           keys: ['liverpool'],              n: 6,  years: [1977,1978,1981,1984,2005,2019] },
+    { name: 'FC Barcelona',           keys: ['barcelona'],              n: 5,  years: [1992,2006,2009,2011,2015] },
+    { name: 'Ajax',                   keys: ['ajax'],                   n: 4,  years: [1971,1972,1973,1995] },
+    { name: 'Inter Milan',            keys: ['inter','internazionale'], n: 3,  years: [1964,1965,2010] },
+    { name: 'Manchester United',      keys: ['manchester united'],      n: 3,  years: [1968,1999,2008] },
+    { name: 'Paris Saint-Germain',    keys: ['paris saint-germain'],    n: 2,  years: [2025,2026] },
+    { name: 'Chelsea FC',             keys: ['chelsea'],                n: 2,  years: [2012,2021] },
+    { name: 'FC Porto',               keys: ['porto'],                  n: 2,  years: [1987,2004] },
+    { name: 'Juventus',               keys: ['juventus'],               n: 2,  years: [1985,1996] },
+    { name: 'Nottingham Forest',      keys: ['nottingham forest'],      n: 2,  years: [1979,1980] },
+    { name: 'Benfica',                keys: ['benfica'],                n: 2,  years: [1961,1962] },
+    { name: 'Manchester City',        keys: ['manchester city'],        n: 1,  years: [2023] },
+    { name: 'Borussia Dortmund',      keys: ['borussia dortmund'],      n: 1,  years: [1997] },
+    { name: 'Olympique de Marseille', keys: ['marseille'],              n: 1,  years: [1993] },
+    { name: 'Red Star Belgrade',      keys: ['red star','crvena'],      n: 1,  years: [1991] },
+    { name: 'PSV Eindhoven',          keys: ['psv'],                    n: 1,  years: [1988] },
+    { name: 'Steaua București',       keys: ['steaua','fcsb'],          n: 1,  years: [1986] },
+    { name: 'Hamburger SV',           keys: ['hamburg'],                n: 1,  years: [1983] },
+    { name: 'Aston Villa',            keys: ['aston villa'],            n: 1,  years: [1982] },
+    { name: 'Feyenoord',              keys: ['feyenoord'],              n: 1,  years: [1970] },
+    { name: 'Celtic FC',              keys: ['celtic'],                 n: 1,  years: [1967] }
   ];
+
+  /* Classement des clubs par nombre de titres (rang à égalités). Ordre intra-égalité : titre le plus récent d'abord. */
+  function palmaresRanking() {
+    var arr = UCL_PALMARES.map(function (e) {
+      return { name: e.name, n: e.n, years: e.years.slice(), last: Math.max.apply(null, e.years) };
+    });
+    arr.sort(function (a, b) { return (b.n - a.n) || (b.last - a.last); });
+    var rank = 1;
+    for (var i = 0; i < arr.length; i++) {
+      if (i > 0 && arr[i].n !== arr[i - 1].n) rank = i + 1;
+      arr[i].rank = rank;
+    }
+    return arr;
+  }
+
+  /* Champion d'une saison via le palmarès (utile quand ESPN n'expose pas le vainqueur,
+     ex. vieilles finales aux tirs au but comme 2002-03). startYear -> titre l'année startYear+1. */
+  function championOfSeason(startYear) {
+    if (startYear == null) startYear = seasonStartYear();
+    var ty = startYear + 1;
+    for (var i = 0; i < UCL_PALMARES.length; i++) {
+      if (UCL_PALMARES[i].years.indexOf(ty) !== -1) return { name: UCL_PALMARES[i].name, keys: UCL_PALMARES[i].keys };
+    }
+    return null;
+  }
 
   /* Renvoie { n, years } si le club a gagné la C1/LDC, sinon null. */
   function clubTitles(name) {
@@ -663,6 +691,8 @@
     seasonOptions: seasonOptions,
     mountSeasonMenu: mountSeasonMenu,
     clubTitles: clubTitles,
+    championOfSeason: championOfSeason,
+    palmaresRanking: palmaresRanking,
     preserveSeasonLinks: preserveSeasonLinks,
     // fetch
     fetchJSON: fetchJSON,
