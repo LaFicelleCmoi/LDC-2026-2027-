@@ -56,6 +56,29 @@
     'dash.searchHint':     { fr: 'Recherche un club pour afficher son parcours, ses buteurs et ses prochains matchs.', en: 'Search a club to show its journey, scorers and upcoming matches.' },
     'dash.played':         { fr: 'Joués',                en: 'Played' },
     'dash.goals':          { fr: 'buts',                 en: 'goals' },
+    'dash.subtitle2':      { fr: 'Scores en direct · Classement · Phase finale', en: 'Live scores · Standings · Knockouts' },
+    'dash.liveToday':      { fr: "AUJOURD'HUI",          en: 'TODAY' },
+    'dash.liveNoMatch':    { fr: 'Pas de match en direct', en: 'No live match' },
+    'dash.zonesTitle':     { fr: '🏆 Le classement par zone', en: '🏆 Standings by zone' },
+    'dash.zonesTitle2':    { fr: 'Le classement par zone', en: 'Standings by zone' },
+    'dash.zoneQ':          { fr: '1–8 · Huitièmes directs', en: '1–8 · Direct to R16' },
+    'dash.zonePO':         { fr: '9–24 · Barrages',      en: '9–24 · Play-offs' },
+    'dash.zoneOut':        { fr: '25–36 · Éliminés',     en: '25–36 · Eliminated' },
+    'dash.marqueeLabel':   { fr: '⚽ Les clubs · clique sur un logo', en: '⚽ The clubs · click a crest' },
+    'dash.empersToday':    { fr: 'Aucun match aujourd’hui', en: 'No match today' },
+    'dash.toTracker':      { fr: 'Classement →',         en: 'Standings →' },
+    'dash.rank':           { fr: 'classé',               en: 'ranked' },
+    'nav.souvenir':        { fr: 'Souvenir',             en: 'Memories' },
+    'souvenir.badge':      { fr: 'Souvenir · Saison',    en: 'Memories · Season' },
+    'souvenir.back':       { fr: '← Saison actuelle',    en: '← Current season' },
+    'season.label':        { fr: 'Saison',               en: 'Season' },
+    'dash.notStarted':     { fr: 'La saison 2026-27 n’a pas encore commencé. En attendant, replonge dans le Souvenir 2025-26.', en: 'The 2026-27 season hasn’t started yet. Meanwhile, dive back into the 2025-26 Memories.' },
+    'dash.seeSouvenir':    { fr: 'Voir le Souvenir 2025-26 →', en: 'See the 2025-26 Memories →' },
+    'stats.clubs':         { fr: 'Clubs',                en: 'Clubs' },
+    'stats.matches':       { fr: 'Matchs joués',         en: 'Matches' },
+    'stats.goals':         { fr: 'Buts',                 en: 'Goals' },
+    'stats.leader':        { fr: 'En tête',              en: 'Leader' },
+    'foot.disclaimer':     { fr: 'Projet indépendant réalisé par un fan — <strong>non affilié à l’UEFA</strong> ni à aucun organisme officiel. « UEFA Champions League » et les marques associées appartiennent à leurs propriétaires. Scores fournis par ESPN (source non officielle), à titre indicatif.', en: 'Independent fan project — <strong>not affiliated with UEFA</strong> or any official body. “UEFA Champions League” and related marks belong to their owners. Scores provided by ESPN (unofficial source), for information only.' },
 
     /* --- Tracker --- */
     'trk.leaguePhase':     { fr: 'Phase de ligue',       en: 'League phase' },
@@ -141,6 +164,12 @@
       var el = nodes[i];
       var val = t(el.getAttribute('data-i18n'));
       if (val != null) el.textContent = val; // sinon : on garde le HTML existant
+    }
+    // HTML autorisé (libellés contenant du balisage de confiance, ex. <strong>)
+    var htmlNodes = root.querySelectorAll('[data-i18n-html]');
+    for (var h = 0; h < htmlNodes.length; h++) {
+      var hv = t(htmlNodes[h].getAttribute('data-i18n-html'));
+      if (hv != null) htmlNodes[h].innerHTML = hv;
     }
     // Attributs courants
     applyAttr(root, 'data-i18n-placeholder', 'placeholder');
