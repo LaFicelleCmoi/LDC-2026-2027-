@@ -28,6 +28,18 @@
   .standings td.live-dot{ width:10px; padding:0; }
   .standings td.gd.pos-v{ color:var(--finished); }
   .standings td.gd.neg-v{ color:var(--live); }
+  /* Forme : 5 derniers résultats */
+  .standings td.form{ white-space:nowrap; }
+  .form-wrap{ display:inline-flex; gap:3px; }
+  .form-pill{ width:18px; height:18px; border-radius:5px; font-size:10px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; }
+  .form-pill.f-w{ background:var(--finished); color:#04270f; }
+  .form-pill.f-d{ background:#caa53a; color:#1a1300; }
+  .form-pill.f-l{ background:var(--live); color:#fff; }
+  .form-none{ color:var(--muted-2); }
+  /* Ligne de l'équipe favorite (couleur du club) */
+  .standings tr.is-fav td{ background:rgba(var(--fav-rgb,245,181,10),.10); }
+  .standings tr.is-fav .nm{ color:rgb(var(--fav-rgb,245,181,10)); font-weight:800; }
+  .tbl-fav{ color:rgb(var(--fav-rgb,245,181,10)); margin-right:5px; }
 
   .legend{ display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--muted); }
   .legend span{ display:inline-flex; align-items:center; gap:7px; }
@@ -123,6 +135,7 @@
     <a href="dashboard.html" data-i18n="nav.dashboard">Accueil</a>
     <a href="tracker.html" class="active" data-i18n="nav.tracker">Classement</a>
     <a href="palmares.html" data-i18n="nav.palmares">Palmarès</a>
+    <a href="calendrier.html" data-i18n="nav.calendar">Calendrier</a>
     <div id="seasonDD"></div>
     <a href="overlay.html" data-i18n="nav.overlay">Overlay OBS</a>
     <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
@@ -166,10 +179,11 @@
             <th data-i18n="trk.col.ga">BC</th>
             <th data-i18n="trk.col.gd">Diff</th>
             <th data-i18n="trk.col.pts">Pts</th>
+            <th class="form" data-i18n="trk.col.form">Forme</th>
           </tr>
         </thead>
         <tbody id="standingsBody">
-          <tr><td colspan="11" class="empty-state" data-i18n="common.loading">Chargement…</td></tr>
+          <tr><td colspan="12" class="empty-state" data-i18n="common.loading">Chargement…</td></tr>
         </tbody>
       </table>
       <div class="legend">
@@ -223,8 +237,8 @@
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=12"></script>
-<script src="espn.js?v=8"></script>
+<script src="i18n.js?v=15"></script>
+<script src="espn.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.js"></script>
 <script>
 (function(){
@@ -247,6 +261,7 @@
 
   /* ---- Saison / Souvenir ---- */
   function applySeasonUI(){
+    applyFavAccent();
     var label=ESPN.seasonLabel();
     var chip=el('season-chip'), banner=el('souvenir-banner');
     if(ESPN.isArchive()){
@@ -272,19 +287,22 @@
       var msg = (!ESPN.isArchive())
         ? esc(I18N.t('dash.notStarted'))+' <a class="souvenir-link" href="tracker.html?season=2025" style="text-decoration:underline">'+esc(I18N.t('dash.seeSouvenir'))+'</a>'
         : esc(I18N.t('common.noMatch')||'—');
-      body.innerHTML='<tr><td colspan="11" class="empty-state">'+msg+'</td></tr>';
+      body.innerHTML='<tr><td colspan="12" class="empty-state">'+msg+'</td></tr>';
       return;
     }
     var nf=ESPN.isLeaguePhaseFormat();
+    var fav=ESPN.getFav(), fid=fav?fav.id:null;
     body.innerHTML = rows.map(function(t){
       var zone = nf ? (t.pos<=8?'z-q':(t.pos<=24?'z-po':'z-out')) : '';
       var gdCls = t.gd>0?'pos-v':(t.gd<0?'neg-v':'');
       var gd = (t.gd>0?'+':'')+t.gd;
-      return '<tr class="'+zone+'">'+
+      var isFav = fid && t.teamId===fid;
+      return '<tr class="'+zone+(isFav?' is-fav':'')+'">'+
         '<td class="pos">'+t.pos+'</td>'+
         '<td class="live-dot">'+(t.live?'<span class="dot live"></span>':'')+'</td>'+
         '<td class="club"><span class="club-cell">'+
           (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
+          (isFav?'<span class="tbl-fav">★</span>':'')+
           '<span class="nm">'+esc(t.name)+'</span>'+
           (function(){ var c=ESPN.clubTitles(t.name); return c?'<span class="tbl-cup" title="'+c.n+' '+esc(I18N.t('pal.titlesN'))+' — LDC">🏆'+c.n+'</span>':''; })()+
           '</span></td>'+
@@ -292,6 +310,7 @@
         '<td>'+t.gf+'</td><td>'+t.ga+'</td>'+
         '<td class="gd '+gdCls+'">'+gd+'</td>'+
         '<td class="pts">'+t.pts+'</td>'+
+        '<td class="form">'+formPills(t.form)+'</td>'+
       '</tr>';
     }).join('');
     var live = rows.some(function(t){return t.live;});
@@ -474,6 +493,14 @@
   });
 
   /* ================= HELPERS ================= */
+  function formPills(form){
+    if(!form || !form.length) return '<span class="form-none">—</span>';
+    return '<span class="form-wrap">'+form.map(function(r){
+      var lbl = r==='w'?'V':(r==='d'?'N':'D');
+      return '<span class="form-pill f-'+r+'">'+lbl+'</span>';
+    }).join('')+'</span>';
+  }
+  function applyFavAccent(){ var a=ESPN.favAccent(), root=document.documentElement; if(a) root.style.setProperty('--fav-rgb',a); else root.style.removeProperty('--fav-rgb'); }
   function lang(){ return I18N.getLang(); }
   function hm(){ var d=new Date(); function p(n){return n<10?'0'+n:''+n;} return p(d.getHours())+':'+p(d.getMinutes()); }
   function countdown(d){
