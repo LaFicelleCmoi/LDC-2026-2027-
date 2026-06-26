@@ -75,29 +75,19 @@ a{ color:inherit; text-decoration:none; }
 .lang-btn:hover{ color:var(--txt); }
 .lang-btn.active{ background:var(--accent); color:#fff; border-color:transparent; }
 
-/* Interrupteur FR / EN — ballon de foot lustré qui roule dans sa piste */
-.lang-toggle{ display:inline-flex; align-items:center; gap:9px; }
-.lang-toggle .lt-opt{ border:none; background:none; cursor:pointer; font-family:inherit; font-weight:800; font-size:12px; letter-spacing:.06em; color:var(--muted); padding:2px 1px; transition:color .25s, text-shadow .25s; }
-.lang-toggle .lt-opt.active{ color:var(--gold); text-shadow:0 0 10px rgba(245,181,10,.45); }
+/* Interrupteur FR / EN — toggle segmenté coulissant (style uiverse) */
+.lang-toggle{ position:relative; display:inline-flex; align-items:center; padding:3px; border-radius:999px;
+  background:linear-gradient(180deg,#0a1228,#13214a); border:1px solid var(--line-2);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.5); }
+.lang-toggle .lt-thumb{ position:absolute; z-index:0; top:3px; left:3px; width:40px; height:calc(100% - 6px); border-radius:999px;
+  background:linear-gradient(180deg,#ffd96a,#f3ab00);
+  box-shadow:0 2px 7px rgba(245,181,10,.5), inset 0 1px 0 rgba(255,255,255,.45);
+  transition:transform .38s cubic-bezier(.5,1.35,.5,1); }
+.lang-toggle[data-active="en"] .lt-thumb{ transform:translateX(40px); }
+.lang-toggle .lt-opt{ position:relative; z-index:1; width:40px; text-align:center; padding:6px 0; border:none; background:none; cursor:pointer;
+  font-family:inherit; font-weight:800; font-size:12px; letter-spacing:.06em; color:var(--muted); transition:color .3s; }
+.lang-toggle .lt-opt.active{ color:#13203f; }
 .lang-toggle .lt-opt:not(.active):hover{ color:var(--txt); }
-.lang-toggle .lt-track{ position:relative; flex:0 0 auto; width:52px; height:26px; border-radius:999px; cursor:pointer;
-  background:linear-gradient(180deg,#0a1228,#13214a);
-  border:1px solid var(--line-2);
-  box-shadow:inset 0 2px 5px rgba(0,0,0,.55), inset 0 -1px 0 rgba(255,255,255,.05);
-  transition:border-color .25s; }
-.lang-toggle .lt-track:hover{ border-color:rgba(245,181,10,.55); }
-/* halo doré qui suit le ballon et marque le côté actif */
-.lang-toggle .lt-track::before{ content:''; position:absolute; top:50%; left:13px; width:24px; height:24px; transform:translate(-50%,-50%);
-  border-radius:50%; background:radial-gradient(circle, rgba(245,181,10,.55), transparent 68%); opacity:.75; pointer-events:none;
-  transition:left .45s cubic-bezier(.45,1.4,.5,1); }
-.lang-toggle[data-active="en"] .lt-track::before{ left:39px; }
-.lang-toggle .lt-knob{ position:absolute; z-index:1; top:3px; left:3px; width:20px; height:20px; border-radius:50%;
-  background:radial-gradient(circle at 34% 28%, #ffffff 0%, #eef2fa 45%, #c2ccde 80%, #9aa6be 100%);
-  box-shadow:inset -2px -3px 5px rgba(0,0,0,.28), inset 2px 2px 3px rgba(255,255,255,.7), 0 3px 5px rgba(0,0,0,.5), 0 0 0 1px rgba(245,181,10,.5);
-  transition:left .45s cubic-bezier(.45,1.4,.5,1), transform .45s cubic-bezier(.45,1.4,.5,1); }
-.lang-toggle .lt-knob::before{ content:''; position:absolute; top:50%; left:50%; width:7.5px; height:7.5px; transform:translate(-50%,-50%); background:#16234d; clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%); }
-.lang-toggle .lt-knob::after{ content:''; position:absolute; top:1.5px; left:50%; width:4.5px; height:4.5px; transform:translateX(-50%); background:#16234d; clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%); opacity:.6; }
-.lang-toggle[data-active="en"] .lt-knob{ left:29px; transform:rotate(360deg); }
 
 .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
 .dot.live{ background:var(--live); box-shadow:0 0 0 0 rgba(255,59,70,.6); animation:ping 1.4s infinite; }
