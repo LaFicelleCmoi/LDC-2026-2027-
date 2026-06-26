@@ -102,36 +102,38 @@
      (données historiques vérifiées ; PSG sacré en 2025 et 2026)
      ======================================================================= */
   var UCL_PALMARES = [
-    { name: 'Real Madrid',            keys: ['real madrid'],            n: 15, years: [1956,1957,1958,1959,1960,1966,1998,2000,2002,2014,2016,2017,2018,2022,2024] },
-    { name: 'AC Milan',               keys: ['ac milan'],               n: 7,  years: [1963,1969,1989,1990,1994,2003,2007] },
-    { name: 'Bayern Munich',          keys: ['bayern'],                 n: 6,  years: [1974,1975,1976,2001,2013,2020] },
-    { name: 'Liverpool FC',           keys: ['liverpool'],              n: 6,  years: [1977,1978,1981,1984,2005,2019] },
-    { name: 'FC Barcelona',           keys: ['barcelona'],              n: 5,  years: [1992,2006,2009,2011,2015] },
-    { name: 'Ajax',                   keys: ['ajax'],                   n: 4,  years: [1971,1972,1973,1995] },
-    { name: 'Inter Milan',            keys: ['inter','internazionale'], n: 3,  years: [1964,1965,2010] },
-    { name: 'Manchester United',      keys: ['manchester united'],      n: 3,  years: [1968,1999,2008] },
-    { name: 'Paris Saint-Germain',    keys: ['paris saint-germain'],    n: 2,  years: [2025,2026] },
-    { name: 'Chelsea FC',             keys: ['chelsea'],                n: 2,  years: [2012,2021] },
-    { name: 'FC Porto',               keys: ['porto'],                  n: 2,  years: [1987,2004] },
-    { name: 'Juventus',               keys: ['juventus'],               n: 2,  years: [1985,1996] },
-    { name: 'Nottingham Forest',      keys: ['nottingham forest'],      n: 2,  years: [1979,1980] },
-    { name: 'Benfica',                keys: ['benfica'],                n: 2,  years: [1961,1962] },
-    { name: 'Manchester City',        keys: ['manchester city'],        n: 1,  years: [2023] },
-    { name: 'Borussia Dortmund',      keys: ['borussia dortmund'],      n: 1,  years: [1997] },
-    { name: 'Olympique de Marseille', keys: ['marseille'],              n: 1,  years: [1993] },
-    { name: 'Red Star Belgrade',      keys: ['red star','crvena'],      n: 1,  years: [1991] },
-    { name: 'PSV Eindhoven',          keys: ['psv'],                    n: 1,  years: [1988] },
-    { name: 'Steaua București',       keys: ['steaua','fcsb'],          n: 1,  years: [1986] },
-    { name: 'Hamburger SV',           keys: ['hamburg'],                n: 1,  years: [1983] },
-    { name: 'Aston Villa',            keys: ['aston villa'],            n: 1,  years: [1982] },
-    { name: 'Feyenoord',              keys: ['feyenoord'],              n: 1,  years: [1970] },
-    { name: 'Celtic FC',              keys: ['celtic'],                 n: 1,  years: [1967] }
+    { name: 'Real Madrid',            id: 86,   keys: ['real madrid'],            n: 15, years: [1956,1957,1958,1959,1960,1966,1998,2000,2002,2014,2016,2017,2018,2022,2024] },
+    { name: 'AC Milan',               id: 103,  keys: ['ac milan'],               n: 7,  years: [1963,1969,1989,1990,1994,2003,2007] },
+    { name: 'Bayern Munich',          id: 132,  keys: ['bayern'],                 n: 6,  years: [1974,1975,1976,2001,2013,2020] },
+    { name: 'Liverpool FC',           id: 364,  keys: ['liverpool'],              n: 6,  years: [1977,1978,1981,1984,2005,2019] },
+    { name: 'FC Barcelona',           id: 83,   keys: ['barcelona'],              n: 5,  years: [1992,2006,2009,2011,2015] },
+    { name: 'Ajax',                   id: 139,  keys: ['ajax'],                   n: 4,  years: [1971,1972,1973,1995] },
+    { name: 'Inter Milan',            id: 110,  keys: ['inter','internazionale'], n: 3,  years: [1964,1965,2010] },
+    { name: 'Manchester United',      id: 360,  keys: ['manchester united'],      n: 3,  years: [1968,1999,2008] },
+    { name: 'Paris Saint-Germain',    id: 160,  keys: ['paris saint-germain'],    n: 2,  years: [2025,2026] },
+    { name: 'Chelsea FC',             id: 363,  keys: ['chelsea'],                n: 2,  years: [2012,2021] },
+    { name: 'FC Porto',               id: 437,  keys: ['porto'],                  n: 2,  years: [1987,2004] },
+    { name: 'Juventus',               id: 111,  keys: ['juventus'],               n: 2,  years: [1985,1996] },
+    { name: 'Nottingham Forest',      id: 393,  keys: ['nottingham forest'],      n: 2,  years: [1979,1980] },
+    { name: 'Benfica',                id: 1929, keys: ['benfica'],                n: 2,  years: [1961,1962] },
+    { name: 'Manchester City',        id: 382,  keys: ['manchester city'],        n: 1,  years: [2023] },
+    { name: 'Borussia Dortmund',      id: 124,  keys: ['borussia dortmund'],      n: 1,  years: [1997] },
+    { name: 'Olympique de Marseille', id: 176,  keys: ['marseille'],              n: 1,  years: [1993] },
+    { name: 'Red Star Belgrade',      id: 2290, keys: ['red star','crvena'],      n: 1,  years: [1991] },
+    { name: 'PSV Eindhoven',          id: 148,  keys: ['psv'],                    n: 1,  years: [1988] },
+    { name: 'Steaua București',       id: 484,  keys: ['steaua','fcsb'],          n: 1,  years: [1986] },
+    { name: 'Hamburger SV',           id: 127,  keys: ['hamburg'],                n: 1,  years: [1983] },
+    { name: 'Aston Villa',            id: 362,  keys: ['aston villa'],            n: 1,  years: [1982] },
+    { name: 'Feyenoord',              id: 142,  keys: ['feyenoord'],              n: 1,  years: [1970] },
+    { name: 'Celtic FC',              id: 256,  keys: ['celtic'],                 n: 1,  years: [1967] }
   ];
+  /* Logo officiel ESPN d'un club du palmarès (par id). */
+  function palmaresLogo(id) { return id ? 'https://a.espncdn.com/i/teamlogos/soccer/500/' + id + '.png' : ''; }
 
   /* Classement des clubs par nombre de titres (rang à égalités). Ordre intra-égalité : titre le plus récent d'abord. */
   function palmaresRanking() {
     var arr = UCL_PALMARES.map(function (e) {
-      return { name: e.name, n: e.n, years: e.years.slice(), last: Math.max.apply(null, e.years) };
+      return { name: e.name, id: e.id, logo: palmaresLogo(e.id), n: e.n, years: e.years.slice(), last: Math.max.apply(null, e.years) };
     });
     arr.sort(function (a, b) { return (b.n - a.n) || (b.last - a.last); });
     var rank = 1;
