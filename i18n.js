@@ -182,7 +182,17 @@
     'fav.search':       { fr: 'Rechercher un club…',     en: 'Search a club…' },
     'fav.skip':         { fr: 'Plus tard',               en: 'Maybe later' },
     'fav.vs':           { fr: 'contre',                  en: 'vs' },
-    'fav.noMatch':      { fr: 'Pas de match cette saison', en: 'No match this season' }
+    'fav.noMatch':      { fr: 'Pas de match cette saison', en: 'No match this season' },
+
+    /* ---- Navigation / Forme / Calendrier ---- */
+    'nav.calendar':     { fr: 'Calendrier',              en: 'Schedule' },
+    'trk.col.form':     { fr: 'Forme',                   en: 'Form' },
+    'cal.title':        { fr: 'Calendrier',              en: 'Schedule' },
+    'cal.sub':          { fr: 'Tous les matchs de la saison, par journée', en: 'All season matches, by matchday' },
+    'cal.allClubs':     { fr: 'Tous les clubs',          en: 'All clubs' },
+    'cal.matchday':     { fr: 'Journée',                 en: 'Matchday' },
+    'cal.empty':        { fr: 'Aucun match à afficher.',  en: 'No match to show.' },
+    'cal.todayTag':     { fr: 'Aujourd’hui',             en: 'Today' }
   };
 
   /* ----------------------------------------------------------------------- */
