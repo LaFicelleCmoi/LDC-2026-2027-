@@ -6,7 +6,7 @@
 <title>Calendrier — Ligue des Champions</title>
 <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml" />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=13" />
+<link rel="stylesheet" href="styles.css?v=14" />
 <style>
   .cal-wrap{ max-width:920px; }
   /* Filtres */
@@ -28,6 +28,9 @@
   .cal-match.is-fav{ border-color:rgba(var(--fav-rgb,245,181,10),.6); background:rgba(var(--fav-rgb,245,181,10),.09); }
   .cal-match.live-row{ border-color:rgba(255,93,108,.55); }
   .cal-date{ font-size:11px; color:var(--muted); text-align:center; line-height:1.3; }
+  .cal-leg{ display:block; margin-top:3px; font-size:9px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:1px 2px; border-radius:5px; }
+  .cal-leg.a{ color:#9fd0ff; background:rgba(59,123,255,.18); }
+  .cal-leg.r{ color:#ffe2a0; background:rgba(245,181,10,.2); }
   .cal-side{ display:flex; align-items:center; gap:8px; min-width:0; }
   .cal-side.home{ flex-direction:row-reverse; text-align:right; }
   .cal-side .nm{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -96,7 +99,7 @@
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=15"></script>
+<script src="i18n.js?v=16"></script>
 <script src="espn.js?v=10"></script>
 <script>
 (function(){
@@ -145,6 +148,8 @@
   function matchRow(m,fid){
     var isFav = fid && (m.home.teamId===fid || m.away.teamId===fid);
     var pen = (m.home.shootout!=null && m.away.shootout!=null);
+    var leg = m.leg===1 ? '<span class="cal-leg a">'+esc(I18N.t('leg.first'))+'</span>'
+            : m.leg===2 ? '<span class="cal-leg r">'+esc(I18N.t('leg.second'))+'</span>' : '';
     var score, status;
     if(m.state==='pre'){
       score='<span class="cal-vs">–</span>';
@@ -155,7 +160,7 @@
                               : '<span class="ft">'+esc(I18N.t('common.finished')||'FT')+'</span>';
     }
     return '<div class="cal-match'+(isFav?' is-fav':'')+(m.state==='in'?' live-row':'')+'">'+
-      '<div class="cal-date">'+(m.dateObj?dm(m.dateObj):'—')+'</div>'+
+      '<div class="cal-date">'+(m.dateObj?dm(m.dateObj):'—')+leg+'</div>'+
       side(m.home,'home')+
       '<div class="cal-score">'+score+'</div>'+
       side(m.away,'away')+
