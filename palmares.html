@@ -81,6 +81,19 @@
   .cw-item.fav{ border-color:rgba(var(--fav-rgb,245,181,10),.65); background:rgba(var(--fav-rgb,245,181,10),.12); box-shadow:0 0 0 1px rgba(var(--fav-rgb,245,181,10),.25); }
   .cw-item.fav .yr, .cw-item.fav .cl{ color:rgb(var(--fav-rgb,245,181,10)); }
   @media (max-width:560px){ .champ-wall{ grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:7px; } .cw-logo{ width:28px; height:28px; } .cw-item{ padding:8px 9px; gap:8px; } .cw-item .cl{ font-size:11px; } .cw-item .yr{ font-size:16px; } }
+
+  /* Toggle prestigieux Palmarès / Mur des champions */
+  .view-switch{ position:relative; display:inline-flex; max-width:100%; padding:4px; margin:6px 0 26px; border-radius:999px;
+    background:linear-gradient(180deg,#0c1430,#13214a); border:1px solid rgba(245,181,10,.35);
+    box-shadow:inset 0 1px 4px rgba(0,0,0,.55), 0 0 22px rgba(245,181,10,.08); }
+  .view-switch .vs-thumb{ position:absolute; z-index:0; top:4px; left:4px; height:calc(100% - 8px); border-radius:999px;
+    background:linear-gradient(180deg,#ffd96a,#f3ab00); box-shadow:0 3px 11px rgba(245,181,10,.5), inset 0 1px 0 rgba(255,255,255,.5);
+    transition:left .42s cubic-bezier(.5,1.35,.5,1), width .42s cubic-bezier(.5,1.35,.5,1); }
+  .view-switch .vs-opt{ position:relative; z-index:1; border:none; background:none; cursor:pointer; font-family:inherit; font-weight:800;
+    font-size:13px; letter-spacing:.03em; color:var(--muted); padding:10px 20px; white-space:nowrap; transition:color .3s; }
+  .view-switch .vs-opt.active{ color:#13203f; }
+  .view-switch .vs-opt:not(.active):hover{ color:var(--txt); }
+  @media (max-width:560px){ .view-switch{ display:flex; width:100%; } .view-switch .vs-opt{ flex:1; padding:10px 8px; font-size:12px; } }
 </style>
 </head>
 <body>
@@ -107,29 +120,35 @@
 </header>
 
 <div class="container">
-  <h1 class="page-title"><span class="shiny" data-i18n="pal.pageTitle">Palmarès de la Ligue des Champions</span></h1>
-  <p class="page-sub"><span data-i18n="pal.pageSub">Classement des clubs par nombre de titres</span> — <span id="palCount"></span></p>
+  <h1 class="page-title"><span class="shiny" id="palTitle">Palmarès de la Ligue des Champions</span></h1>
+  <p class="page-sub" id="palSub"></p>
 
-  <div class="podium pal-wrap" id="podium"></div>
-
-  <div class="card pad pal-wrap">
-    <table class="pal-table">
-      <thead>
-        <tr>
-          <th class="c" data-i18n="pal.colRank">Rang</th>
-          <th data-i18n="pal.colClub">Club</th>
-          <th class="c" data-i18n="pal.colTitles">Titres</th>
-          <th class="r" data-i18n="pal.colYears">Années</th>
-        </tr>
-      </thead>
-      <tbody id="palBody"></tbody>
-    </table>
+  <div class="view-switch" id="viewSwitch" role="tablist">
+    <span class="vs-thumb" aria-hidden="true"></span>
+    <button class="vs-opt active" type="button" data-view="palmares" id="vsPalmares">Palmarès</button>
+    <button class="vs-opt" type="button" data-view="wall" id="vsWall">Mur des champions</button>
   </div>
 
-  <section class="wall-wrap" style="margin-top:30px">
-    <div class="section-head"><h2 class="shiny" id="wallTitle" style="font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;letter-spacing:.03em">Mur des champions</h2></div>
-    <div class="champ-wall" id="champWall"></div>
-  </section>
+  <div id="viewPalmares">
+    <div class="podium pal-wrap" id="podium"></div>
+    <div class="card pad pal-wrap">
+      <table class="pal-table">
+        <thead>
+          <tr>
+            <th class="c" data-i18n="pal.colRank">Rang</th>
+            <th data-i18n="pal.colClub">Club</th>
+            <th class="c" data-i18n="pal.colTitles">Titres</th>
+            <th class="r" data-i18n="pal.colYears">Années</th>
+          </tr>
+        </thead>
+        <tbody id="palBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="viewWall" style="display:none">
+    <div class="champ-wall pal-wrap" id="champWall"></div>
+  </div>
 </div>
 
 <footer class="site-footer">
@@ -143,6 +162,8 @@
 (function(){
   'use strict';
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function el(id){ return document.getElementById(id); }
+  var currentView='palmares', palCountStr='';
   if(window.I18N) I18N.mountToggle('#langSwitch');
   if(window.ESPN){ ESPN.mountSeasonMenu('#seasonDD','tracker.html'); ESPN.preserveSeasonLinks(document); }
 
@@ -183,8 +204,8 @@
       '</tr>'+
       '<tr class="pal-detail"><td colspan="4"><div class="pal-detail-in"><span class="pdl">'+esc(yearsLbl)+'</span>'+yrs+'</div></td></tr>';
     }).join('');
-    var cnt=document.getElementById('palCount');
-    if(cnt) cnt.textContent=rows.length+' '+((window.I18N&&I18N.t('pal.total'))||'clubs');
+    palCountStr=rows.length+' '+((window.I18N&&I18N.t('pal.total'))||'clubs');
+    refreshTexts();
   }
   function applyFavAccent(){ if(!window.ESPN||!ESPN.favAccent) return; var a=ESPN.favAccent(), root=document.documentElement; if(a) root.style.setProperty('--fav-rgb',a); else root.style.removeProperty('--fav-rgb'); }
   function renderWall(){
@@ -201,9 +222,47 @@
       return '<div class="cw-item'+(isFav?' fav':'')+'">'+logo+'<div class="cw-txt"><span class="yr">'+y+'</span><span class="cl">'+esc(c.name)+'</span></div></div>';
     }).join('');
   }
+  function setLabels(){
+    var en=window.I18N&&I18N.getLang()==='en';
+    var p=el('vsPalmares'), w=el('vsWall');
+    if(p) p.textContent=(window.I18N&&I18N.t('nav.palmares'))||'Palmarès';
+    if(w) w.textContent=en?'Hall of Champions':'Mur des champions';
+  }
+  function moveThumb(){
+    var sw=el('viewSwitch'); if(!sw) return;
+    var a=sw.querySelector('.vs-opt.active'), th=sw.querySelector('.vs-thumb');
+    if(!a||!th) return;
+    th.style.left=a.offsetLeft+'px'; th.style.width=a.offsetWidth+'px';
+  }
+  function refreshTexts(){
+    var en=window.I18N&&I18N.getLang()==='en';
+    if(currentView==='palmares'){
+      el('palTitle').textContent=(window.I18N&&I18N.t('pal.pageTitle'))||'Palmarès de la Ligue des Champions';
+      el('palSub').textContent=((window.I18N&&I18N.t('pal.pageSub'))||'Classement des clubs par nombre de titres')+' — '+palCountStr;
+    } else {
+      el('palTitle').textContent=en?'Hall of Champions':'Mur des champions';
+      el('palSub').textContent=en?'European Cup / Champions League winners, year by year · 1956–2026':'Vainqueurs de la Coupe d’Europe / Ligue des champions, année par année · 1956–2026';
+    }
+  }
+  function setView(v){
+    currentView=v;
+    el('viewPalmares').style.display=(v==='palmares')?'':'none';
+    el('viewWall').style.display=(v==='wall')?'':'none';
+    Array.prototype.forEach.call(el('viewSwitch').querySelectorAll('.vs-opt'),function(b){ b.classList.toggle('active', b.getAttribute('data-view')===v); });
+    refreshTexts(); moveThumb();
+  }
   applyFavAccent();
   render();
   renderWall();
+  setLabels();
+  setView('palmares');
+  requestAnimationFrame(moveThumb);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(moveThumb);
+  window.addEventListener('resize', moveThumb);
+  (function bindSwitch(){
+    var sw=el('viewSwitch'); if(!sw) return;
+    sw.addEventListener('click', function(ev){ var b=ev.target.closest('.vs-opt'); if(b) setView(b.getAttribute('data-view')); });
+  })();
   // Mobile : révéler les années de victoire au clic sur la ligne d'un club
   (function bindExpand(){
     var body=document.getElementById('palBody'); if(!body) return;
@@ -220,7 +279,7 @@
       if(b && pod.contains(b)){ var op=b.classList.toggle('open'); b.setAttribute('aria-expanded', op?'true':'false'); }
     });
   })();
-  if(window.I18N) window.addEventListener('ldc:langchange',function(){ render(); renderWall(); applyFavAccent(); if(window.ESPN) ESPN.mountSeasonMenu('#seasonDD','tracker.html'); });
+  if(window.I18N) window.addEventListener('ldc:langchange',function(){ render(); renderWall(); applyFavAccent(); setLabels(); requestAnimationFrame(moveThumb); if(window.ESPN) ESPN.mountSeasonMenu('#seasonDD','tracker.html'); });
 
   /* Starfield (fond étoilé partagé) */
   (function starfield(){
