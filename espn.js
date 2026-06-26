@@ -455,7 +455,8 @@
         teams[k] = {
           teamId: c.teamId, name: c.name, shortName: c.shortName,
           abbr: c.abbr, logo: c.logo,
-          pld: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0, live: false
+          pld: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0, live: false,
+          results: []
         };
       }
       return teams[k];
@@ -475,14 +476,19 @@
       A.gf += m.away.score; A.ga += m.home.score;
       if (m.state === 'in') { H.live = true; A.live = true; }
 
-      if (m.home.score > m.away.score) { H.w++; A.l++; H.pts += 3; }
-      else if (m.home.score < m.away.score) { A.w++; H.l++; A.pts += 3; }
-      else { H.d++; A.d++; H.pts += 1; A.pts += 1; }
+      var rH, rA;
+      if (m.home.score > m.away.score) { H.w++; A.l++; H.pts += 3; rH = 'w'; rA = 'l'; }
+      else if (m.home.score < m.away.score) { A.w++; H.l++; A.pts += 3; rH = 'l'; rA = 'w'; }
+      else { H.d++; A.d++; H.pts += 1; A.pts += 1; rH = 'd'; rA = 'd'; }
+      var _t = m.dateObj ? m.dateObj.getTime() : 0;
+      H.results.push({ t: _t, r: rH }); A.results.push({ t: _t, r: rA });
     });
 
     var arr = Object.keys(teams).map(function (k) {
       var t = teams[k];
       t.gd = t.gf - t.ga;
+      t.results.sort(function (a, b) { return a.t - b.t; });
+      t.form = t.results.slice(-5).map(function (x) { return x.r; });   // 5 derniers : 'w'|'d'|'l'
       return t;
     });
 
@@ -704,8 +710,8 @@
       [m.home, m.away].forEach(function (c) {
         if (!c || !c.teamId) return;
         var ex = map[c.teamId];
-        if (!ex) map[c.teamId] = { id: c.teamId, name: c.name, abbr: c.abbr, logo: c.logo };
-        else if (!ex.logo && c.logo) ex.logo = c.logo;
+        if (!ex) map[c.teamId] = { id: c.teamId, name: c.name, abbr: c.abbr, logo: c.logo, color: c.color };
+        else { if (!ex.logo && c.logo) ex.logo = c.logo; if (!ex.color && c.color) ex.color = c.color; }
       });
     });
     return Object.keys(map).map(function (k) { return map[k]; })
@@ -729,6 +735,57 @@
       return _prevSeasonClubs().then(function (l2) { _clubListCache = l2; return l2; })
         .catch(function () { return []; });
     });
+  }
+
+  /* Couleur d'accent du club favori, ajustée pour rester lisible sur fond sombre.
+     Renvoie "r, g, b" (utilisable dans rgb()/rgba()) ou null (repli sur l'or). */
+  function _hexToRgb(hex) {
+    if (!hex) return null;
+    hex = ('' + hex).trim().replace(/^#/, '');
+    if (hex.length === 3) hex = hex.charAt(0) + hex.charAt(0) + hex.charAt(1) + hex.charAt(1) + hex.charAt(2) + hex.charAt(2);
+    if (hex.length < 6) return null;
+    var r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+    return { r: r, g: g, b: b };
+  }
+  function _rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), h, s, l = (mx + mn) / 2;
+    if (mx === mn) { h = s = 0; }
+    else {
+      var d = mx - mn;
+      s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+      switch (mx) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4;
+      }
+      h /= 6;
+    }
+    return { h: h, s: s, l: l };
+  }
+  function _hslToRgb(h, s, l) {
+    var r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+      function hue(p, q, t) { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; }
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+      r = hue(p, q, h + 1 / 3); g = hue(p, q, h); b = hue(p, q, h - 1 / 3);
+    }
+    return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+  }
+  function _legibleRGB(hex) {
+    var c = _hexToRgb(hex); if (!c) return null;
+    var hsl = _rgbToHsl(c.r, c.g, c.b);
+    hsl.s = Math.max(hsl.s, 0.5);                    // assez saturé
+    hsl.l = Math.min(Math.max(hsl.l, 0.52), 0.7);    // ni trop sombre ni trop clair
+    var o = _hslToRgb(hsl.h, hsl.s, hsl.l);
+    return o.r + ', ' + o.g + ', ' + o.b;
+  }
+  function favAccent() {
+    var f = getFav();
+    if (f && f.color) { var rgb = _legibleRGB(f.color); if (rgb) return rgb; }
+    return null;
   }
 
   global.ESPN = {
@@ -778,7 +835,8 @@
     clearFav: clearFav,
     favSeen: favSeen,
     markFavSeen: markFavSeen,
-    fetchClubList: fetchClubList
+    fetchClubList: fetchClubList,
+    favAccent: favAccent
   };
 
 })(window);
