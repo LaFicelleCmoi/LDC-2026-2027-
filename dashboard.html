@@ -1077,10 +1077,15 @@ a{ text-decoration:none; color:inherit; }
   }
 
   /* ---- "Revivre" : parcours du club (favori si choisi, sinon champion) ---- */
+  function sameClub(team, id, name){
+    if(!team) return false;
+    if(id!=null && ((team.id!=null && String(team.id)===String(id)) || (team.teamId!=null && String(team.teamId)===String(id)))) return true;
+    var tn=(team.name||'').toLowerCase(), cn=(name||'').toLowerCase();
+    return !!(cn && tn) && (tn===cn || tn.indexOf(cn)!==-1 || cn.indexOf(tn)!==-1);
+  }
   function clubPath(id, name){
     if(!retroData || !retroData.rounds) return [];
-    var cn=(name||'').toLowerCase();
-    function isC(t){ if(!t) return false; if(id!=null && t.id!=null) return String(t.id)===String(id); return (t.name||'').toLowerCase()===cn; }
+    function isC(t){ return sameClub(t, id, name); }
     var path=[];
     retroData.rounds.forEach(function(r){
       r.ties.forEach(function(tie){
@@ -1106,13 +1111,13 @@ a{ text-decoration:none; color:inherit; }
       if(d.round==='final') return { label:(d.won?'Champion 🏆':(lang()==='en'?'Runner-up':'Finaliste')), isChamp:d.won, lastTie:d };
       return { label:stageLabel(d.round), isChamp:false, lastTie:d };
     }
-    var inLeague=(retroData.standings||[]).some(function(t){ return String(t.teamId)===String(id) || (name && (t.name||'').toLowerCase()===String(name).toLowerCase()); });
+    var inLeague=(retroData.standings||[]).some(function(t){ return sameClub(t, id, name); });
     if(inLeague) return { label:(lang()==='en'?'League phase':'Phase de ligue'), isChamp:false, lastTie:null };
     return null;
   }
   function memSubject(){
     var fav=window.ESPN&&ESPN.getFav?ESPN.getFav():null;
-    if(fav){ var oc=clubOutcome(fav.id, fav.name); if(oc) return { id:fav.id, name:fav.name, logo:fav.logo, outcome:oc }; }
+    if(fav){ var oc=clubOutcome(fav.id, fav.name)||{ label:(lang()==='en'?'Did not qualify':'Non qualifié'), isChamp:false, lastTie:null }; return { id:fav.id, name:fav.name, logo:fav.logo, outcome:oc }; }
     var c=retroData&&retroData.champ;
     if(c){ var oc2=clubOutcome(c.id, c.name)||{ label:'Champion 🏆', isChamp:true, lastTie:null }; return { id:c.id, name:c.name, logo:c.logo, outcome:oc2 }; }
     return null;
