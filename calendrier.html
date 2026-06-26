@@ -52,6 +52,17 @@
     .cal-side .nm{ font-size:12px; }
     .cal-group-head{ font-size:19px; }
   }
+
+  /* Dates officielles (intersaison) */
+  .sch-intro{ font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:22px; }
+  .sch-group{ margin-bottom:24px; }
+  .sch-head{ font-family:'Bebas Neue',Impact,sans-serif; font-size:21px; letter-spacing:.04em; color:var(--upcoming); margin:0 0 11px; }
+  .sch-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:10px 14px; border:1px solid var(--line); border-radius:11px; background:var(--card); margin-bottom:7px; }
+  .sch-row.final{ border-color:rgba(245,181,10,.5); background:rgba(245,181,10,.09); }
+  .sch-ev{ font-weight:700; font-size:13.5px; color:var(--txt); }
+  .sch-star{ color:var(--upcoming); margin-right:3px; }
+  .sch-d{ color:var(--upcoming); font-weight:800; font-size:13px; white-space:nowrap; text-align:right; }
+  @media (max-width:560px){ .sch-row{ flex-direction:column; align-items:flex-start; gap:3px; padding:9px 11px; } .sch-d{ font-size:12px; } }
 </style>
 </head>
 <body>
@@ -193,13 +204,57 @@
     '</div>';
   }
 
+  /* Dates officielles UEFA 2026-27 (affichées tant que la saison n'a pas commencé) */
+  var SCHEDULE = {
+    qualif: [
+      {fr:'1er tour de qualif.', en:'1st qualifying round', dfr:'7-8 & 14-15 juil. 2026', den:'7-8 & 14-15 Jul 2026'},
+      {fr:'2e tour de qualif.',  en:'2nd qualifying round', dfr:'21-22 & 28-29 juil. 2026', den:'21-22 & 28-29 Jul 2026'},
+      {fr:'3e tour de qualif.',  en:'3rd qualifying round', dfr:'4-5 & 11 août 2026', den:'4-5 & 11 Aug 2026'},
+      {fr:'Barrages',            en:'Play-offs',            dfr:'18-19 & 25-26 août 2026', den:'18-19 & 25-26 Aug 2026'}
+    ],
+    league: [
+      {fr:'Tirage au sort', en:'League phase draw', dfr:'27 août 2026', den:'27 Aug 2026', star:true},
+      {fr:'Journée 1', en:'Matchday 1', dfr:'8-9-10 sept. 2026', den:'8-9-10 Sep 2026'},
+      {fr:'Journée 2', en:'Matchday 2', dfr:'13-14 oct. 2026', den:'13-14 Oct 2026'},
+      {fr:'Journée 3', en:'Matchday 3', dfr:'20-21 oct. 2026', den:'20-21 Oct 2026'},
+      {fr:'Journée 4', en:'Matchday 4', dfr:'3-4 nov. 2026', den:'3-4 Nov 2026'},
+      {fr:'Journée 5', en:'Matchday 5', dfr:'24-25 nov. 2026', den:'24-25 Nov 2026'},
+      {fr:'Journée 6', en:'Matchday 6', dfr:'8-9 déc. 2026', den:'8-9 Dec 2026'},
+      {fr:'Journée 7', en:'Matchday 7', dfr:'19-20 janv. 2027', den:'19-20 Jan 2027'},
+      {fr:'Journée 8', en:'Matchday 8', dfr:'27 janv. 2027', den:'27 Jan 2027'}
+    ],
+    ko: [
+      {fr:'Tirage des barrages',  en:'Knockout play-off draw', dfr:'29 janv. 2027', den:'29 Jan 2027', star:true},
+      {fr:'Barrages',             en:'Knockout play-offs',     dfr:'16-17 & 23-24 févr. 2027', den:'16-17 & 23-24 Feb 2027'},
+      {fr:'Tirage phase finale',  en:'Knockout phase draw',    dfr:'26 févr. 2027', den:'26 Feb 2027', star:true},
+      {fr:'Huitièmes de finale',  en:'Round of 16',            dfr:'9-10 & 16-17 mars 2027', den:'9-10 & 16-17 Mar 2027'},
+      {fr:'Quarts de finale',     en:'Quarter-finals',         dfr:'6-7 & 13-14 avr. 2027', den:'6-7 & 13-14 Apr 2027'},
+      {fr:'Demi-finales',         en:'Semi-finals',            dfr:'27-28 avr. & 4-5 mai 2027', den:'27-28 Apr & 4-5 May 2027'},
+      {fr:'Finale · Madrid',      en:'Final · Madrid',         dfr:'5 juin 2027 · Estadio Metropolitano', den:'5 Jun 2027 · Estadio Metropolitano', final:true}
+    ]
+  };
+  function renderSchedule(){
+    var en=I18N.getLang()==='en';
+    function row(it){
+      return '<div class="sch-row'+(it.final?' final':'')+'">'+
+        '<span class="sch-ev">'+(it.star?'<span class="sch-star">◆</span>':'')+esc(en?it.en:it.fr)+'</span>'+
+        '<span class="sch-d">'+esc(en?it.den:it.dfr)+'</span></div>';
+    }
+    function grp(title,items){ return '<div class="sch-group"><div class="sch-head">'+esc(title)+'</div>'+items.map(row).join('')+'</div>'; }
+    return '<div class="sch-intro">'+esc(en?'The 2026-27 season hasn’t started yet — here are all the key dates to remember 📅':'La saison 2026-27 n’a pas encore commencé — voici toutes les dates à retenir 📅')+
+      ' <a class="souvenir-link" style="text-decoration:underline;color:var(--upcoming)" href="calendrier.html?season=2025">'+esc(I18N.t('dash.seeSouvenir'))+'</a></div>'+
+      grp(en?'Qualifying':'Qualifications', SCHEDULE.qualif)+
+      grp(en?'League phase':'Phase de ligue', SCHEDULE.league)+
+      grp(en?'Knockout phase':'Phase finale', SCHEDULE.ko);
+  }
+
   function render(){
     var host=el('cal-body'); if(!host) return;
     var fav=ESPN.getFav(), fid=fav?fav.id:null;
     var aggMap=computeAggregates();
     if(!allMatches.length){
       host.innerHTML = (!ESPN.isArchive())
-        ? '<div class="empty-state">'+esc(I18N.t('dash.notStarted'))+' <a class="souvenir-link" style="text-decoration:underline" href="calendrier.html?season=2025">'+esc(I18N.t('dash.seeSouvenir'))+'</a></div>'
+        ? renderSchedule()
         : '<div class="empty-state">'+esc(I18N.t('cal.empty'))+'</div>';
       return;
     }
