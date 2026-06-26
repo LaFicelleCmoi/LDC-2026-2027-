@@ -976,7 +976,7 @@ a{ text-decoration:none; color:inherit; }
         '<button class="fav-btn" id="favRemove">'+esc(I18N.t('fav.remove'))+'</button>'+
       '</div></div>';
     var ch=el('favChange'); if(ch) ch.addEventListener('click',function(e){ e.stopPropagation(); openFavChooser(); });
-    var rm=el('favRemove'); if(rm) rm.addEventListener('click',function(e){ e.stopPropagation(); ESPN.clearFav(); renderFav(); renderZones(); renderMarquee(); });
+    var rm=el('favRemove'); if(rm) rm.addEventListener('click',function(e){ e.stopPropagation(); ESPN.clearFav(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); });
   }
   function openFavChooser(){
     var modal=el('fav-modal'); if(!modal) return;
@@ -1006,7 +1006,7 @@ a{ text-decoration:none; color:inherit; }
     Array.prototype.forEach.call(g.querySelectorAll('.fav-club'),function(btn){
       btn.addEventListener('click',function(){
         ESPN.setFav({ id:this.getAttribute('data-fid'), name:this.getAttribute('data-fname'), abbr:this.getAttribute('data-fabbr'), logo:this.getAttribute('data-flogo'), color:this.getAttribute('data-fcolor') });
-        closeFavChooser(); renderFav(); renderZones(); renderMarquee();
+        closeFavChooser(); renderFav(); renderZones(); renderMarquee(); renderOffseason();
       });
     });
   }
