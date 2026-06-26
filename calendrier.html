@@ -40,6 +40,7 @@
   .cal-score .cal-sep{ opacity:.5; margin:0 2px; }
   .cal-score .cal-vs{ color:var(--muted-2); font-weight:700; }
   .cal-score .pen{ display:block; font-size:9px; color:var(--accent); font-weight:700; }
+  .cal-score .cal-agg{ display:block; margin-top:2px; font-size:9px; font-weight:800; letter-spacing:.02em; color:var(--upcoming); white-space:nowrap; }
   .cal-status{ font-size:10px; text-align:center; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
   .cal-status .live{ color:var(--live); font-weight:800; }
   .cal-status .ft{ color:var(--finished); font-weight:800; }
@@ -145,11 +146,34 @@
   function logo(c){ return c.logo?'<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span class="nl"></span>'; }
   function side(c,cls){ return '<div class="cal-side '+cls+'">'+logo(c)+'<span class="nm">'+esc(c.shortName||c.name)+'</span></div>'; }
 
-  function matchRow(m,fid){
+  /* Clé d'une confrontation (tour + paire d'équipes) et cumul des scores sur les 2 manches. */
+  function tieKey(m){ var ids=[m.home.teamId,m.away.teamId].sort(); return m.round+'|'+ids.join('::'); }
+  function computeAggregates(){
+    var agg={};
+    allMatches.forEach(function(m){
+      if(!m.leg) return;                       // seulement les double confrontations (aller/retour)
+      var k=tieKey(m);
+      if(!agg[k]) agg[k]={};
+      if(m.state!=='pre'){
+        agg[k][m.home.teamId]=(agg[k][m.home.teamId]||0)+m.home.score;
+        agg[k][m.away.teamId]=(agg[k][m.away.teamId]||0)+m.away.score;
+      }
+    });
+    return agg;
+  }
+
+  function matchRow(m,fid,aggMap){
     var isFav = fid && (m.home.teamId===fid || m.away.teamId===fid);
     var pen = (m.home.shootout!=null && m.away.shootout!=null);
     var leg = m.leg===1 ? '<span class="cal-leg a">'+esc(I18N.t('leg.first'))+'</span>'
             : m.leg===2 ? '<span class="cal-leg r">'+esc(I18N.t('leg.second'))+'</span>' : '';
+    // Cumul affiché sur le match retour (somme des 2 manches)
+    var aggLine='';
+    if(m.leg===2 && m.state!=='pre' && aggMap){
+      var a=aggMap[tieKey(m)];
+      if(a){ var h=a[m.home.teamId], aw=a[m.away.teamId];
+        if(h!=null && aw!=null) aggLine='<span class="cal-agg">'+(I18N.getLang()==='en'?'Agg.':'Cumul')+' '+h+'–'+aw+'</span>'; }
+    }
     var score, status;
     if(m.state==='pre'){
       score='<span class="cal-vs">–</span>';
@@ -162,7 +186,7 @@
     return '<div class="cal-match'+(isFav?' is-fav':'')+(m.state==='in'?' live-row':'')+'">'+
       '<div class="cal-date">'+(m.dateObj?dm(m.dateObj):'—')+leg+'</div>'+
       side(m.home,'home')+
-      '<div class="cal-score">'+score+'</div>'+
+      '<div class="cal-score">'+score+aggLine+'</div>'+
       side(m.away,'away')+
       '<div class="cal-status">'+status+'</div>'+
     '</div>';
@@ -171,6 +195,7 @@
   function render(){
     var host=el('cal-body'); if(!host) return;
     var fav=ESPN.getFav(), fid=fav?fav.id:null;
+    var aggMap=computeAggregates();
     if(!allMatches.length){
       host.innerHTML = (!ESPN.isArchive())
         ? '<div class="empty-state">'+esc(I18N.t('dash.notStarted'))+' <a class="souvenir-link" style="text-decoration:underline" href="calendrier.html?season=2025">'+esc(I18N.t('dash.seeSouvenir'))+'</a></div>'
@@ -192,7 +217,7 @@
 
     host.innerHTML=groups.map(function(g){
       return '<div class="cal-group"><div class="cal-group-head">'+esc(g.title)+' <span class="cal-count">'+g.matches.length+'</span></div>'+
-        g.matches.map(function(m){ return matchRow(m,fid); }).join('')+'</div>';
+        g.matches.map(function(m){ return matchRow(m,fid,aggMap); }).join('')+'</div>';
     }).join('');
   }
 
