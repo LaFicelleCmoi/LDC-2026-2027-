@@ -51,9 +51,10 @@ a{ color:inherit; text-decoration:none; }
 }
 .brand{ display:flex; align-items:center; gap:11px; font-weight:800; letter-spacing:.3px; }
 .brand .star{
-  width:34px; height:34px; border-radius:9px;
-  background:var(--accent); color:#fff;
-  display:grid; place-items:center; font-size:18px;
+  width:38px; height:38px; flex-shrink:0;
+  background:url('logo.svg') center/contain no-repeat;
+  color:transparent; font-size:0;       /* masque l'ancien ★, affiche le logo LDC */
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.45));
 }
 .brand .t1{ font-size:15px; line-height:1; }
 .brand .t2{ font-size:10.5px; color:var(--muted); font-weight:600; letter-spacing:.4px; }
@@ -169,7 +170,7 @@ footer.site-footer{
 @media (max-width:720px){
   .nav a{ padding:6px 10px; font-size:12px; }
   .brand .t2{ display:none; }
-  .brand .star{ width:30px; height:30px; font-size:16px; }
+  .brand .star{ width:32px; height:32px; }
   .container{ padding:16px; }
 }
 @media (max-width:560px){
