@@ -383,6 +383,35 @@ a{ text-decoration:none; color:inherit; }
   .fav-actions{ width:100%; }
   .fav-actions .fav-btn{ flex:1; }
 }
+
+/* ================= INTERSAISON (compte à rebours + rétro) ================= */
+.offseason{ max-width:1200px; margin:0 auto 26px; }
+.os-grid{ display:grid; grid-template-columns:1.25fr 1fr; gap:16px; }
+@media (max-width:760px){ .os-grid{ grid-template-columns:1fr; } }
+.os-card{ background:#111a36; border:1px solid var(--border); border-radius:16px; padding:20px 22px; }
+.os-count{ border-color:rgba(245,181,10,.35); background:linear-gradient(125deg, rgba(245,181,10,.10), rgba(17,26,54,.6)); }
+.os-eyebrow{ font-size:0.66em; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); }
+.os-title{ font-family:var(--font-d); font-size:1.9em; line-height:1; color:#fff; margin:7px 0 4px; letter-spacing:.02em; }
+.os-milestone{ font-size:0.82em; color:var(--muted); margin-bottom:14px; }
+.os-milestone b{ color:#fff; }
+.cd-row{ display:flex; gap:9px; }
+.cd-unit{ flex:1; text-align:center; background:rgba(0,0,0,.28); border:1px solid var(--border); border-radius:12px; padding:11px 4px; }
+.cd-num{ font-family:var(--font-d); font-size:2.5em; line-height:1; color:var(--gold); font-variant-numeric:tabular-nums; }
+.cd-lbl{ font-size:0.58em; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
+.os-dates{ display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+.os-date{ display:flex; align-items:center; justify-content:space-between; font-size:0.82em; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,.04); border:1px solid var(--border); }
+.os-date .d{ color:var(--gold); font-weight:800; }
+.os-date.done{ opacity:.42; }
+.os-date.done .d{ color:var(--muted); }
+.os-date.next{ border-color:rgba(245,181,10,.5); background:rgba(245,181,10,.08); }
+.os-retro .rt-champ{ display:flex; align-items:center; gap:14px; margin:10px 0 12px; font-size:1.6em; }
+.os-retro .rt-champ img{ width:54px; height:54px; object-fit:contain; }
+.os-retro .rt-champ .nm{ font-family:var(--font-d); font-size:1em; color:#fff; line-height:1; }
+.os-retro .rt-champ .sub{ font-size:0.4em; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); margin-bottom:3px; }
+.os-retro .rt-final{ font-size:0.86em; color:var(--muted); }
+.os-retro .rt-final b{ color:#fff; }
+.os-cta{ display:inline-block; margin-top:14px; font-size:0.7em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#1a1300; background:var(--gold); padding:9px 15px; border-radius:10px; }
+.os-play{ display:inline-block; margin-top:14px; margin-left:8px; font-size:0.7em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--gold); background:rgba(245,181,10,.12); border:1px solid rgba(245,181,10,.4); padding:9px 15px; border-radius:10px; }
 </style>
 </head>
 <body>
@@ -404,6 +433,7 @@ a{ text-decoration:none; color:inherit; }
     <a href="tracker.html" class="nav-forward star-border" data-i18n="dash.toTracker">Classement →</a>
     <a href="palmares.html" class="nav-ghost" data-i18n="nav.palmares">Palmarès</a>
     <a href="calendrier.html" class="nav-ghost" data-i18n="nav.calendar">Calendrier</a>
+    <a href="jeu.html" class="nav-ghost" data-i18n="nav.game">Jeu</a>
     <div id="seasonDD"></div>
     <a href="overlay.html" class="nav-ghost" data-i18n="nav.overlay">Overlay OBS</a>
   </div>
@@ -416,6 +446,8 @@ a{ text-decoration:none; color:inherit; }
 </div>
 
 <section class="fav-section" id="fav-section"></section>
+
+<section class="offseason" id="offseason" style="display:none"></section>
 
 <div class="souvenir-banner" id="souvenir-banner">
   <span class="sb-label" id="souvenir-banner-label">Souvenir · Saison 2025–26</span>
@@ -465,7 +497,7 @@ a{ text-decoration:none; color:inherit; }
   </p>
 </footer>
 
-<script src="i18n.js?v=16"></script>
+<script src="i18n.js?v=17"></script>
 <script src="espn.js?v=10"></script>
 <script>
 (function(){
@@ -953,15 +985,88 @@ a{ text-decoration:none; color:inherit; }
     });
   }
 
+  /* ================= INTERSAISON (compte à rebours + rétrospective) ================= */
+  var SEASON_DATES=[
+    {key:'draw',  ts:Date.parse('2026-08-28T18:00:00'), fr:'Tirage au sort', en:'League phase draw'},
+    {key:'md1',   ts:Date.parse('2026-09-16T19:00:00'), fr:'1re journée',    en:'Matchday 1'},
+    {key:'final', ts:Date.parse('2027-05-29T21:00:00'), fr:'Finale',         en:'Final'}
+  ];
+  var retroLoaded=false, retroData=null;
+  function osMonths(){ return lang()==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']; }
+  function fmtDate(ts){ var d=new Date(ts); return d.getDate()+' '+osMonths()[d.getMonth()]+' '+d.getFullYear(); }
+  function nextMilestone(){ var now=Date.now(); for(var i=0;i<SEASON_DATES.length;i++){ if(SEASON_DATES[i].ts>now) return SEASON_DATES[i]; } return null; }
+  function renderCountdown(ts){
+    var row=el('cdRow'); if(!row) return;
+    var ms=Math.max(0, ts-Date.now()), s=Math.floor(ms/1000);
+    var d=Math.floor(s/86400), h=Math.floor(s%86400/3600), m=Math.floor(s%3600/60), sec=s%60;
+    function p(n){ return n<10?'0'+n:''+n; }
+    var L=lang()==='en'?['Days','Hrs','Min','Sec']:['Jours','Heures','Min','Sec'];
+    function unit(v,l){ return '<div class="cd-unit"><div class="cd-num">'+v+'</div><div class="cd-lbl">'+esc(l)+'</div></div>'; }
+    row.innerHTML=unit(d,L[0])+unit(p(h),L[1])+unit(p(m),L[2])+unit(p(sec),L[3]);
+  }
+  function paintRetro(data){
+    var box=el('osRetro'); if(!box) return;
+    var py=ESPN.CURRENT_SEASON-1;
+    var head='<div class="os-eyebrow">'+esc(I18N.t('souvenir.badge')||'Souvenir')+' '+esc(ESPN.seasonLabel(py))+'</div>';
+    if(!data || !data.champ){ box.innerHTML=head+'<div class="rt-final" style="margin-top:10px">—</div>'; return; }
+    var champ=data.champ, fin=data.fin, finalLine='';
+    if(fin){ var pn=(fin.penA!=null&&fin.penB!=null)?' <span style="color:var(--blue)">('+esc(I18N.t('common.pen'))+' '+fin.penA+'–'+fin.penB+')</span>':''; finalLine='<div class="rt-final">'+esc(lang()==='en'?'Final':'Finale')+' : <b>'+esc(fin.teamA.name)+'</b> '+fin.aggA+'–'+fin.aggB+' <b>'+esc(fin.teamB.name)+'</b>'+pn+'</div>'; }
+    box.innerHTML=head+
+      '<div class="rt-champ">'+(champ.logo?'<img src="'+esc(champ.logo)+'" onerror="this.style.display=\'none\'">':'<span>🏆</span>')+
+        '<div><div class="sub">Champion</div><div class="nm">'+esc(champ.name)+'</div></div></div>'+
+      finalLine+
+      '<a class="os-cta" href="dashboard.html?season='+py+'">'+esc(lang()==='en'?'Relive →':'Revivre →')+'</a>'+
+      '<a class="os-play" href="jeu.html">'+esc(lang()==='en'?'Play 🎮':'Jouer 🎮')+'</a>';
+  }
+  function renderRetro(){
+    var box=el('osRetro'); if(!box) return;
+    if(retroData){ paintRetro(retroData); return; }
+    box.innerHTML='<div class="os-eyebrow">'+esc(I18N.t('souvenir.badge')||'Souvenir')+' '+esc(ESPN.seasonLabel(ESPN.CURRENT_SEASON-1))+'</div><div class="rt-champ"><div class="nm skeleton">…</div></div>';
+    if(retroLoaded) return; retroLoaded=true;
+    var py=ESPN.CURRENT_SEASON-1;
+    ESPN.fetchScoreboard(py+'0901-'+(py+1)+'0831',{limit:500,ttl:600000}).then(function(events){
+      var rounds=ESPN.buildBracket(events);
+      var champ=ESPN.findChampion(rounds);
+      var fin=rounds.filter(function(r){return r.key==='final';})[0];
+      if(!champ){ var c=ESPN.championOfSeason(py); if(c) champ={name:c.name, logo:''}; }
+      retroData={champ:champ, fin:fin&&fin.ties[0]};
+      paintRetro(retroData);
+    }).catch(function(){ retroLoaded=false; });
+  }
+  function renderOffseason(){
+    var host=el('offseason'); if(!host) return;
+    var nm=nextMilestone();
+    if(ESPN.isArchive() || !nm){ host.style.display='none'; host.innerHTML=''; return; }
+    host.style.display='block';
+    var datesHTML=SEASON_DATES.map(function(dt){
+      var cls=dt.ts<Date.now()?'done':(dt===nm?'next':'');
+      return '<div class="os-date '+cls+'"><span>'+esc(lang()==='en'?dt.en:dt.fr)+'</span><span class="d">'+esc(fmtDate(dt.ts))+'</span></div>';
+    }).join('');
+    host.innerHTML=
+      '<div class="os-grid">'+
+        '<div class="os-card os-count">'+
+          '<div class="os-eyebrow">'+esc(I18N.t('season.label')||'Saison')+' '+esc(ESPN.seasonLabel())+'</div>'+
+          '<div class="os-title">'+esc(lang()==='en'?'The new season is coming':'La nouvelle saison arrive')+'</div>'+
+          '<div class="os-milestone">'+esc(lang()==='en'?'Next:':'Prochain :')+' <b>'+esc(lang()==='en'?nm.en:nm.fr)+'</b></div>'+
+          '<div class="cd-row" id="cdRow"></div>'+
+          '<div class="os-dates">'+datesHTML+'</div>'+
+        '</div>'+
+        '<div class="os-card os-retro" id="osRetro"></div>'+
+      '</div>';
+    renderCountdown(nm.ts);
+    renderRetro();
+  }
+
   applySeasonUI();
   renderFav();
+  renderOffseason();
   loadToday(); loadSeason();
   if(!ESPN.getFav() && !ESPN.favSeen()) openFavChooser();
   setInterval(function(){ try{ loadToday(); }catch(e){} }, 20000);
   setInterval(function(){ try{ loadSeason(); }catch(e){} }, 60000);
-  setInterval(function(){ try{ document.querySelectorAll('.live-countdown[data-kickoff], .fav-cd[data-kickoff]').forEach(function(c){ var ts=parseInt(c.getAttribute('data-kickoff'),10); if(ts) c.textContent=countdown(new Date(ts)); }); }catch(e){} }, 1000);
+  setInterval(function(){ try{ document.querySelectorAll('.live-countdown[data-kickoff], .fav-cd[data-kickoff]').forEach(function(c){ var ts=parseInt(c.getAttribute('data-kickoff'),10); if(ts) c.textContent=countdown(new Date(ts)); }); var _nm=nextMilestone(); if(_nm && el('cdRow')) renderCountdown(_nm.ts); }catch(e){} }, 1000);
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'){ loadToday(); loadSeason(); } });
-  window.addEventListener('ldc:langchange',function(){ buildHero(); applySeasonUI(); lastStatsKey=''; renderLive(); renderZones(); renderMarquee(); renderFav(); });
+  window.addEventListener('ldc:langchange',function(){ buildHero(); applySeasonUI(); lastStatsKey=''; renderLive(); renderZones(); renderMarquee(); renderFav(); renderOffseason(); });
 
 })();
 </script>
