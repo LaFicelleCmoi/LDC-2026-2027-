@@ -6,7 +6,7 @@
 <title>Accueil — Tracker Ligue des Champions</title>
 <meta name="description" content="Tracker et simulateur non officiel de la Ligue des Champions : scores en direct, classement de la phase de ligue et phase finale.">
 <meta name="theme-color" content="#081027">
-<link rel="icon" href="favicon.svg?v=1" type="image/svg+xml">
+<link rel="icon" href="logo.svg?v=1" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -49,6 +49,11 @@ a{ text-decoration:none; color:inherit; }
 /* ---- Top controls ---- */
 .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px 14px; max-width:1200px; margin:0 auto 14px; flex-wrap:wrap; position:relative; z-index:30; }
 #langSwitch{ display:flex; gap:5px; }
+.tb-left{ display:flex; align-items:center; gap:13px; }
+.dash-brand{ display:inline-flex; }
+.dash-brand .db-logo{ width:40px; height:40px; display:block; background:url('logo.svg') center/contain no-repeat; filter:drop-shadow(0 2px 6px rgba(0,0,0,.45)); transition:transform .15s; }
+.dash-brand:hover .db-logo{ transform:scale(1.06); }
+@media (max-width:600px){ .dash-brand .db-logo{ width:34px; height:34px; } }
 .lang-toggle{ position:relative; display:inline-flex; align-items:center; padding:3px; border-radius:999px;
   background:linear-gradient(180deg,#0a1228,#13214a); border:1px solid var(--border);
   box-shadow:inset 0 1px 3px rgba(0,0,0,.5); }
@@ -461,7 +466,10 @@ a{ text-decoration:none; color:inherit; }
 </svg>
 
 <div class="topbar">
-  <div id="langSwitch"></div>
+  <div class="tb-left">
+    <a class="dash-brand" href="dashboard.html" aria-label="LDC"><span class="db-logo"></span></a>
+    <div id="langSwitch"></div>
+  </div>
   <div class="top-nav">
     <a href="tracker.html" class="nav-forward star-border" data-i18n="dash.toTracker">Classement →</a>
     <a href="palmares.html" class="nav-ghost" data-i18n="nav.palmares">Palmarès</a>
