@@ -386,8 +386,7 @@ a{ text-decoration:none; color:inherit; }
 
 /* ================= INTERSAISON (compte à rebours + rétro) ================= */
 .offseason{ max-width:1200px; margin:0 auto 26px; }
-.os-grid{ display:grid; grid-template-columns:1.25fr 1fr; gap:16px; }
-@media (max-width:760px){ .os-grid{ grid-template-columns:1fr; } }
+.os-grid{ display:grid; grid-template-columns:1fr; gap:16px; }
 .os-card{ background:#111a36; border:1px solid var(--border); border-radius:16px; padding:20px 22px; }
 .os-count{ border-color:rgba(245,181,10,.35); background:linear-gradient(125deg, rgba(245,181,10,.10), rgba(17,26,54,.6)); }
 .os-eyebrow{ font-size:0.66em; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); }
@@ -404,15 +403,20 @@ a{ text-decoration:none; color:inherit; }
 .os-date.done{ opacity:.42; }
 .os-date.done .d{ color:var(--muted); }
 .os-date.next{ border-color:rgba(245,181,10,.5); background:rgba(245,181,10,.08); }
-.os-retro .rt-champ{ display:flex; align-items:center; gap:14px; margin:10px 0 12px; font-size:1.6em; }
-.os-retro .rt-champ img{ width:54px; height:54px; object-fit:contain; }
-.os-retro .rt-champ .nm{ font-family:var(--font-d); font-size:1em; color:#fff; line-height:1; }
-.os-retro .rt-champ .sub{ font-size:0.4em; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); margin-bottom:3px; }
-.os-retro .rt-final{ font-size:0.86em; color:var(--muted); }
+/* Carte Memories = bannière horizontale, alignée sur la carte « Mon équipe » */
+.os-retro{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; border-color:rgba(245,181,10,.4); background:linear-gradient(120deg, rgba(245,181,10,.12), rgba(17,26,54,.55)); }
+.os-retro .rt-main{ display:flex; align-items:center; gap:14px; flex:1; min-width:0; }
+.os-retro .rt-crest{ width:54px; height:54px; object-fit:contain; flex-shrink:0; filter:drop-shadow(0 3px 8px rgba(0,0,0,.5)); }
+.os-retro .rt-crest.emoji{ font-size:42px; line-height:54px; text-align:center; }
+.os-retro .rt-txt{ min-width:0; }
+.os-retro .rt-eyebrow{ font-size:0.66em; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); }
+.os-retro .rt-name{ font-family:var(--font-d); font-size:1.7em; line-height:1; color:#fff; letter-spacing:.02em; margin-top:1px; }
+.os-retro .rt-final{ font-size:0.82em; color:var(--muted); margin-top:6px; }
 .os-retro .rt-final b{ color:#fff; }
-.os-cta{ display:inline-block; margin-top:14px; font-size:0.7em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#1a1300; background:var(--gold); padding:9px 15px; border-radius:10px; }
-.os-play{ display:inline-block; margin-top:14px; margin-left:8px; font-size:0.7em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--gold); background:rgba(245,181,10,.12); border:1px solid rgba(245,181,10,.4); padding:9px 15px; border-radius:10px; }
-.os-cta{ font-family:inherit; cursor:pointer; border:none; }
+.os-retro .rt-actions{ display:flex; gap:8px; flex-shrink:0; }
+.os-cta{ font-family:inherit; cursor:pointer; border:none; font-size:0.7em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#1a1300; background:var(--gold); padding:10px 16px; border-radius:10px; }
+.os-play{ font-size:0.7em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--gold); background:rgba(245,181,10,.12); border:1px solid rgba(245,181,10,.4); padding:10px 16px; border-radius:10px; }
+@media (max-width:560px){ .os-retro .rt-actions{ width:100%; } .os-retro .rt-actions .os-cta, .os-retro .rt-actions .os-play{ flex:1; text-align:center; } }
 
 /* ====== Modale "Revivre" — la route vers le sacre ====== */
 .replay-backdrop{ display:none; position:fixed; inset:0; background:rgba(4,7,16,.9); z-index:1300; align-items:center; justify-content:center; padding:18px; }
@@ -1052,23 +1056,26 @@ a{ text-decoration:none; color:inherit; }
   }
   function paintRetro(data){
     var box=el('osRetro'); if(!box) return;
-    var py=ESPN.CURRENT_SEASON-1;
-    var head='<div class="os-eyebrow">'+esc(I18N.t('souvenir.badge')||'Souvenir')+' '+esc(ESPN.seasonLabel(py))+'</div>';
-    if(!data || !data.champ){ box.innerHTML=head+'<div class="rt-final" style="margin-top:10px">—</div>'; return; }
+    var py=ESPN.CURRENT_SEASON-1, en=lang()==='en';
+    var eyebrow=(en?'Memories':'Souvenir')+' · '+esc(ESPN.seasonLabel(py))+' · '+(en?'Champion':'Champion');
+    if(!data || !data.champ){ box.innerHTML='<div class="rt-main"><div class="rt-txt"><div class="rt-eyebrow">'+eyebrow+'</div><div class="rt-final">—</div></div></div>'; return; }
     var champ=data.champ, fin=data.fin, finalLine='';
-    if(fin){ var pn=(fin.penA!=null&&fin.penB!=null)?' <span style="color:var(--blue)">('+esc(I18N.t('common.pen'))+' '+fin.penA+'–'+fin.penB+')</span>':''; finalLine='<div class="rt-final">'+esc(lang()==='en'?'Final':'Finale')+' : <b>'+esc(fin.teamA.name)+'</b> '+fin.aggA+'–'+fin.aggB+' <b>'+esc(fin.teamB.name)+'</b>'+pn+'</div>'; }
-    box.innerHTML=head+
-      '<div class="rt-champ">'+(champ.logo?'<img src="'+esc(champ.logo)+'" onerror="this.style.display=\'none\'">':'<span>🏆</span>')+
-        '<div><div class="sub">Champion</div><div class="nm">'+esc(champ.name)+'</div></div></div>'+
-      finalLine+
-      '<button class="os-cta" id="osReplay" type="button">'+esc(lang()==='en'?'▶ Relive':'▶ Revivre')+'</button>'+
-      '<a class="os-play" href="jeu.html">'+esc(lang()==='en'?'Play 🎮':'Jouer 🎮')+'</a>';
+    if(fin){ var pn=(fin.penA!=null&&fin.penB!=null)?' <span style="color:var(--blue)">('+esc(I18N.t('common.pen'))+' '+fin.penA+'–'+fin.penB+')</span>':''; finalLine='<div class="rt-final">'+esc(en?'Final':'Finale')+' : <b>'+esc(fin.teamA.name)+'</b> '+fin.aggA+'–'+fin.aggB+' <b>'+esc(fin.teamB.name)+'</b>'+pn+'</div>'; }
+    box.innerHTML=
+      '<div class="rt-main">'+
+        (champ.logo?'<img class="rt-crest" src="'+esc(champ.logo)+'" onerror="this.style.display=\'none\'">':'<span class="rt-crest emoji">🏆</span>')+
+        '<div class="rt-txt"><div class="rt-eyebrow">'+eyebrow+'</div><div class="rt-name">'+esc(champ.name)+'</div>'+finalLine+'</div>'+
+      '</div>'+
+      '<div class="rt-actions">'+
+        '<button class="os-cta" id="osReplay" type="button">'+esc(en?'▶ Relive':'▶ Revivre')+'</button>'+
+        '<a class="os-play" href="jeu.html">'+esc(en?'Play 🎮':'Jouer 🎮')+'</a>'+
+      '</div>';
     var rb=el('osReplay'); if(rb) rb.addEventListener('click', openReplay);
   }
   function renderRetro(){
     var box=el('osRetro'); if(!box) return;
     if(retroData){ paintRetro(retroData); return; }
-    box.innerHTML='<div class="os-eyebrow">'+esc(I18N.t('souvenir.badge')||'Souvenir')+' '+esc(ESPN.seasonLabel(ESPN.CURRENT_SEASON-1))+'</div><div class="rt-champ"><div class="nm skeleton">…</div></div>';
+    box.innerHTML='<div class="rt-main"><div class="rt-txt"><div class="rt-eyebrow">'+(lang()==='en'?'Memories':'Souvenir')+' · '+esc(ESPN.seasonLabel(ESPN.CURRENT_SEASON-1))+'</div><div class="rt-final skeleton">…</div></div></div>';
     fetchRetro().then(paintRetro).catch(function(){});
   }
 
