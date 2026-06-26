@@ -412,6 +412,37 @@ a{ text-decoration:none; color:inherit; }
 .os-retro .rt-final b{ color:#fff; }
 .os-cta{ display:inline-block; margin-top:14px; font-size:0.7em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#1a1300; background:var(--gold); padding:9px 15px; border-radius:10px; }
 .os-play{ display:inline-block; margin-top:14px; margin-left:8px; font-size:0.7em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--gold); background:rgba(245,181,10,.12); border:1px solid rgba(245,181,10,.4); padding:9px 15px; border-radius:10px; }
+.os-cta{ font-family:inherit; cursor:pointer; border:none; }
+
+/* ====== Modale "Revivre" — la route vers le sacre ====== */
+.replay-backdrop{ display:none; position:fixed; inset:0; background:rgba(4,7,16,.9); z-index:1300; align-items:center; justify-content:center; padding:18px; }
+.replay-backdrop.open{ display:flex; animation:fadeIn .25s ease; }
+.replay-modal{ position:relative; width:520px; max-width:calc(100vw - 28px); max-height:calc(100vh - 40px); overflow-y:auto;
+  background:radial-gradient(125% 75% at 50% 0%, rgba(245,181,10,.16), #0f1830 58%); border:1px solid rgba(245,181,10,.45); border-radius:18px;
+  box-shadow:0 24px 60px rgba(0,0,0,.6); animation:cardPop .32s cubic-bezier(.34,1.4,.64,1); }
+.rp-loader{ display:flex; justify-content:center; padding:54px; }
+.rp-close{ position:absolute; top:12px; right:12px; z-index:2; width:30px; height:30px; border:none; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:1em; cursor:pointer; transition:.15s; }
+.rp-close:hover{ background:rgba(255,71,87,.8); }
+.rp-head{ text-align:center; padding:26px 22px 18px; border-bottom:1px solid var(--border); }
+.rp-trophy{ font-size:2em; line-height:1; }
+.rp-crest{ width:86px; height:86px; object-fit:contain; margin:8px auto 0; display:block; filter:drop-shadow(0 8px 26px rgba(0,0,0,.6)); }
+.rp-champlbl{ font-size:0.66em; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-top:10px; }
+.rp-name{ font-family:var(--font-d); font-size:2.5em; line-height:1; color:#fff; margin-top:3px; letter-spacing:.02em; }
+.rp-season{ font-size:0.78em; color:var(--muted); margin-top:5px; }
+.rp-body{ padding:18px 22px 22px; }
+.rp-title{ font-size:0.66em; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; text-align:center; }
+.rp-step{ display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid var(--border); margin-bottom:9px; opacity:0; transform:translateX(-12px); animation:rpIn .5s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes rpIn{ to{ opacity:1; transform:none; } }
+.rp-step.final{ border-color:rgba(245,181,10,.55); background:rgba(245,181,10,.1); }
+.rp-round{ width:84px; flex-shrink:0; font-size:0.66em; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--gold); }
+.rp-opp{ flex:1; display:flex; align-items:center; gap:9px; min-width:0; }
+.rp-opp img{ width:26px; height:26px; object-fit:contain; flex-shrink:0; }
+.rp-opp .nm{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rp-score{ font-family:var(--font-d); font-size:1.3em; line-height:1; color:#fff; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.rp-score .pen{ font-family:var(--font-b); font-size:.5em; font-weight:800; color:var(--blue); }
+.rp-full{ display:block; text-align:center; margin-top:16px; font-size:0.74em; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--gold); }
+.rp-full:hover{ text-decoration:underline; }
+@media (max-width:560px){ .rp-name{ font-size:2em; } .rp-crest{ width:70px; height:70px; } .rp-round{ width:64px; font-size:0.6em; } .rp-opp .nm{ font-size:12px; } }
 </style>
 </head>
 <body>
@@ -487,6 +518,7 @@ a{ text-decoration:none; color:inherit; }
 
 <div class="modal-backdrop" id="modal-backdrop"></div>
 <div class="fav-modal-backdrop" id="fav-modal"></div>
+<div class="replay-backdrop" id="replay-modal"></div>
 
 <footer class="site-footer">
   <p class="footer-disclaimer" data-i18n-html="foot.disclaimer">Projet indépendant réalisé par un fan — <strong>non affilié à l’UEFA</strong>. Scores fournis par ESPN (source non officielle), à titre indicatif.</p>
@@ -991,7 +1023,7 @@ a{ text-decoration:none; color:inherit; }
     {key:'md1',   ts:Date.parse('2026-09-16T19:00:00'), fr:'1re journée',    en:'Matchday 1'},
     {key:'final', ts:Date.parse('2027-05-29T21:00:00'), fr:'Finale',         en:'Final'}
   ];
-  var retroLoaded=false, retroData=null;
+  var retroData=null, retroPromise=null;
   function osMonths(){ return lang()==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']; }
   function fmtDate(ts){ var d=new Date(ts); return d.getDate()+' '+osMonths()[d.getMonth()]+' '+d.getFullYear(); }
   function nextMilestone(){ var now=Date.now(); for(var i=0;i<SEASON_DATES.length;i++){ if(SEASON_DATES[i].ts>now) return SEASON_DATES[i]; } return null; }
@@ -1004,6 +1036,20 @@ a{ text-decoration:none; color:inherit; }
     function unit(v,l){ return '<div class="cd-unit"><div class="cd-num">'+v+'</div><div class="cd-lbl">'+esc(l)+'</div></div>'; }
     row.innerHTML=unit(d,L[0])+unit(p(h),L[1])+unit(p(m),L[2])+unit(p(sec),L[3]);
   }
+  function fetchRetro(){
+    if(retroData) return Promise.resolve(retroData);
+    if(retroPromise) return retroPromise;
+    var py=ESPN.CURRENT_SEASON-1;
+    retroPromise=ESPN.fetchScoreboard(py+'0901-'+(py+1)+'0831',{limit:500,ttl:600000}).then(function(events){
+      var rounds=ESPN.buildBracket(events);
+      var champ=ESPN.findChampion(rounds);
+      if(!champ){ var c=ESPN.championOfSeason(py); if(c) champ={name:c.name, logo:''}; }
+      var fin=rounds.filter(function(r){return r.key==='final';})[0];
+      retroData={champ:champ, fin:fin&&fin.ties[0], rounds:rounds};
+      return retroData;
+    }).catch(function(e){ retroPromise=null; throw e; });
+    return retroPromise;
+  }
   function paintRetro(data){
     var box=el('osRetro'); if(!box) return;
     var py=ESPN.CURRENT_SEASON-1;
@@ -1015,23 +1061,72 @@ a{ text-decoration:none; color:inherit; }
       '<div class="rt-champ">'+(champ.logo?'<img src="'+esc(champ.logo)+'" onerror="this.style.display=\'none\'">':'<span>🏆</span>')+
         '<div><div class="sub">Champion</div><div class="nm">'+esc(champ.name)+'</div></div></div>'+
       finalLine+
-      '<a class="os-cta" href="dashboard.html?season='+py+'">'+esc(lang()==='en'?'Relive →':'Revivre →')+'</a>'+
+      '<button class="os-cta" id="osReplay" type="button">'+esc(lang()==='en'?'▶ Relive':'▶ Revivre')+'</button>'+
       '<a class="os-play" href="jeu.html">'+esc(lang()==='en'?'Play 🎮':'Jouer 🎮')+'</a>';
+    var rb=el('osReplay'); if(rb) rb.addEventListener('click', openReplay);
   }
   function renderRetro(){
     var box=el('osRetro'); if(!box) return;
     if(retroData){ paintRetro(retroData); return; }
     box.innerHTML='<div class="os-eyebrow">'+esc(I18N.t('souvenir.badge')||'Souvenir')+' '+esc(ESPN.seasonLabel(ESPN.CURRENT_SEASON-1))+'</div><div class="rt-champ"><div class="nm skeleton">…</div></div>';
-    if(retroLoaded) return; retroLoaded=true;
+    fetchRetro().then(paintRetro).catch(function(){});
+  }
+
+  /* ---- "Revivre" : modale de la route vers le sacre ---- */
+  function championPath(){
+    if(!retroData || !retroData.champ || !retroData.rounds) return [];
+    var champ=retroData.champ, cid=champ.id, cname=(champ.name||'').toLowerCase();
+    function isC(t){ if(!t) return false; if(cid!=null && t.id!=null) return String(t.id)===String(cid); return (t.name||'').toLowerCase()===cname; }
+    var path=[];
+    retroData.rounds.forEach(function(r){
+      r.ties.forEach(function(tie){
+        if(isC(tie.teamA)||isC(tie.teamB)){
+          var aC=isC(tie.teamA);
+          path.push({ round:r.key, opp:aC?tie.teamB:tie.teamA, mine:aC?tie.aggA:tie.aggB, his:aC?tie.aggB:tie.aggA,
+            pen:(tie.penA!=null&&tie.penB!=null)?(aC?(tie.penA+'–'+tie.penB):(tie.penB+'–'+tie.penA)):null });
+        }
+      });
+    });
+    return path;
+  }
+  function openReplay(){
+    var m=el('replay-modal'); if(!m) return;
+    m.innerHTML='<div class="replay-modal"><div class="rp-loader"><div class="soccer"></div></div></div>';
+    m.classList.add('open');
+    fetchRetro().then(buildReplay).catch(function(){ closeReplay(); });
+  }
+  function closeReplay(){ var m=el('replay-modal'); if(m){ m.classList.remove('open'); m.innerHTML=''; } }
+  function buildReplay(){
+    var m=el('replay-modal'); if(!m || !m.classList.contains('open')) return;
+    var champ=retroData&&retroData.champ; if(!champ){ closeReplay(); return; }
     var py=ESPN.CURRENT_SEASON-1;
-    ESPN.fetchScoreboard(py+'0901-'+(py+1)+'0831',{limit:500,ttl:600000}).then(function(events){
-      var rounds=ESPN.buildBracket(events);
-      var champ=ESPN.findChampion(rounds);
-      var fin=rounds.filter(function(r){return r.key==='final';})[0];
-      if(!champ){ var c=ESPN.championOfSeason(py); if(c) champ={name:c.name, logo:''}; }
-      retroData={champ:champ, fin:fin&&fin.ties[0]};
-      paintRetro(retroData);
-    }).catch(function(){ retroLoaded=false; });
+    var RL={po:'trk.round.po',r16:'trk.round.r16',qf:'trk.round.qf',sf:'trk.round.sf',final:'trk.round.final'};
+    var steps=championPath().map(function(st,i){
+      var rl=esc(I18N.t(RL[st.round])||st.round), opp=st.opp||{};
+      var pen=st.pen?'<span class="pen"> ('+esc(st.pen)+' '+esc(I18N.t('common.pen'))+')</span>':'';
+      return '<div class="rp-step'+(st.round==='final'?' final':'')+'" style="animation-delay:'+(i*0.09)+'s">'+
+        '<span class="rp-round">'+rl+'</span>'+
+        '<span class="rp-opp">'+(opp.logo?'<img src="'+esc(opp.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+'<span class="nm">'+esc(opp.name||'—')+'</span></span>'+
+        '<span class="rp-score">'+st.mine+'–'+st.his+pen+'</span>'+
+      '</div>';
+    }).join('');
+    m.innerHTML='<div class="replay-modal">'+
+      '<button class="rp-close" id="rpClose" aria-label="Fermer">×</button>'+
+      '<div class="rp-head">'+
+        '<div class="rp-trophy">🏆</div>'+
+        (champ.logo?'<img class="rp-crest" src="'+esc(champ.logo)+'" onerror="this.style.display=\'none\'">':'')+
+        '<div class="rp-champlbl">'+esc(lang()==='en'?'Champions of Europe':'Champion d’Europe')+'</div>'+
+        '<div class="rp-name">'+esc(champ.name)+'</div>'+
+        '<div class="rp-season">'+esc(I18N.t('souvenir.badge')||'Souvenir')+' '+esc(ESPN.seasonLabel(py))+'</div>'+
+      '</div>'+
+      '<div class="rp-body">'+
+        '<div class="rp-title">'+esc(lang()==='en'?'Road to glory':'La route vers le sacre')+'</div>'+
+        (steps||'<div class="rt-final" style="text-align:center">—</div>')+
+        '<a class="rp-full" href="dashboard.html?season='+py+'">'+esc(lang()==='en'?'See full season →':'Voir la saison complète →')+'</a>'+
+      '</div>'+
+    '</div>';
+    var c=el('rpClose'); if(c) c.addEventListener('click', closeReplay);
+    try{ Confetti.champion(); }catch(e){}
   }
   function renderOffseason(){
     var host=el('offseason'); if(!host) return;
@@ -1062,6 +1157,7 @@ a{ text-decoration:none; color:inherit; }
   renderOffseason();
   loadToday(); loadSeason();
   if(!ESPN.getFav() && !ESPN.favSeen()) openFavChooser();
+  (function(){ var rm=el('replay-modal'); if(rm) rm.addEventListener('click', function(e){ if(e.target===rm) closeReplay(); }); document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeReplay(); }); })();
   setInterval(function(){ try{ loadToday(); }catch(e){} }, 20000);
   setInterval(function(){ try{ loadSeason(); }catch(e){} }, 60000);
   setInterval(function(){ try{ document.querySelectorAll('.live-countdown[data-kickoff], .fav-cd[data-kickoff]').forEach(function(c){ var ts=parseInt(c.getAttribute('data-kickoff'),10); if(ts) c.textContent=countdown(new Date(ts)); }); var _nm=nextMilestone(); if(_nm && el('cdRow')) renderCountdown(_nm.ts); }catch(e){} }, 1000);
