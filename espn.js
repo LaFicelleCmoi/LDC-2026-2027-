@@ -673,6 +673,64 @@
     return hit(m.home) || hit(m.away);
   }
 
+  /* =======================================================================
+     ÉQUIPE FAVORITE — stockage local + liste des clubs pour le sélecteur
+     ======================================================================= */
+  var FAV_KEY = 'ldc_fav', FAV_SEEN_KEY = 'ldc_fav_seen';
+
+  function getFav() {
+    try { var s = localStorage.getItem(FAV_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+  }
+  function setFav(obj) {
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(obj)); markFavSeen(); } catch (e) {}
+  }
+  function clearFav() {
+    try { localStorage.removeItem(FAV_KEY); } catch (e) {}
+  }
+  function favSeen() {
+    try { return localStorage.getItem(FAV_SEEN_KEY) === '1'; } catch (e) { return false; }
+  }
+  function markFavSeen() {
+    try { localStorage.setItem(FAV_SEEN_KEY, '1'); } catch (e) {}
+  }
+
+  /* Liste dédupliquée des clubs (id, name, abbr, logo) pour le sélecteur de favori.
+     Saison courante ; repli sur la saison précédente si vide (intersaison). */
+  var _clubListCache = null;
+  function _clubsFromEvents(events) {
+    var map = {};
+    (events || []).forEach(function (ev) {
+      var m = normalizeEvent(ev); if (!m) return;
+      [m.home, m.away].forEach(function (c) {
+        if (!c || !c.teamId) return;
+        var ex = map[c.teamId];
+        if (!ex) map[c.teamId] = { id: c.teamId, name: c.name, abbr: c.abbr, logo: c.logo };
+        else if (!ex.logo && c.logo) ex.logo = c.logo;
+      });
+    });
+    return Object.keys(map).map(function (k) { return map[k]; })
+      .sort(function (a, b) { return a.name.localeCompare(b.name); });
+  }
+  function _prevSeasonClubs() {
+    var py = CURRENT_SEASON - 1;
+    return fetchScoreboard(py + '0901-' + (py + 1) + '0831', { limit: 500, ttl: 300000 })
+      .then(_clubsFromEvents);
+  }
+  function fetchClubList() {
+    if (_clubListCache) return Promise.resolve(_clubListCache);
+    return fetchSeasonEvents({ ttl: 300000 }).then(function (ev) {
+      var list = _clubsFromEvents(ev);
+      if (list.length >= 8) { _clubListCache = list; return list; }
+      return _prevSeasonClubs().then(function (l2) {
+        _clubListCache = l2.length ? l2 : list;
+        return _clubListCache;
+      });
+    }).catch(function () {
+      return _prevSeasonClubs().then(function (l2) { _clubListCache = l2; return l2; })
+        .catch(function () { return []; });
+    });
+  }
+
   global.ESPN = {
     LEAGUE_SLUG: LEAGUE_SLUG,
     BASE: BASE,
@@ -713,7 +771,14 @@
     isInterrupted: isInterrupted,
     splitClock: splitClock,
     matchesTeam: matchesTeam,
-    ROUND_ORDER: ROUND_ORDER
+    ROUND_ORDER: ROUND_ORDER,
+    // équipe favorite
+    getFav: getFav,
+    setFav: setFav,
+    clearFav: clearFav,
+    favSeen: favSeen,
+    markFavSeen: markFavSeen,
+    fetchClubList: fetchClubList
   };
 
 })(window);
