@@ -290,7 +290,12 @@
     wrap.setAttribute('role', 'group');
     wrap.setAttribute('aria-label', 'FR / EN');
     wrap.setAttribute('data-active', getLang());
-    var labels = SUPPORTED.map(function (lng) {
+    // Curseur coulissant (derrière les libellés) + libellés FR / EN par-dessus
+    var thumb = document.createElement('span');
+    thumb.className = 'lt-thumb';
+    thumb.setAttribute('aria-hidden', 'true');
+    wrap.appendChild(thumb);
+    SUPPORTED.forEach(function (lng) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'lt-opt';
@@ -298,19 +303,8 @@
       b.setAttribute('aria-label', lng === 'fr' ? 'Français' : 'English');
       b.textContent = lng.toUpperCase();
       b.addEventListener('click', function () { setLang(lng); });
-      return b;
+      wrap.appendChild(b);
     });
-    // Piste + ballon (le curseur ne recouvre plus les libellés, restés lisibles)
-    var track = document.createElement('span');
-    track.className = 'lt-track';
-    track.setAttribute('aria-hidden', 'true');
-    track.addEventListener('click', function () { setLang(getLang() === 'fr' ? 'en' : 'fr'); });
-    var knob = document.createElement('span');
-    knob.className = 'lt-knob';
-    track.appendChild(knob);
-    wrap.appendChild(labels[0]);
-    wrap.appendChild(track);
-    if (labels[1]) wrap.appendChild(labels[1]);
     host.appendChild(wrap);
     apply(host.ownerDocument || document);
   }
