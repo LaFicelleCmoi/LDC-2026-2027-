@@ -168,7 +168,21 @@
     'legal.b.liability':   { fr: 'L’auteur ne saurait être tenu responsable d’un dommage direct ou indirect résultant de l’utilisation du site ou de l’indisponibilité des données. Les éventuels liens externes ne relèvent pas de sa responsabilité.', en: 'The author cannot be held liable for any direct or indirect damage resulting from use of the site or unavailability of data. Any external links are beyond the author’s responsibility.' },
     'legal.h.credits':     { fr: '10 · Crédits',          en: '10 · Credits' },
     'legal.b.credits':     { fr: 'Ce site s’appuie sur des ressources que nous remercions :<ul class="credits-list"><li><b>Données &amp; logos</b> — <a href="https://www.espn.com" target="_blank" rel="noopener">ESPN</a> (API publique non officielle), propriété de leurs détenteurs respectifs</li><li><b>brackets-viewer.js</b> (Drarig29) — affichage du tableau de phase finale — licence MIT</li><li><b>Bebas Neue &amp; Inter</b> — Google Fonts, SIL Open Font License (OFL)</li><li><b>Effets d’interface</b> — inspirés de <a href="https://reactbits.dev" target="_blank" rel="noopener">ReactBits</a> &amp; <a href="https://uiverse.io" target="_blank" rel="noopener">Uiverse</a>, réécrits en JavaScript vanilla</li><li><b>Hébergement</b> — Vercel</li></ul>', en: 'This site relies on resources we gratefully credit:<ul class="credits-list"><li><b>Data &amp; logos</b> — <a href="https://www.espn.com" target="_blank" rel="noopener">ESPN</a> (unofficial public API), property of their respective owners</li><li><b>brackets-viewer.js</b> (Drarig29) — knockout bracket display — MIT license</li><li><b>Bebas Neue &amp; Inter</b> — Google Fonts, SIL Open Font License (OFL)</li><li><b>Interface effects</b> — inspired by <a href="https://reactbits.dev" target="_blank" rel="noopener">ReactBits</a> &amp; <a href="https://uiverse.io" target="_blank" rel="noopener">Uiverse</a>, rewritten in vanilla JavaScript</li><li><b>Hosting</b> — Vercel</li></ul>' },
-    'legal.h.contact':     { fr: '11 · Contact',          en: '11 · Contact' }
+    'legal.h.contact':     { fr: '11 · Contact',          en: '11 · Contact' },
+
+    /* ---- Équipe favorite ---- */
+    'fav.myTeam':       { fr: 'Mon équipe',              en: 'My team' },
+    'fav.promptTitle':  { fr: 'Suis ton club',           en: 'Follow your club' },
+    'fav.promptSub':    { fr: 'Choisis ton équipe favorite pour un suivi spécial.', en: 'Pick your favorite team for special tracking.' },
+    'fav.choose':       { fr: 'Choisir mon équipe',      en: 'Choose my team' },
+    'fav.change':       { fr: 'Changer',                 en: 'Change' },
+    'fav.remove':       { fr: 'Retirer',                 en: 'Remove' },
+    'fav.chooseTitle':  { fr: 'Choisis ton club favori', en: 'Choose your favorite club' },
+    'fav.chooseSub':    { fr: 'Tu auras un suivi spécial de ton équipe sur l’accueil.', en: 'You’ll get special tracking of your team on the home page.' },
+    'fav.search':       { fr: 'Rechercher un club…',     en: 'Search a club…' },
+    'fav.skip':         { fr: 'Plus tard',               en: 'Maybe later' },
+    'fav.vs':           { fr: 'contre',                  en: 'vs' },
+    'fav.noMatch':      { fr: 'Pas de match cette saison', en: 'No match this season' }
   };
 
   /* ----------------------------------------------------------------------- */
