@@ -26,7 +26,8 @@
   .quiz-q{ text-align:center; margin-bottom:20px; }
   .quiz-q .qlabel{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
   .quiz-q .qyear{ font-family:'Bebas Neue',Impact,sans-serif; font-size:64px; line-height:.9; color:var(--upcoming); letter-spacing:.02em; }
-  .quiz-q .qcrest{ width:120px; height:120px; object-fit:contain; margin:4px auto 0; display:block; filter:drop-shadow(0 8px 22px rgba(0,0,0,.55)); }
+  .quiz-q .qcrest{ width:120px; height:120px; object-fit:contain; margin:4px auto 0; display:block; filter:blur(4.5px) drop-shadow(0 8px 22px rgba(0,0,0,.55)); transition:filter .4s ease; }
+  .quiz-q .qcrest.revealed{ filter:drop-shadow(0 8px 22px rgba(0,0,0,.55)); }
   .quiz-opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .opt{ padding:13px 12px; border-radius:12px; border:1px solid var(--line-2); background:var(--bg-soft); color:var(--txt);
     font-family:inherit; font-weight:700; font-size:14px; cursor:pointer; transition:.15s; text-align:center; }
@@ -183,6 +184,7 @@
     if(locked) return; locked=true;
     var chosen=btn.getAttribute('data-opt');
     var correct = chosen===answer;
+    var cr=document.querySelector('#quizQ .qcrest'); if(cr) cr.classList.add('revealed');  // révèle l'écusson net
     Array.prototype.forEach.call(el('quizOpts').querySelectorAll('.opt'), function(b){
       b.disabled=true;
       var v=b.getAttribute('data-opt');
