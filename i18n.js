@@ -186,6 +186,7 @@
 
     /* ---- Navigation / Forme / Calendrier ---- */
     'nav.calendar':     { fr: 'Calendrier',              en: 'Schedule' },
+    'nav.game':         { fr: 'Jeu',                     en: 'Game' },
     'trk.col.form':     { fr: 'Forme',                   en: 'Form' },
     'cal.title':        { fr: 'Calendrier',              en: 'Schedule' },
     'cal.sub':          { fr: 'Tous les matchs de la saison, par journée', en: 'All season matches, by matchday' },
