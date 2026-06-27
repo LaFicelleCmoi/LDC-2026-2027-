@@ -120,6 +120,30 @@
   .pm-pick:hover{ color:var(--txt); border-color:rgba(var(--gold-rgb,245,181,10),.55); }
   .pm-pick.active{ background:rgba(var(--gold-rgb,245,181,10),.18); border-color:rgb(var(--gold-rgb)); color:#fff; }
 
+  /* ---- Parcours vers la finale (bracket interactif) --------------------- */
+  .bracket-predict{ display:flex; flex-direction:column; gap:14px; }
+  #runBar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .run-hypo{ font-size:11px; color:var(--muted); border:1px dashed var(--line-2); border-radius:8px; padding:4px 9px; }
+  .run-copied{ font-size:12px; font-weight:800; color:var(--upcoming); }
+  .run-hint{ font-size:12.5px; color:var(--muted); }
+  .run-rounds{ display:flex; gap:18px; overflow-x:auto; padding-bottom:8px; }
+  .run-rounds .round-col{ min-width:190px; }
+  .run-row{ display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:8px; cursor:pointer; transition:background .12s, box-shadow .12s; }
+  .run-row + .run-row{ margin-top:4px; }
+  .run-row .crest{ width:22px; height:22px; object-fit:contain; flex:none; }
+  .run-row .nm{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .run-row:hover{ background:rgba(var(--gold-rgb,245,181,10),.10); }
+  .run-row.picked{ background:rgba(var(--gold-rgb,245,181,10),.16); box-shadow:inset 0 0 0 1px rgb(var(--gold-rgb)); }
+  .run-row.picked .nm{ color:#fff; }
+  .run-row.empty{ opacity:.55; cursor:default; }
+  .run-row.empty .nm{ color:var(--muted); font-style:italic; }
+  .run-row:focus-visible{ outline:2px solid rgb(var(--gold-rgb)); outline-offset:1px; }
+  .run-champion{ display:none; align-items:center; gap:14px; padding:14px 18px; background:rgba(var(--gold-rgb,245,181,10),.10); border:1px dashed rgba(var(--gold-rgb,245,181,10),.5); border-radius:12px; }
+  .run-champion.show{ display:flex; }
+  .run-champion img{ width:46px; height:46px; object-fit:contain; }
+  .run-champion .lbl{ font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--upcoming); }
+  .run-champion .nm{ font-size:22px; font-weight:900; }
+
   @media (max-width:720px){
     #liveWidget{ width:calc(100vw - 28px); right:14px; bottom:14px; }
     #widgetReopen{ right:14px; bottom:14px; }
@@ -227,6 +251,7 @@
       <div class="view-toggle" style="margin-left:auto">
         <button class="btn active star-border" id="btnCards" data-i18n="trk.viewCards">Vue cartes</button>
         <button class="btn star-border" id="btnTree" data-i18n="trk.viewTree">Vue arbre</button>
+        <button class="btn star-border" id="btnRun" data-i18n="trk.viewRun">🏆 Mon parcours</button>
       </div>
     </div>
 
@@ -241,6 +266,7 @@
     <div class="card pad">
       <div id="bracketCards" class="bracket-cards"></div>
       <div id="bracketTree" class="brackets-viewer" style="display:none;"></div>
+      <div id="bracketPredict" class="bracket-predict" style="display:none;"></div>
       <div id="bracketEmpty" class="empty-state" data-i18n="trk.noKnockout" style="display:none;">La phase finale n’a pas encore commencé.</div>
     </div>
   </section>
@@ -515,15 +541,21 @@
   el('widgetReopen').addEventListener('click',function(){ widgetClosed=false; renderWidget(); });
 
   /* ================= TOGGLE VUES ================= */
-  el('btnCards').addEventListener('click',function(){
-    this.classList.add('active'); el('btnTree').classList.remove('active');
-    el('bracketCards').style.display='flex'; el('bracketTree').style.display='none';
-  });
-  el('btnTree').addEventListener('click',function(){
-    this.classList.add('active'); el('btnCards').classList.remove('active');
-    el('bracketCards').style.display='none'; el('bracketTree').style.display='block';
-    if(lastBracket) renderBracketTree(lastBracket);
-  });
+  function setKnockoutView(view){  // 'cards' | 'tree' | 'run'
+    el('btnCards').classList.toggle('active', view==='cards');
+    el('btnTree').classList.toggle('active', view==='tree');
+    el('btnRun').classList.toggle('active', view==='run');
+    el('bracketCards').style.display   = view==='cards'?'flex':'none';
+    el('bracketTree').style.display    = view==='tree'?'block':'none';
+    el('bracketPredict').style.display = view==='run'?'flex':'none';
+    el('bracketEmpty').style.display   = (view==='cards' && (!lastBracket||!lastBracket.length))?'block':'none';
+    el('championBanner').style.display = view==='run'?'none':'';
+    if(view==='tree' && lastBracket) renderBracketTree(lastBracket);
+    if(view==='run') ensureRun();
+  }
+  el('btnCards').addEventListener('click',function(){ setKnockoutView('cards'); });
+  el('btnTree').addEventListener('click',function(){ setKnockoutView('tree'); });
+  el('btnRun').addEventListener('click',function(){ setKnockoutView('run'); });
 
   /* ================= PRÉDICTEUR DE CLASSEMENT ================= */
   function byAscDate(a,b){ return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0); }
@@ -579,6 +611,75 @@
   el('btnPredict').addEventListener('click',function(){ setPredictMode(!predictMode); });
   el('btnPredictReset').addEventListener('click',function(){ predictions={}; savePred(); refreshPredict(); });
   el('predictPanel').addEventListener('click',function(e){ var b=e.target.closest?e.target.closest('.pm-pick'):null; if(b) applyPick(b.getAttribute('data-id'), b.getAttribute('data-pick')); });
+
+  /* ================= PARCOURS VERS LA FINALE (bracket interactif) ================= */
+  var RUN_ROUNDS=['r16','qf','sf','final'];
+  var RUN_LABEL={ r16:'trk.round.r16', qf:'trk.round.qf', sf:'trk.round.sf', final:'trk.round.final' };
+  var RUN_KEY='ldc_run_'+PRED_YEAR;
+  var runSeed=null, runPicks={}, runBuilt=false;
+  function saveRun(){ try{ localStorage.setItem(RUN_KEY, JSON.stringify(runPicks)); }catch(e){} }
+  function buildRunSeed(cb){
+    var r16=(lastBracket||[]).filter(function(r){return r.key==='r16';})[0];
+    if(r16 && r16.ties.length>=8){ runSeed={ pairs:r16.ties.slice(0,8).map(function(t){return {a:t.teamA,b:t.teamB};}), hypo:false, source:'bracket' }; if(cb)cb(); return; }
+    ESPN.fetchClubList().then(function(list){
+      var cl=(list||[]).filter(function(c){return c && (c.id||c.name);}).slice(0,16), pairs=[];
+      for(var i=0;i<8;i++){ pairs.push({ a:cl[2*i]||null, b:cl[2*i+1]||null }); }
+      runSeed={ pairs:pairs, hypo:true, source:cl.length?'clubs':'empty' }; if(cb)cb();
+    }).catch(function(){ runSeed={ pairs:[], hypo:true, source:'empty' }; if(cb)cb(); });
+  }
+  function runWinners(ties, rk){ return ties.map(function(t,i){ var p=runPicks[rk+':'+i]; return p==='A'?t.teamA:(p==='B'?t.teamB:null); }); }
+  function computeRunBracket(){
+    if(!runSeed) return [];
+    var r16=runSeed.pairs.map(function(p){ return {teamA:p.a, teamB:p.b}; });
+    var r16w=runWinners(r16,'r16'), qf=[]; for(var i=0;i<4;i++) qf.push({teamA:r16w[2*i]||null, teamB:r16w[2*i+1]||null});
+    var qfw=runWinners(qf,'qf'), sf=[]; for(var j=0;j<2;j++) sf.push({teamA:qfw[2*j]||null, teamB:qfw[2*j+1]||null});
+    var sfw=runWinners(sf,'sf'), fin=[{teamA:sfw[0]||null, teamB:sfw[1]||null}];
+    return [{key:'r16',ties:r16},{key:'qf',ties:qf},{key:'sf',ties:sf},{key:'final',ties:fin}];
+  }
+  function runRow(t, rk, i, side, picked){
+    var has=!!t, cls='run-row'+(picked?' picked':'')+(has?'':' empty');
+    var inner = has
+      ? ((t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span class="crest"></span>')+'<span class="nm">'+esc(t.shortName||t.name||t.abbr||'')+'</span>')
+      : '<span class="crest"></span><span class="nm">'+esc(I18N.t('trk.run.empty'))+'</span>';
+    var attrs = has ? ' role="button" tabindex="0" data-r="'+rk+'" data-t="'+i+'" data-s="'+side+'"' : '';
+    return '<div class="'+cls+'"'+attrs+'>'+inner+'</div>';
+  }
+  function renderRun(){
+    var host=el('bracketPredict'); if(!host) return;
+    if(!runSeed || !runSeed.pairs.length){ host.innerHTML='<div class="empty-state">'+esc(I18N.t('trk.run.noData'))+'</div>'; return; }
+    var rounds=computeRunBracket();
+    var fin=rounds[rounds.length-1].ties[0], fp=runPicks['final:0'], champ=fp==='A'?fin.teamA:(fp==='B'?fin.teamB:null);
+    var bar='<div id="runBar">'+(runSeed.hypo?'<span class="run-hypo">'+esc(I18N.t('trk.run.hypo'))+'</span>':'')+
+      '<button class="btn star-border" id="runRandom">'+esc(I18N.t('trk.run.random'))+'</button>'+
+      '<button class="btn star-border" id="runReset">'+esc(I18N.t('trk.run.reset'))+'</button>'+
+      '<button class="btn star-border" id="runShare">'+esc(I18N.t('trk.run.share'))+'</button>'+
+      '<span class="run-copied" id="runCopied" style="display:none">'+esc(I18N.t('trk.run.copied'))+'</span></div>';
+    var banner='<div class="run-champion'+(champ?' show':'')+'">'+(champ?((champ.logo?'<img src="'+esc(champ.logo)+'" alt="">':'')+'<div><div class="lbl">'+esc(I18N.t('trk.run.champion'))+'</div><div class="nm">'+esc(champ.name||champ.shortName||'')+'</div></div>'):'')+'</div>';
+    var cols=rounds.map(function(r){
+      var ties=r.ties.map(function(tie,i){ var p=runPicks[r.key+':'+i];
+        return '<div class="tie run-tie">'+runRow(tie.teamA,r.key,i,'A',p==='A')+runRow(tie.teamB,r.key,i,'B',p==='B')+'</div>'; }).join('');
+      return '<div class="round-col"><h3>'+esc(I18N.t(RUN_LABEL[r.key])||r.key)+'</h3>'+ties+'</div>';
+    }).join('');
+    host.innerHTML=bar+banner+'<div class="run-hint">'+esc(I18N.t('trk.run.pick'))+'</div><div class="run-rounds">'+cols+'</div>';
+    el('runRandom').addEventListener('click',runRandom);
+    el('runReset').addEventListener('click',function(){ runPicks={}; saveRun(); writeRunUrl(); renderRun(); });
+    el('runShare').addEventListener('click',shareRun);
+  }
+  function invalidateRunDownstream(rk){ var idx=RUN_ROUNDS.indexOf(rk); for(var i=idx+1;i<RUN_ROUNDS.length;i++){ var d=RUN_ROUNDS[i]; Object.keys(runPicks).forEach(function(k){ if(k.indexOf(d+':')===0) delete runPicks[k]; }); } }
+  function setRunPick(rk,ti,side){ runPicks[rk+':'+ti]=side; invalidateRunDownstream(rk); saveRun(); writeRunUrl(); renderRun(); }
+  function runRandom(){ if(!runSeed) return; runPicks={}; var counts={r16:8,qf:4,sf:2,final:1}; RUN_ROUNDS.forEach(function(rk){ for(var i=0;i<counts[rk];i++) runPicks[rk+':'+i]=(Math.random()<0.5?'A':'B'); }); saveRun(); writeRunUrl(); renderRun(); }
+  function encodeRun(){ var s='', counts={r16:8,qf:4,sf:2,final:1}; RUN_ROUNDS.forEach(function(rk){ for(var i=0;i<counts[rk];i++){ var p=runPicks[rk+':'+i]; s+=(p==='A'?'0':(p==='B'?'1':'-')); } }); return s; }
+  function decodeRun(s){ if(!s) return; var counts={r16:8,qf:4,sf:2,final:1}, idx=0; RUN_ROUNDS.forEach(function(rk){ for(var i=0;i<counts[rk];i++){ var ch=s.charAt(idx++); if(ch==='0') runPicks[rk+':'+i]='A'; else if(ch==='1') runPicks[rk+':'+i]='B'; } }); }
+  function writeRunUrl(){ try{ var u=new URL(location.href); u.searchParams.set('run', encodeRun()); history.replaceState(null,'',u.toString()); }catch(e){} }
+  function shareRun(){ writeRunUrl(); var url=location.href; function ok(){ var c=el('runCopied'); if(c){ c.style.display='inline'; setTimeout(function(){ if(c) c.style.display='none'; },1800); } } if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok,ok); } else { try{ var ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok(); }catch(e){} } }
+  function ensureRun(){
+    if(runBuilt){ renderRun(); return; }
+    try{ var rp=new URLSearchParams(location.search).get('run'); if(rp){ decodeRun(rp); } else { var st=JSON.parse(localStorage.getItem(RUN_KEY)||'{}'); if(st&&typeof st==='object') runPicks=st; } }catch(e){}
+    el('bracketPredict').innerHTML='<div class="empty-state">'+esc(I18N.t('common.loading')||'…')+'</div>';
+    buildRunSeed(function(){ runBuilt=true; renderRun(); });
+  }
+  el('bracketPredict').addEventListener('click',function(e){ var r=e.target.closest?e.target.closest('.run-row[data-r]'):null; if(r) setRunPick(r.getAttribute('data-r'),+r.getAttribute('data-t'),r.getAttribute('data-s')); });
+  el('bracketPredict').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ var r=e.target.closest?e.target.closest('.run-row[data-r]'):null; if(r){ e.preventDefault(); setRunPick(r.getAttribute('data-r'),+r.getAttribute('data-t'),r.getAttribute('data-s')); } } });
 
   /* ================= HELPERS ================= */
   function formPills(form){
@@ -660,6 +761,7 @@
     if(lastStandings) renderStandings(predictMode?predictedStandings():lastStandings);
     if(predictMode) renderPredictPanel();
     if(lastBracket){ renderBracketCards(lastBracket); if(el('btnTree').classList.contains('active')) renderBracketTree(lastBracket); }
+    if(el('btnRun').classList.contains('active')) renderRun();
     renderWidget();
   });
 
