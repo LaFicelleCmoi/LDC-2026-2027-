@@ -183,6 +183,14 @@
     'fav.skip':         { fr: 'Plus tard',               en: 'Maybe later' },
     'fav.vs':           { fr: 'contre',                  en: 'vs' },
     'fav.noMatch':      { fr: 'Pas de match cette saison', en: 'No match this season' },
+    'fav.notif.enable': { fr: 'Activer les notifications', en: 'Enable notifications' },
+    'fav.notif.on':     { fr: 'Notifications activées',   en: 'Notifications on' },
+    'fav.notif.off':    { fr: 'Notifications désactivées', en: 'Notifications off' },
+    'fav.notif.blocked':{ fr: 'Notifications bloquées',   en: 'Notifications blocked' },
+    'fav.notif.blockedHint': { fr: 'Autorise les notifications dans les réglages du navigateur', en: 'Allow notifications in your browser settings' },
+    'fav.notif.title':  { fr: 'Match du favori bientôt',  en: 'Favorite match soon' },
+    'fav.notif.inMin':  { fr: 'coup d’envoi dans {min} min', en: 'kickoff in {min} min' },
+    'fav.notif.tabHint':{ fr: 'Rappel envoyé seulement si un onglet du site reste ouvert.', en: 'Reminder fires only while a tab stays open.' },
 
     /* ---- Navigation / Forme / Calendrier ---- */
     'nav.calendar':     { fr: 'Calendrier',              en: 'Schedule' },
