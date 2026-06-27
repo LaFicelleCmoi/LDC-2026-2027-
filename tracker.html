@@ -71,8 +71,8 @@
   /* ---- Champion ---------------------------------------------------------- */
   .champion{
     display:none; align-items:center; gap:14px; margin-bottom:16px; padding:16px 18px;
-    background:rgba(245,181,10,.08);
-    border:1px solid rgba(245,181,10,.4); border-top:3px solid var(--upcoming); border-radius:12px;
+    background:rgba(var(--gold-rgb,245,181,10),.08);
+    border:1px solid rgba(var(--gold-rgb,245,181,10),.4); border-top:3px solid var(--upcoming); border-radius:12px;
   }
   .champion.show{ display:flex; }
   .champion img{ width:48px; height:48px; object-fit:contain; }
@@ -103,6 +103,23 @@
 
   #confetti{ position:fixed; inset:0; pointer-events:none; z-index:70; display:none; }
 
+  /* ---- Prédicteur de classement ----------------------------------------- */
+  .predict-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .predict-badge{ display:inline-flex; align-items:center; font-size:10.5px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; color:#1a1300; background:var(--upcoming); padding:3px 9px; border-radius:999px; }
+  .predict-panel{ margin-top:14px; border-top:1px dashed var(--line-2); padding-top:14px; }
+  .predict-hint{ font-size:12.5px; color:var(--muted); margin-bottom:6px; }
+  .predict-count{ font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--upcoming); margin-bottom:12px; }
+  .pm-list{ display:flex; flex-direction:column; gap:8px; }
+  .pm-row{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:8px 10px; background:var(--bg-soft); border:1px solid var(--line); border-radius:10px; }
+  .pm-team{ display:flex; align-items:center; gap:8px; min-width:0; }
+  .pm-row .pm-team:last-child{ justify-content:flex-end; text-align:right; }
+  .pm-team img{ width:24px; height:24px; object-fit:contain; flex:none; }
+  .pm-nm{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pm-picks{ display:flex; gap:4px; }
+  .pm-pick{ width:34px; height:34px; border-radius:8px; border:1px solid var(--line-2); background:var(--card); color:var(--muted); font-family:inherit; font-weight:800; font-size:13px; cursor:pointer; transition:.12s; }
+  .pm-pick:hover{ color:var(--txt); border-color:rgba(var(--gold-rgb,245,181,10),.55); }
+  .pm-pick.active{ background:rgba(var(--gold-rgb,245,181,10),.18); border-color:rgb(var(--gold-rgb)); color:#fff; }
+
   @media (max-width:720px){
     #liveWidget{ width:calc(100vw - 28px); right:14px; bottom:14px; }
     #widgetReopen{ right:14px; bottom:14px; }
@@ -116,6 +133,8 @@
     .standings .club-cell .nm{ font-weight:700; }
     .standings .tbl-cup{ margin-left:5px; font-size:10px; }
     .legend{ gap:8px 14px; font-size:11px; }
+    .pm-row{ gap:6px; padding:7px 8px; } .pm-nm{ font-size:12px; } .pm-team img{ width:20px; height:20px; }
+    .pm-pick{ width:30px; height:30px; font-size:12px; }
     .champion{ padding:12px 14px; gap:11px; }
     .champion img{ width:38px; height:38px; }
     .champion .nm{ font-size:18px; }
@@ -164,6 +183,11 @@
     <div class="section-head">
       <h2 id="leagueHead" data-i18n="trk.leaguePhase">Phase de ligue</h2>
       <span class="sub" id="standingsUpdated"></span>
+      <div class="predict-bar" style="margin-left:auto">
+        <span class="predict-badge" id="predictBadge" data-i18n="trk.pred.badge" style="display:none">PRÉDICTION</span>
+        <button class="btn star-border" id="btnPredictReset" data-i18n="trk.pred.reset" style="display:none">Réinitialiser</button>
+        <button class="btn star-border" id="btnPredict" data-i18n="trk.pred.toggle">🔮 Mode prédiction</button>
+      </div>
     </div>
     <div class="card pad" style="overflow-x:auto;">
       <table class="standings">
@@ -192,6 +216,7 @@
         <span><i style="background:var(--zone-po)"></i><span data-i18n="trk.legend.po">9–24 : barrages</span></span>
         <span><i style="background:var(--zone-out)"></i><span data-i18n="trk.legend.out">25–36 : éliminés</span></span>
       </div>
+      <div id="predictPanel" class="predict-panel" style="display:none"></div>
     </div>
   </section>
 
@@ -238,7 +263,7 @@
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=17"></script>
+<script src="i18n.js?v=18"></script>
 <script src="espn.js?v=10"></script>
 <script src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.js"></script>
 <script>
@@ -249,7 +274,14 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function el(id){ return document.getElementById(id); }
 
-  var lastStandings=null, lastBracket=null, lastChampion=null;
+  var lastStandings=null, lastBracket=null, lastChampion=null, lastEvents=null;
+  /* Prédicteur de classement */
+  var predictMode=false, replayAll=false, predictions={};
+  var PRED_YEAR=(function(){ try{ return new URLSearchParams(location.search).get('season')||String(ESPN.CURRENT_SEASON); }catch(e){ return String(ESPN.CURRENT_SEASON); } })();
+  var PRED_KEY='ldc_pred_'+PRED_YEAR;
+  try{ predictions=JSON.parse(localStorage.getItem(PRED_KEY)||'{}')||{}; }catch(e){ predictions={}; }
+  if(typeof predictions!=='object'||!predictions) predictions={};
+  function savePred(){ try{ localStorage.setItem(PRED_KEY, JSON.stringify(predictions)); }catch(e){} }
 
   /* ---- Starfield (ReactBits Particles) ---- */
   (function starfield(){
@@ -493,6 +525,61 @@
     if(lastBracket) renderBracketTree(lastBracket);
   });
 
+  /* ================= PRÉDICTEUR DE CLASSEMENT ================= */
+  function byAscDate(a,b){ return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0); }
+  function predictableMatches(){
+    if(!lastEvents) return [];
+    var arr=lastEvents.map(ESPN.normalizeEvent).filter(function(m){ return m && m.round==='league' && (replayAll || m.state==='pre'); });
+    arr.sort(byAscDate); return arr;
+  }
+  function emptyRow(c){ return {teamId:c.teamId,name:c.name,shortName:c.shortName,abbr:c.abbr,logo:c.logo,pld:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,form:[],live:false}; }
+  function cloneRow(t){ return {teamId:t.teamId,name:t.name,shortName:t.shortName,abbr:t.abbr,logo:t.logo,pld:t.pld,w:t.w,d:t.d,l:t.l,gf:t.gf,ga:t.ga,gd:t.gd,pts:t.pts,form:(t.form||[]).slice(),live:false}; }
+  function applyResult(map,m,pick){
+    var hk=m.home.teamId||m.home.name, ak=m.away.teamId||m.away.name;
+    var H=map[hk]||(map[hk]=emptyRow(m.home)), A=map[ak]||(map[ak]=emptyRow(m.away));
+    H.pld++; A.pld++;
+    if(pick==='H'){ H.gf++; A.ga++; H.w++; A.l++; H.pts+=3; H.form.push('w'); A.form.push('l'); }
+    else if(pick==='A'){ A.gf++; H.ga++; A.w++; H.l++; A.pts+=3; A.form.push('w'); H.form.push('l'); }
+    else { H.gf++; A.gf++; H.ga++; A.ga++; H.d++; A.d++; H.pts++; A.pts++; H.form.push('d'); A.form.push('d'); }
+  }
+  function predictedStandings(){
+    var map={}, ms=predictableMatches();
+    if(replayAll){ ms.forEach(function(m){ var hk=m.home.teamId||m.home.name, ak=m.away.teamId||m.away.name; if(!map[hk]) map[hk]=emptyRow(m.home); if(!map[ak]) map[ak]=emptyRow(m.away); }); }
+    else { (lastStandings||[]).forEach(function(t){ map[t.teamId||t.name]=cloneRow(t); }); }
+    ms.forEach(function(m){ var p=predictions[m.id]; if(p) applyResult(map,m,p); });
+    var arr=Object.keys(map).map(function(k){ var t=map[k]; t.gd=t.gf-t.ga; t.form=t.form.slice(-5); return t; });
+    arr.sort(function(a,b){ if(b.pts!==a.pts)return b.pts-a.pts; if(b.gd!==a.gd)return b.gd-a.gd; if(b.gf!==a.gf)return b.gf-a.gf; return a.name.localeCompare(b.name); });
+    arr.forEach(function(t,i){ t.pos=i+1; });
+    return arr;
+  }
+  function renderPredictPanel(){
+    var host=el('predictPanel'); if(!host) return;
+    var ms=predictableMatches();
+    if(!ms.length){
+      var cta=(!ESPN.isArchive())?' <a class="souvenir-link" href="tracker.html?season=2025" style="text-decoration:underline">'+esc(I18N.t('dash.seeSouvenir'))+'</a>':'';
+      host.innerHTML='<div class="predict-hint">'+esc(I18N.t('trk.pred.empty'))+cta+'</div>'; return;
+    }
+    var done=ms.filter(function(m){return predictions[m.id];}).length;
+    function side(c){ return '<span class="pm-team">'+(c.logo?'<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+'<span class="pm-nm">'+esc(c.abbr||c.shortName||c.name)+'</span></span>'; }
+    function pk(m,v,lbl){ var p=predictions[m.id]||''; return '<button class="pm-pick'+(p===v?' active':'')+'" data-id="'+esc(m.id)+'" data-pick="'+v+'">'+lbl+'</button>'; }
+    host.innerHTML='<div class="predict-hint">'+(replayAll?esc(I18N.t('trk.pred.replay')):esc(I18N.t('trk.pred.title')))+'</div>'+
+      '<div class="predict-count">'+esc(I18N.t('trk.pred.count').replace('{done}',done).replace('{total}',ms.length))+'</div>'+
+      '<div class="pm-list">'+ms.map(function(m){ return '<div class="pm-row">'+side(m.home)+'<span class="pm-picks">'+pk(m,'H','1')+pk(m,'D','N')+pk(m,'A','2')+'</span>'+side(m.away)+'</div>'; }).join('')+'</div>';
+  }
+  function refreshPredict(){ renderStandings(predictMode?predictedStandings():lastStandings); if(predictMode) renderPredictPanel(); }
+  function applyPick(id,pick){ if(predictions[id]===pick) delete predictions[id]; else predictions[id]=pick; savePred(); refreshPredict(); }
+  function setPredictMode(on){
+    predictMode=!!on;
+    var b=el('btnPredict'); b.setAttribute('data-i18n', predictMode?'trk.pred.exit':'trk.pred.toggle'); b.innerHTML=esc(I18N.t(predictMode?'trk.pred.exit':'trk.pred.toggle'));
+    el('predictBadge').style.display=predictMode?'inline-flex':'none';
+    el('btnPredictReset').style.display=predictMode?'inline-flex':'none';
+    el('predictPanel').style.display=predictMode?'block':'none';
+    refreshPredict();
+  }
+  el('btnPredict').addEventListener('click',function(){ setPredictMode(!predictMode); });
+  el('btnPredictReset').addEventListener('click',function(){ predictions={}; savePred(); refreshPredict(); });
+  el('predictPanel').addEventListener('click',function(e){ var b=e.target.closest?e.target.closest('.pm-pick'):null; if(b) applyPick(b.getAttribute('data-id'), b.getAttribute('data-pick')); });
+
   /* ================= HELPERS ================= */
   function formPills(form){
     if(!form || !form.length) return '<span class="form-none">—</span>';
@@ -535,9 +622,12 @@
     if(document.visibilityState==='hidden') return;
     ESPN.fetchSeasonEvents().then(function(events){
       showOffline(false);
+      lastEvents = events;
       lastStandings = ESPN.computeStandings(events);
       lastBracket = ESPN.buildBracket(events);
-      renderStandings(lastStandings);
+      (function(){ var lg=(events||[]).map(ESPN.normalizeEvent).filter(function(m){return m&&m.round==='league';}); replayAll=(lg.length>0 && lg.filter(function(m){return m.state==='pre';}).length===0); })();
+      renderStandings(predictMode?predictedStandings():lastStandings);
+      if(predictMode) renderPredictPanel();
       renderBracketCards(lastBracket);
       if(el('btnTree').classList.contains('active')) renderBracketTree(lastBracket);
       handleChampion(lastBracket);
@@ -567,7 +657,8 @@
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'){ loadSeason(); loadToday(); } });
   window.addEventListener('ldc:langchange',function(){
     applySeasonUI();
-    if(lastStandings) renderStandings(lastStandings);
+    if(lastStandings) renderStandings(predictMode?predictedStandings():lastStandings);
+    if(predictMode) renderPredictPanel();
     if(lastBracket){ renderBracketCards(lastBracket); if(el('btnTree').classList.contains('active')) renderBracketTree(lastBracket); }
     renderWidget();
   });
