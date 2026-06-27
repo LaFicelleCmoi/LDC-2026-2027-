@@ -6,7 +6,7 @@
 <title>Jeu — Ligue des Champions</title>
 <link rel="icon" href="logo.svg?v=1" type="image/svg+xml" />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=15" />
+<link rel="stylesheet" href="styles.css?v=16" />
 <style>
   .game-wrap{ max-width:680px; }
   .game-modes{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
@@ -121,6 +121,7 @@
   function sample(arr,n,exclude){ var pool=arr.filter(function(x){return x!==exclude;}); shuffle(pool); return pool.slice(0,n); }
 
   if(window.I18N) I18N.mountToggle('#langSwitch');
+  (function applyFavAccent(){ if(!window.ESPN||!ESPN.favAccent) return; var a=ESPN.favAccent(), r=document.documentElement; if(a) r.style.setProperty('--fav-rgb',a); else r.style.removeProperty('--fav-rgb'); })();
 
   /* ---- données ---- */
   var ranking = (window.ESPN&&ESPN.palmaresRanking)?ESPN.palmaresRanking():[];
