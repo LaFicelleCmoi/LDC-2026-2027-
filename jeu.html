@@ -12,8 +12,8 @@
   .game-modes{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
   .gm-btn{ flex:1 1 auto; min-width:150px; padding:11px 14px; border-radius:11px; border:1px solid var(--line-2); background:var(--card); color:var(--muted);
     font-family:inherit; font-weight:800; font-size:13px; letter-spacing:.02em; cursor:pointer; transition:.15s; }
-  .gm-btn:hover{ color:var(--txt); border-color:rgba(245,181,10,.5); }
-  .gm-btn.active{ background:rgba(245,181,10,.14); border-color:rgba(245,181,10,.55); color:var(--upcoming); }
+  .gm-btn:hover{ color:var(--txt); border-color:rgba(var(--gold-rgb,245,181,10),.5); }
+  .gm-btn.active{ background:rgba(var(--gold-rgb,245,181,10),.14); border-color:rgba(var(--gold-rgb,245,181,10),.55); color:var(--upcoming); }
 
   .score-bar{ display:flex; gap:14px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
   .score-pill{ display:inline-flex; align-items:baseline; gap:6px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:7px 14px; }
@@ -28,10 +28,18 @@
   .quiz-q .qyear{ font-family:'Bebas Neue',Impact,sans-serif; font-size:64px; line-height:.9; color:var(--upcoming); letter-spacing:.02em; }
   .quiz-q .qcrest{ width:120px; height:120px; object-fit:contain; margin:4px auto 0; display:block; filter:blur(4.5px) drop-shadow(0 8px 22px rgba(0,0,0,.55)); transition:filter .4s ease; }
   .quiz-q .qcrest.revealed{ filter:drop-shadow(0 8px 22px rgba(0,0,0,.55)); }
+  .quiz-q .qname{ font-family:'Bebas Neue',Impact,sans-serif; font-size:30px; line-height:1; color:var(--txt); margin-top:8px; letter-spacing:.02em; }
+  .quiz-q .qmatch{ display:flex; align-items:center; justify-content:center; gap:20px; margin-top:6px; }
+  .quiz-q .qm-side{ display:flex; flex-direction:column; align-items:center; gap:7px; width:112px; }
+  .quiz-q .qm-logo{ width:72px; height:72px; object-fit:contain; filter:drop-shadow(0 6px 16px rgba(0,0,0,.5)); }
+  .quiz-q .qm-name{ font-size:12px; font-weight:800; color:var(--txt); text-align:center; line-height:1.15; }
+  .quiz-q .qm-vs{ font-family:'Bebas Neue',Impact,sans-serif; font-size:42px; color:var(--upcoming); }
+  .quiz-q .daily-prog{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--upcoming); margin-bottom:10px; }
+  .quiz-q .daily-final{ font-family:'Bebas Neue',Impact,sans-serif; font-size:60px; line-height:.9; color:var(--upcoming); }
   .quiz-opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .opt{ padding:13px 12px; border-radius:12px; border:1px solid var(--line-2); background:var(--bg-soft); color:var(--txt);
     font-family:inherit; font-weight:700; font-size:14px; cursor:pointer; transition:.15s; text-align:center; }
-  .opt:hover:not(:disabled){ border-color:rgba(245,181,10,.6); background:var(--card-2); }
+  .opt:hover:not(:disabled){ border-color:rgba(var(--gold-rgb,245,181,10),.6); background:var(--card-2); }
   .opt:disabled{ cursor:default; }
   .opt.correct{ background:rgba(40,199,111,.18); border-color:var(--finished); color:#b7f5d2; }
   .opt.wrong{ background:rgba(255,93,108,.16); border-color:var(--live); color:#ffc2c8; }
@@ -49,6 +57,8 @@
   @media (max-width:560px){
     .quiz-q .qyear{ font-size:52px; }
     .quiz-q .qcrest{ width:92px; height:92px; }
+    .quiz-q .qm-side{ width:84px; } .quiz-q .qm-logo{ width:54px; height:54px; } .quiz-q .qm-vs{ font-size:30px; }
+    .quiz-q .qname{ font-size:25px; } .quiz-q .daily-final{ font-size:48px; }
     .opt{ font-size:13px; padding:12px 9px; }
     .quiz-card{ padding:18px 14px; }
   }
@@ -84,6 +94,9 @@
     <div class="game-modes" id="gameModes">
       <button class="gm-btn active" data-mode="champion" id="modeChampion">🏆 Champion de l’année</button>
       <button class="gm-btn" data-mode="crest" id="modeCrest">🛡️ Devine le club</button>
+      <button class="gm-btn" data-mode="score" id="modeScore">⚽ Devine le score</button>
+      <button class="gm-btn" data-mode="year" id="modeYear">📅 Devine l’année</button>
+      <button class="gm-btn" data-mode="daily" id="modeDaily">🔥 Défi du jour</button>
     </div>
 
     <div class="score-bar">
@@ -126,51 +139,77 @@
   /* ---- données ---- */
   var ranking = (window.ESPN&&ESPN.palmaresRanking)?ESPN.palmaresRanking():[];
   var clubNames = ranking.map(function(c){return c.name;});
+  var nameLogo = {}; ranking.forEach(function(c){ nameLogo[c.name]=c.logo; });
   var yearChamp = [];                          // [{year, name}]
   ranking.forEach(function(c){ c.years.forEach(function(y){ yearChamp.push({year:y, name:c.name}); }); });
 
   var crestClubs = [];                          // [{name, logo}] (chargé via ESPN)
+  var scoreMatches = [], scoreLoaded=false;     // matchs passés (saison 2024-25) pour "Devine le score"
   var mode='champion', locked=false;
   var score=0, streak=0;
-  var BEST_KEY='ldc_quiz_best';
-  var best=(function(){ try{ return parseInt(localStorage.getItem(BEST_KEY),10)||0; }catch(e){ return 0; } })();
+  var dailySeq=null, dailyIdx=0, dailyScore=0;  // défi quotidien
 
-  function setBest(){ if(streak>best){ best=streak; try{ localStorage.setItem(BEST_KEY,best); }catch(e){} } el('beVal').textContent=best; }
-  function refreshScore(){ el('scVal').textContent=score; el('stVal').textContent=streak; el('beVal').textContent=best; }
+  var BEST_KEY='ldc_quiz_best', BEST2_KEY='ldc_quiz_best_v2', DAILY_KEY='ldc_quiz_daily';
+  var best2=(function(){ var o={}; try{ o=JSON.parse(localStorage.getItem(BEST2_KEY)||'{}')||{}; }catch(e){ o={}; }
+    if(typeof o!=='object'||!o) o={};
+    if(o.champion==null){ try{ var old=parseInt(localStorage.getItem(BEST_KEY),10); if(!isNaN(old)) o.champion=old; }catch(e){} }
+    return o; })();
+  function saveBest2(){ try{ localStorage.setItem(BEST2_KEY, JSON.stringify(best2)); }catch(e){} }
+  function refreshScore(){
+    if(mode==='daily'){ el('scVal').textContent=dailyScore; el('stVal').textContent=Math.min(dailyIdx,5); el('beVal').textContent=best2.daily||0; }
+    else { el('scVal').textContent=score; el('stVal').textContent=streak; el('beVal').textContent=best2[mode]||0; }
+  }
+
+  /* PRNG déterministe (défi quotidien) + helpers aléatoires injectables */
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+  function rshuffle(arr,rnd){ for(var i=arr.length-1;i>0;i--){ var j=Math.floor(rnd()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; } return arr; }
+  function rsample(arr,n,excl,rnd){ var pool=arr.filter(function(x){return x!==excl;}); rshuffle(pool,rnd); return pool.slice(0,n); }
+  function pickR(arr,rnd){ return arr[Math.floor(rnd()*arr.length)]; }
+  function clampN(n,a,b){ return n<a?a:(n>b?b:n); }
+
+  /* ---- générateurs de question (rnd injectable pour le défi quotidien déterministe) ---- */
+  function qChampion(rnd){
+    var q=pickR(yearChamp,rnd), opts=rsample(clubNames,3,q.name,rnd); opts.push(q.name); rshuffle(opts,rnd);
+    return { q:'<div class="qlabel">'+esc(T('Quel club a gagné en','Which club won in'))+'</div><div class="qyear">'+q.year+'</div>', opts:opts, answer:q.name };
+  }
+  function qYear(rnd){
+    var q=pickR(yearChamp,rnd), logo=nameLogo[q.name], pool=[];
+    for(var y=1956;y<=2026;y++){ if(y!==q.year) pool.push(y); }
+    var opts=rsample(pool,3,null,rnd).map(String); opts.push(String(q.year)); rshuffle(opts,rnd);
+    return { q:'<div class="qlabel">'+esc(T('Sacré en quelle année ?','Crowned in which year?'))+'</div>'+(logo?'<img class="qcrest revealed" src="'+esc(logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'')+'<div class="qname">'+esc(q.name)+'</div>', opts:opts, answer:String(q.year) };
+  }
+  function qCrest(rnd){
+    var q=pickR(crestClubs,rnd), names=crestClubs.map(function(c){return c.name;});
+    var opts=rsample(names,3,q.name,rnd); opts.push(q.name); rshuffle(opts,rnd);
+    return { q:'<div class="qlabel">'+esc(T('À quel club appartient ce blason ?','Which club does this crest belong to?'))+'</div><img class="qcrest" src="'+esc(q.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">', opts:opts, answer:q.name };
+  }
+  function qScore(rnd){
+    var m=pickR(scoreMatches,rnd), ans=m.home.score+' – '+m.away.score, set={}, opts=[], t=0; set[ans]=1;
+    while(opts.length<3 && t<40){ t++; var da=clampN(m.home.score+(Math.floor(rnd()*3)-1),0,9), db=clampN(m.away.score+(Math.floor(rnd()*3)-1),0,9), sc=da+' – '+db; if(!set[sc]){ set[sc]=1; opts.push(sc); } }
+    while(opts.length<3){ var sc2=Math.floor(rnd()*5)+' – '+Math.floor(rnd()*5); if(!set[sc2]){ set[sc2]=1; opts.push(sc2); } }
+    opts.push(ans); rshuffle(opts,rnd);
+    function side(c){ return '<span class="qm-side">'+(c.logo?'<img class="qm-logo" src="'+esc(c.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'')+'<span class="qm-name">'+esc(c.shortName||c.name)+'</span></span>'; }
+    return { q:'<div class="qlabel">'+esc(T('Quel était le score ?','What was the score?'))+'</div><div class="qmatch">'+side(m.home)+'<span class="qm-vs">?</span>'+side(m.away)+'</div>', opts:opts, answer:ans };
+  }
+
+  /* ---- chargement asynchrone (clubs / scores passés) ---- */
+  function ensureCrest(cb){ if(crestClubs.length){ cb(crestClubs.length>=4); return; } ESPN.fetchClubList().then(function(list){ crestClubs=(list||[]).filter(function(c){return c.logo;}); cb(crestClubs.length>=4); }).catch(function(){ cb(false); }); }
+  function ensureScore(cb){ if(scoreLoaded){ cb(scoreMatches.length>0); return; } ESPN.fetchScoreboard('20240901-20250831',{limit:500,ttl:600000}).then(function(events){ scoreMatches=(events||[]).map(ESPN.normalizeEvent).filter(function(m){ return m&&m.state==='post'&&m.home.logo&&m.away.logo&&(m.home.score+m.away.score)>=1&&m.home.score<=7&&m.away.score<=7; }); scoreLoaded=true; cb(scoreMatches.length>0); }).catch(function(){ scoreLoaded=true; cb(false); }); }
 
   /* ---- rendu d'une question ---- */
+  function loadingQ(){ el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Chargement…','Loading…'))+'</div>'; el('quizOpts').innerHTML=''; }
+  function offlineQ(){ el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Indisponible hors-ligne','Unavailable offline'))+'</div>'; el('quizOpts').innerHTML=''; }
+  function showQuestion(qo){
+    locked=false; el('quizMsg').textContent=''; el('quizMsg').className='quiz-msg'; el('quizNext').hidden=true;
+    var prog=(mode==='daily')?'<div class="daily-prog">'+esc(T('Question','Question'))+' '+(dailyIdx+1)+'/5</div>':'';
+    el('quizQ').innerHTML=prog+qo.q;
+    paintOpts(qo.opts, qo.answer);
+  }
   function newQuestion(){
-    locked=false;
-    el('quizMsg').textContent=''; el('quizMsg').className='quiz-msg';
-    el('quizNext').hidden=true;
-    if(mode==='crest') renderCrest(); else renderChampion();
-  }
-
-  function renderChampion(){
-    if(!yearChamp.length){ el('quizQ').innerHTML='—'; return; }
-    var q=yearChamp[Math.floor(Math.random()*yearChamp.length)];
-    var opts=sample(clubNames,3,q.name); opts.push(q.name); shuffle(opts);
-    el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Quel club a gagné en','Which club won in'))+'</div><div class="qyear">'+q.year+'</div>';
-    paintOpts(opts, q.name);
-  }
-
-  function renderCrest(){
-    if(!crestClubs.length){
-      el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Chargement des clubs…','Loading clubs…'))+'</div>';
-      el('quizOpts').innerHTML='';
-      ESPN.fetchClubList().then(function(list){
-        crestClubs=(list||[]).filter(function(c){return c.logo;});
-        if(crestClubs.length>=4) renderCrest();
-        else { el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Indisponible hors-ligne','Unavailable offline'))+'</div>'; }
-      }).catch(function(){ el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Indisponible hors-ligne','Unavailable offline'))+'</div>'; });
-      return;
-    }
-    var q=crestClubs[Math.floor(Math.random()*crestClubs.length)];
-    var names=crestClubs.map(function(c){return c.name;});
-    var opts=sample(names,3,q.name); opts.push(q.name); shuffle(opts);
-    el('quizQ').innerHTML='<div class="qlabel">'+esc(T('À quel club appartient ce blason ?','Which club does this crest belong to?'))+'</div>'+
-      '<img class="qcrest" src="'+esc(q.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">';
-    paintOpts(opts, q.name);
+    if(mode==='crest'){ if(crestClubs.length>=4){ showQuestion(qCrest(Math.random)); } else { loadingQ(); ensureCrest(function(ok){ ok?showQuestion(qCrest(Math.random)):offlineQ(); }); } return; }
+    if(mode==='score'){ if(scoreLoaded&&scoreMatches.length){ showQuestion(qScore(Math.random)); } else { loadingQ(); ensureScore(function(ok){ ok?showQuestion(qScore(Math.random)):offlineQ(); }); } return; }
+    if(!yearChamp.length){ el('quizQ').innerHTML='—'; el('quizOpts').innerHTML=''; return; }
+    showQuestion((mode==='year'?qYear:qChampion)(Math.random));
   }
 
   function paintOpts(opts, answer){
@@ -183,9 +222,8 @@
 
   function choose(btn, answer){
     if(locked) return; locked=true;
-    var chosen=btn.getAttribute('data-opt');
-    var correct = chosen===answer;
-    var cr=document.querySelector('#quizQ .qcrest'); if(cr) cr.classList.add('revealed');  // révèle l'écusson net
+    var chosen=btn.getAttribute('data-opt'), correct=chosen===answer;
+    var cr=document.querySelector('#quizQ .qcrest:not(.revealed)'); if(cr) cr.classList.add('revealed');  // révèle l'écusson net
     Array.prototype.forEach.call(el('quizOpts').querySelectorAll('.opt'), function(b){
       b.disabled=true;
       var v=b.getAttribute('data-opt');
@@ -193,10 +231,39 @@
       else if(b===btn) b.classList.add('wrong');
       else b.classList.add('dim');
     });
-    if(correct){ score++; streak++; setBest(); var m=el('quizMsg'); m.textContent=T('Bravo ! 🎉','Correct! 🎉'); m.className='quiz-msg ok'; }
-    else { streak=0; var mm=el('quizMsg'); mm.textContent=T('Raté — c’était ','Nope — it was ')+answer; mm.className='quiz-msg ko'; }
+    var m=el('quizMsg');
+    if(mode==='daily'){
+      if(correct) dailyScore++;
+      m.textContent=correct?T('Bonne réponse !','Correct!'):(T('Raté — c’était ','Nope — it was ')+answer); m.className='quiz-msg '+(correct?'ok':'ko');
+      el('quizNext').hidden=false; el('quizNext').textContent=(dailyIdx>=4)?T('Voir le résultat','See result'):T('Suivante →','Next →');
+    } else {
+      if(correct){ score++; streak++; if(streak>(best2[mode]||0)){ best2[mode]=streak; saveBest2(); } m.textContent=T('Bravo ! 🎉','Correct! 🎉'); m.className='quiz-msg ok'; }
+      else { streak=0; m.textContent=T('Raté — c’était ','Nope — it was ')+answer; m.className='quiz-msg ko'; }
+      el('quizNext').hidden=false; el('quizNext').textContent=T('Suivante →','Next →');
+    }
     refreshScore();
-    el('quizNext').hidden=false;
+  }
+
+  /* ---- défi quotidien (séquence déterministe de 5 questions, 1×/jour) ---- */
+  function dateKey(){ var d=new Date(); function p(n){return n<10?'0'+n:''+n;} return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+  function startDaily(){
+    var today=dateKey(), st=null; try{ st=JSON.parse(localStorage.getItem(DAILY_KEY)||'null'); }catch(e){}
+    if(st && st.date===today && st.done){ dailyScore=st.score||0; dailyIdx=5; refreshScore(); showDailyRecap(st.score||0, true); return; }
+    var seed=parseInt(today.replace(/-/g,''),10)||1, rnd=mulberry32(seed);
+    dailySeq=[]; for(var i=0;i<5;i++){ dailySeq.push((rnd()<0.5?qYear:qChampion)(rnd)); }
+    dailyIdx=0; dailyScore=0; refreshScore(); showQuestion(dailySeq[0]);
+  }
+  function dailyNext(){ dailyIdx++; if(!dailySeq||dailyIdx>=dailySeq.length){ finishDaily(); return; } refreshScore(); showQuestion(dailySeq[dailyIdx]); }
+  function finishDaily(){
+    if(dailyScore>(best2.daily||0)){ best2.daily=dailyScore; saveBest2(); }
+    try{ localStorage.setItem(DAILY_KEY, JSON.stringify({date:dateKey(), done:true, score:dailyScore})); }catch(e){}
+    dailyIdx=5; refreshScore(); showDailyRecap(dailyScore, false);
+  }
+  function showDailyRecap(sc, already){
+    el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Défi du jour','Daily challenge'))+'</div><div class="daily-final">'+sc+' / 5</div>';
+    el('quizOpts').innerHTML='';
+    var m=el('quizMsg'); m.textContent=already?T('Déjà joué — reviens demain !','Already played — come back tomorrow!'):T('Reviens demain pour un nouveau défi !','Come back tomorrow for a new challenge!'); m.className='quiz-msg ok';
+    el('quizNext').hidden=true;
   }
 
   /* ---- modes ---- */
@@ -204,11 +271,11 @@
     b.addEventListener('click', function(){
       mode=this.getAttribute('data-mode');
       Array.prototype.forEach.call(document.querySelectorAll('.gm-btn'),function(x){ x.classList.toggle('active', x===b); });
-      score=0; streak=0; refreshScore();
-      newQuestion();
+      score=0; streak=0; dailyScore=0; dailyIdx=0; dailySeq=null; refreshScore();
+      if(mode==='daily') startDaily(); else newQuestion();
     });
   });
-  el('quizNext').addEventListener('click', newQuestion);
+  el('quizNext').addEventListener('click', function(){ if(mode==='daily') dailyNext(); else newQuestion(); });
 
   /* ---- i18n des libellés statiques ---- */
   function applyTexts(){
@@ -216,14 +283,21 @@
     el('gameSub').textContent=T('En attendant la nouvelle saison, teste tes connaissances.','While waiting for the new season, test your knowledge.');
     el('modeChampion').innerHTML='🏆 '+T('Champion de l’année','Champion of the year');
     el('modeCrest').innerHTML='🛡️ '+T('Devine le club','Guess the club');
+    el('modeScore').innerHTML='⚽ '+T('Devine le score','Guess the score');
+    el('modeYear').innerHTML='📅 '+T('Devine l’année','Guess the year');
+    el('modeDaily').innerHTML='🔥 '+T('Défi du jour','Daily challenge');
     el('scLbl').textContent=T('Score','Score');
-    el('stLbl').textContent=T('Série','Streak');
+    el('stLbl').textContent=(mode==='daily')?T('Question','Question'):T('Série','Streak');
     el('beLbl').textContent=T('Record','Best');
     el('quizNext').textContent=T('Suivante →','Next →');
   }
 
   applyTexts(); refreshScore(); newQuestion();
-  if(window.I18N) window.addEventListener('ldc:langchange', function(){ applyTexts(); newQuestion(); });
+  if(window.I18N) window.addEventListener('ldc:langchange', function(){
+    applyTexts();
+    if(mode==='daily'){ if(dailyIdx>=5) showDailyRecap(dailyScore, true); /* en cours : on garde la question affichée */ }
+    else newQuestion();
+  });
 
   /* Starfield (fond étoilé partagé) */
   (function starfield(){
