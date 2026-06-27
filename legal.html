@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Mentions légales — Tracker Ligue des Champions</title>
 <link rel="icon" href="logo.svg?v=1" type="image/svg+xml" />
-<link rel="stylesheet" href="styles.css?v=15" />
+<link rel="stylesheet" href="styles.css?v=16" />
 <style>
   .legal-wrap{ max-width:860px; }
   .legal-sub{ color:var(--muted); font-size:13.5px; margin:0 0 4px; }
@@ -113,6 +113,7 @@
 <script src="espn.js?v=10"></script>
 <script>
   if(window.I18N) I18N.mountToggle('#langSwitch');
+  (function applyFavAccent(){ if(!window.ESPN||!ESPN.favAccent) return; var a=ESPN.favAccent(), r=document.documentElement; if(a) r.style.setProperty('--fav-rgb',a); else r.style.removeProperty('--fav-rgb'); })();
   if(window.ESPN) ESPN.mountSeasonMenu('#seasonDD','tracker.html');
   if(window.ESPN) ESPN.preserveSeasonLinks(document);
   if(window.I18N) window.addEventListener('ldc:langchange',function(){ if(window.ESPN) ESPN.mountSeasonMenu('#seasonDD','tracker.html'); });
