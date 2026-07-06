@@ -104,6 +104,7 @@
       <span class="score-pill streak"><span class="v" id="stVal">0</span><span class="l" id="stLbl">Série</span></span>
       <span class="score-pill best"><span class="v" id="beVal">0</span><span class="l" id="beLbl">Record</span></span>
     </div>
+    <div style="text-align:center;margin:2px 0 6px"><button class="gm-btn" id="quizShare" style="flex:none;min-width:0">📸 <span id="quizShareLbl">Partager mes scores</span></button></div>
 
     <div class="quiz-card">
       <div class="quiz-q" id="quizQ"></div>
@@ -123,6 +124,7 @@
 
 <script src="i18n.js?v=17"></script>
 <script src="espn.js?v=10"></script>
+<script src="share.js?v=1"></script>
 <script>
 (function(){
   'use strict';
@@ -277,8 +279,19 @@
   });
   el('quizNext').addEventListener('click', function(){ if(mode==='daily') dailyNext(); else newQuestion(); });
 
+  /* ---- partage des scores (image) ---- */
+  function shareQuiz(){
+    if(!window.ShareCard) return;
+    var defs=[['champion',T('Champion de l’année','Champion of the year')],['crest',T('Devine le club','Guess the club')],['score',T('Devine le score','Guess the score')],['year',T('Devine l’année','Guess the year')],['daily',T('Défi du jour','Daily challenge')]];
+    var rows=defs.map(function(d){ return { label:d[1], value:(best2[d[0]]!=null?best2[d[0]]:0) }; });
+    var total=0; defs.forEach(function(d){ var v=best2[d[0]]||0; if(v>total) total=v; });
+    ShareCard.quiz({ rows:rows, total:total });
+  }
+  (function(){ var b=el('quizShare'); if(b) b.addEventListener('click',function(){ b.disabled=true; Promise.resolve(shareQuiz()).then(function(){b.disabled=false;},function(){b.disabled=false;}); }); })();
+
   /* ---- i18n des libellés statiques ---- */
   function applyTexts(){
+    var qs=el('quizShareLbl'); if(qs) qs.textContent=T('Partager mes scores','Share my scores');
     el('gameTitle').textContent=T('Jeu','Game');
     el('gameSub').textContent=T('En attendant la nouvelle saison, teste tes connaissances.','While waiting for the new season, test your knowledge.');
     el('modeChampion').innerHTML='🏆 '+T('Champion de l’année','Champion of the year');
