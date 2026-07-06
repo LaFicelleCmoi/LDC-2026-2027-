@@ -489,7 +489,6 @@ a{ text-decoration:none; color:inherit; }
   display:flex; align-items:center; justify-content:center; gap:9px; }
 .lc-foot .lc-logo{ width:18px; height:18px; opacity:.85; }
 .lc-foot .lc-abbr{ font-family:var(--font-d); letter-spacing:2px; font-size:17px; color:rgb(var(--club)); }
-@media (max-width:600px){ #lanyard{ display:none; } }
 </style>
 </head>
 <body>
@@ -1331,7 +1330,8 @@ window.LDCLanyard = (function(){
 
   function sizeFor(){
     var w=window.innerWidth;
-    if(w<820){ CARDW=190; CLIPW=90; BANDLEN=140; }
+    if(w<480){ CARDW=166; CLIPW=78; BANDLEN=116; }
+    else if(w<820){ CARDW=188; CLIPW=90; BANDLEN=140; }
     else { CARDW=214; CLIPW=104; BANDLEN=176; }
     card.style.width=CARDW+'px';
   }
