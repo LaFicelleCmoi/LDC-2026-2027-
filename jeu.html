@@ -62,6 +62,42 @@
     .opt{ font-size:13px; padding:12px 9px; }
     .quiz-card{ padding:18px 14px; }
   }
+
+  /* ---- Récompenses (succès + records) ---- */
+  .ach-frac{ font-size:11px; font-weight:800; color:var(--upcoming); }
+  .ach-toast{ position:fixed; left:50%; bottom:26px; transform:translate(-50%,20px); z-index:120; opacity:0; transition:.4s;
+    display:flex; align-items:center; gap:12px; padding:12px 18px; border-radius:14px;
+    background:linear-gradient(160deg,#12203f,#0a1330); border:1px solid rgba(var(--gold-rgb,245,181,10),.5);
+    box-shadow:0 16px 40px rgba(0,0,0,.55), 0 0 30px rgba(var(--gold-rgb,245,181,10),.2); pointer-events:none; max-width:90vw; }
+  .ach-toast.show{ opacity:1; transform:translate(-50%,0); }
+  .ach-toast .at-emo{ font-size:30px; line-height:1; }
+  .ach-toast .at-txt{ display:flex; flex-direction:column; }
+  .ach-toast .at-txt b{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:rgb(var(--gold-rgb,245,181,10)); }
+  .ach-toast .at-txt span{ font-size:14px; font-weight:700; color:var(--txt); }
+
+  .ach-modal{ position:fixed; inset:0; z-index:110; display:none; align-items:center; justify-content:center; padding:20px;
+    background:rgba(4,7,16,.72); backdrop-filter:blur(4px); }
+  .ach-modal.open{ display:flex; }
+  .ach-panel{ position:relative; width:min(560px,100%); max-height:88vh; overflow:auto; padding:24px 22px;
+    background:linear-gradient(165deg,#101b34,#0a1226); border:1px solid var(--line-2); border-radius:18px; box-shadow:0 30px 70px rgba(0,0,0,.6); }
+  .ach-close{ position:absolute; top:12px; right:14px; background:none; border:none; color:var(--muted); font-size:26px; line-height:1; cursor:pointer; }
+  .ach-close:hover{ color:#fff; }
+  .ach-h{ font-family:'Bebas Neue',Impact,sans-serif; font-size:30px; letter-spacing:.02em; }
+  .ach-h .ach-frac{ font-size:15px; }
+  .ach-sub{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:18px 2px 10px; }
+  .rec-board{ display:flex; flex-direction:column; gap:6px; }
+  .rec-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 13px; background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  .rec-row.total{ border-color:rgba(var(--gold-rgb,245,181,10),.4); background:rgba(var(--gold-rgb,245,181,10),.08); }
+  .rec-row .rec-m{ font-size:13.5px; font-weight:600; color:var(--txt); }
+  .rec-row .rec-v{ font-family:'Bebas Neue',Impact,sans-serif; font-size:1.4em; color:var(--upcoming); font-variant-numeric:tabular-nums; }
+  .ach-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+  .ach-tile{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; padding:16px 10px; border-radius:14px;
+    background:var(--card); border:1px solid var(--line); opacity:.55; }
+  .ach-tile.on{ opacity:1; border-color:rgba(var(--gold-rgb,245,181,10),.5); background:rgba(var(--gold-rgb,245,181,10),.08); }
+  .ach-tile .ach-emo{ font-size:32px; line-height:1; }
+  .ach-tile .ach-nm{ font-weight:800; font-size:13.5px; color:var(--txt); }
+  .ach-tile .ach-ds{ font-size:11px; color:var(--muted); line-height:1.3; }
+  @media (max-width:560px){ .ach-grid{ grid-template-columns:1fr 1fr; } }
 </style>
 </head>
 <body>
@@ -104,7 +140,10 @@
       <span class="score-pill streak"><span class="v" id="stVal">0</span><span class="l" id="stLbl">Série</span></span>
       <span class="score-pill best"><span class="v" id="beVal">0</span><span class="l" id="beLbl">Record</span></span>
     </div>
-    <div style="text-align:center;margin:2px 0 6px"><button class="gm-btn" id="quizShare" style="flex:none;min-width:0">📸 <span id="quizShareLbl">Partager mes scores</span></button></div>
+    <div style="text-align:center;margin:2px 0 6px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="gm-btn" id="achBtn" style="flex:none;min-width:0">🏅 <span id="achBtnLbl">Récompenses</span> <span id="achCount" class="ach-frac"></span></button>
+      <button class="gm-btn" id="quizShare" style="flex:none;min-width:0">📸 <span id="quizShareLbl">Partager mes scores</span></button>
+    </div>
 
     <div class="quiz-card">
       <div class="quiz-q" id="quizQ"></div>
@@ -116,6 +155,8 @@
     </div>
   </div>
 </div>
+
+<div id="achModal" class="ach-modal"></div>
 
 <footer class="site-footer">
   <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
@@ -157,6 +198,56 @@
     if(o.champion==null){ try{ var old=parseInt(localStorage.getItem(BEST_KEY),10); if(!isNaN(old)) o.champion=old; }catch(e){} }
     return o; })();
   function saveBest2(){ try{ localStorage.setItem(BEST2_KEY, JSON.stringify(best2)); }catch(e){} }
+
+  /* ---- stats joueur + succès ---- */
+  var STATS_KEY='ldc_quiz_stats', ACH_KEY='ldc_quiz_ach';
+  function loadJSON(k,d){ try{ var o=JSON.parse(localStorage.getItem(k)||'null'); return (o&&typeof o==='object')?o:d; }catch(e){ return d; } }
+  var stats=loadJSON(STATS_KEY,{correct:0,modes:{}}); if(!stats.modes) stats.modes={};
+  var achDone=loadJSON(ACH_KEY,{});
+  function saveStats(){ try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){} }
+  function saveAch(){ try{ localStorage.setItem(ACH_KEY, JSON.stringify(achDone)); }catch(e){} }
+  function maxStreak(){ return Math.max(best2.champion||0,best2.crest||0,best2.score||0,best2.year||0); }
+  function markMode(m){ if(m){ stats.modes[m]=true; saveStats(); } }
+  function addCorrect(){ stats.correct=(stats.correct||0)+1; saveStats(); }
+  var ACHS=[
+    {id:'first',   emo:'⚽', fr:['Premier but','Réponds correctement à 1 question'],  en:['First goal','Answer 1 question correctly'], ok:function(){return (stats.correct||0)>=1;}},
+    {id:'streak5', emo:'🔥', fr:['En feu','Atteins une série de 5'],                  en:['On fire','Reach a streak of 5'],          ok:function(){return maxStreak()>=5;}},
+    {id:'streak10',emo:'⭐', fr:['Invincible','Atteins une série de 10'],              en:['Unstoppable','Reach a streak of 10'],     ok:function(){return maxStreak()>=10;}},
+    {id:'streak20',emo:'🏆', fr:['Légende','Atteins une série de 20'],                 en:['Legend','Reach a streak of 20'],          ok:function(){return maxStreak()>=20;}},
+    {id:'daily5',  emo:'🎯', fr:['Sans faute','Fais 5/5 au défi du jour'],            en:['Flawless','Score 5/5 in the daily'],      ok:function(){return (best2.daily||0)>=5;}},
+    {id:'allmodes',emo:'🎲', fr:['Touche-à-tout','Joue aux 5 modes'],                 en:['All-rounder','Play all 5 modes'],         ok:function(){return ['champion','crest','score','year','daily'].every(function(m){return stats.modes[m];});}},
+    {id:'century', emo:'💯', fr:['Centurion','100 bonnes réponses au total'],         en:['Centurion','100 correct answers total'],  ok:function(){return (stats.correct||0)>=100;}}
+  ];
+  function achLab(a){ return EN()?a.en:a.fr; }
+  function achCount(){ var n=0; ACHS.forEach(function(a){ if(achDone[a.id]) n++; }); return n; }
+  function checkAch(silent){
+    var newly=[]; ACHS.forEach(function(a){ if(!achDone[a.id] && a.ok()){ achDone[a.id]=1; newly.push(a); } });
+    if(newly.length){ saveAch(); if(!silent) newly.forEach(toastAch); updateAchBtn(); }
+  }
+  function toastAch(a){
+    var t=document.createElement('div'); t.className='ach-toast';
+    t.innerHTML='<span class="at-emo">'+a.emo+'</span><span class="at-txt"><b>'+esc(T('Succès débloqué','Achievement unlocked'))+'</b><span>'+esc(achLab(a)[0])+'</span></span>';
+    document.body.appendChild(t); requestAnimationFrame(function(){ t.classList.add('show'); });
+    setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){ try{t.remove();}catch(e){} },420); }, 3600);
+  }
+  function updateAchBtn(){ var b=el('achCount'); if(b) b.textContent=achCount()+'/'+ACHS.length; }
+  function openAch(){
+    var modal=el('achModal'); if(!modal) return;
+    var MODES=[['champion','🏆',T('Champion de l’année','Champion of the year')],['crest','🛡️',T('Devine le club','Guess the club')],['score','⚽',T('Devine le score','Guess the score')],['year','📅',T('Devine l’année','Guess the year')]];
+    var recRows=MODES.map(function(m){ return '<div class="rec-row"><span class="rec-m">'+m[1]+' '+esc(m[2])+'</span><span class="rec-v">'+(best2[m[0]]||0)+'</span></div>'; }).join('')+
+      '<div class="rec-row"><span class="rec-m">🔥 '+esc(T('Défi du jour','Daily challenge'))+'</span><span class="rec-v">'+(best2.daily||0)+'/5</span></div>'+
+      '<div class="rec-row total"><span class="rec-m">✅ '+esc(T('Bonnes réponses (total)','Correct answers (total)'))+'</span><span class="rec-v">'+(stats.correct||0)+'</span></div>';
+    var grid=ACHS.map(function(a){ var on=!!achDone[a.id], l=achLab(a); return '<div class="ach-tile'+(on?' on':'')+'"><span class="ach-emo">'+(on?a.emo:'🔒')+'</span><span class="ach-nm">'+esc(l[0])+'</span><span class="ach-ds">'+esc(l[1])+'</span></div>'; }).join('');
+    modal.innerHTML='<div class="ach-panel"><button class="ach-close" id="achClose" aria-label="Fermer">×</button>'+
+      '<div class="ach-h">🏅 '+esc(T('Mes récompenses','My rewards'))+' <span class="ach-frac">'+achCount()+'/'+ACHS.length+'</span></div>'+
+      '<div class="ach-sub">'+esc(T('Mes records','My records'))+'</div><div class="rec-board">'+recRows+'</div>'+
+      '<div class="ach-sub">'+esc(T('Succès','Achievements'))+'</div><div class="ach-grid">'+grid+'</div></div>';
+    modal.classList.add('open');
+    el('achClose').addEventListener('click', closeAch);
+    modal.addEventListener('click', function(e){ if(e.target===modal) closeAch(); });
+  }
+  function closeAch(){ var m=el('achModal'); if(m){ m.classList.remove('open'); m.innerHTML=''; } }
+
   function refreshScore(){
     if(mode==='daily'){ el('scVal').textContent=dailyScore; el('stVal').textContent=Math.min(dailyIdx,5); el('beVal').textContent=best2.daily||0; }
     else { el('scVal').textContent=score; el('stVal').textContent=streak; el('beVal').textContent=best2[mode]||0; }
@@ -235,15 +326,16 @@
     });
     var m=el('quizMsg');
     if(mode==='daily'){
-      if(correct) dailyScore++;
+      if(correct){ dailyScore++; addCorrect(); }
       m.textContent=correct?T('Bonne réponse !','Correct!'):(T('Raté — c’était ','Nope — it was ')+answer); m.className='quiz-msg '+(correct?'ok':'ko');
       el('quizNext').hidden=false; el('quizNext').textContent=(dailyIdx>=4)?T('Voir le résultat','See result'):T('Suivante →','Next →');
     } else {
-      if(correct){ score++; streak++; if(streak>(best2[mode]||0)){ best2[mode]=streak; saveBest2(); } m.textContent=T('Bravo ! 🎉','Correct! 🎉'); m.className='quiz-msg ok'; }
+      if(correct){ score++; streak++; addCorrect(); if(streak>(best2[mode]||0)){ best2[mode]=streak; saveBest2(); } m.textContent=T('Bravo ! 🎉','Correct! 🎉'); m.className='quiz-msg ok'; }
       else { streak=0; m.textContent=T('Raté — c’était ','Nope — it was ')+answer; m.className='quiz-msg ko'; }
       el('quizNext').hidden=false; el('quizNext').textContent=T('Suivante →','Next →');
     }
     refreshScore();
+    checkAch();
   }
 
   /* ---- défi quotidien (séquence déterministe de 5 questions, 1×/jour) ---- */
@@ -259,7 +351,7 @@
   function finishDaily(){
     if(dailyScore>(best2.daily||0)){ best2.daily=dailyScore; saveBest2(); }
     try{ localStorage.setItem(DAILY_KEY, JSON.stringify({date:dateKey(), done:true, score:dailyScore})); }catch(e){}
-    dailyIdx=5; refreshScore(); showDailyRecap(dailyScore, false);
+    dailyIdx=5; refreshScore(); showDailyRecap(dailyScore, false); checkAch();
   }
   function showDailyRecap(sc, already){
     el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Défi du jour','Daily challenge'))+'</div><div class="daily-final">'+sc+' / 5</div>';
@@ -274,6 +366,7 @@
       mode=this.getAttribute('data-mode');
       Array.prototype.forEach.call(document.querySelectorAll('.gm-btn'),function(x){ x.classList.toggle('active', x===b); });
       score=0; streak=0; dailyScore=0; dailyIdx=0; dailySeq=null; refreshScore();
+      markMode(mode); checkAch();
       if(mode==='daily') startDaily(); else newQuestion();
     });
   });
@@ -288,10 +381,12 @@
     ShareCard.quiz({ rows:rows, total:total });
   }
   (function(){ var b=el('quizShare'); if(b) b.addEventListener('click',function(){ b.disabled=true; Promise.resolve(shareQuiz()).then(function(){b.disabled=false;},function(){b.disabled=false;}); }); })();
+  (function(){ var b=el('achBtn'); if(b) b.addEventListener('click', openAch); updateAchBtn(); checkAch(true); })();
 
   /* ---- i18n des libellés statiques ---- */
   function applyTexts(){
     var qs=el('quizShareLbl'); if(qs) qs.textContent=T('Partager mes scores','Share my scores');
+    var al=el('achBtnLbl'); if(al) al.textContent=T('Récompenses','Rewards');
     el('gameTitle').textContent=T('Jeu','Game');
     el('gameSub').textContent=T('En attendant la nouvelle saison, teste tes connaissances.','While waiting for the new season, test your knowledge.');
     el('modeChampion').innerHTML='🏆 '+T('Champion de l’année','Champion of the year');
