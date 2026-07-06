@@ -1,45 +1,44 @@
-<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ligue des Champions">
+<svg viewBox="0 0 100 100" role="img" aria-label="Ligue des Champions" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="ldcBg" cx="50%" cy="34%" r="78%">
-      <stop offset="0" stop-color="#26386a"/>
-      <stop offset=".62" stop-color="#0c1732"/>
-      <stop offset="1" stop-color="#060b1c"/>
+    <radialGradient id="ldcDisc" cx="42%" cy="36%" r="74%">
+      <stop offset="0" stop-color="#24356a"/>
+      <stop offset=".55" stop-color="#182750"/>
+      <stop offset="1" stop-color="#070d1f"/>
     </radialGradient>
-    <linearGradient id="ldcGold" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="ldcRim" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#ffe9a8"/>
-      <stop offset=".55" stop-color="#f7bd39"/>
+      <stop offset=".45" stop-color="#f7bd39"/>
       <stop offset="1" stop-color="#d68d06"/>
     </linearGradient>
-    <linearGradient id="ldcStar" x1="0" y1="0" x2="0" y2="1">
+    <radialGradient id="ldcStar" cx="42%" cy="34%" r="72%">
       <stop offset="0" stop-color="#fff4cf"/>
-      <stop offset=".5" stop-color="#f9c748"/>
-      <stop offset="1" stop-color="#e29b0e"/>
-    </linearGradient>
+      <stop offset=".55" stop-color="#f7c02a"/>
+      <stop offset="1" stop-color="#d88f08"/>
+    </radialGradient>
     <linearGradient id="ldcGloss" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity=".20"/>
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".16"/>
       <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
-  <!-- disque + anneau doré biseauté -->
-  <circle cx="50" cy="50" r="48" fill="url(#ldcGold)"/>
-  <circle cx="50" cy="50" r="47.2" fill="none" stroke="#fff2c4" stroke-opacity=".55" stroke-width=".8"/>
-  <circle cx="50" cy="50" r="43.6" fill="url(#ldcBg)"/>
-  <circle cx="50" cy="50" r="43.6" fill="none" stroke="#000000" stroke-opacity=".35" stroke-width="1"/>
-  <circle cx="50" cy="50" r="39.4" fill="none" stroke="#f5b50a" stroke-opacity=".45" stroke-width="1"/>
+  <!-- blason : anneau doré biseauté + disque navy -->
+  <circle cx="50" cy="50" r="48" fill="url(#ldcRim)"/>
+  <circle cx="50" cy="50" r="47.2" fill="none" stroke="#fff2c4" stroke-opacity=".5" stroke-width=".8"/>
+  <circle cx="50" cy="50" r="43.5" fill="url(#ldcDisc)"/>
+  <circle cx="50" cy="50" r="43.5" fill="none" stroke="#000000" stroke-opacity=".3" stroke-width="1"/>
+  <ellipse cx="50" cy="29" rx="32" ry="18" fill="url(#ldcGloss)"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="#f5b50a" stroke-opacity=".32" stroke-width=".6"/>
 
-  <!-- reflet vitré haut -->
-  <ellipse cx="50" cy="29" rx="33" ry="19" fill="url(#ldcGloss)"/>
+  <!-- satellites (en retrait, plus petites) -->
+  <g fill="url(#ldcStar)" stroke="#e8a41a" stroke-width=".3" stroke-linejoin="round">
+    <polygon points="28,24.5 29.68,29.68 35.13,29.68 30.73,32.89 32.41,38.07 28,34.87 23.59,38.07 25.28,32.89 20.87,29.68 26.32,29.68"/>
+    <polygon points="72,24.5 70.32,29.68 64.87,29.68 69.27,32.89 67.59,38.07 72,34.87 76.41,38.07 74.72,32.89 79.13,29.68 73.68,29.68"/>
+    <polygon points="26,53.8 27.39,58.08 31.90,58.08 28.25,60.73 29.64,65.02 26,62.37 22.36,65.02 23.75,60.73 20.10,58.08 24.61,58.08"/>
+    <polygon points="74,53.8 72.61,58.08 68.10,58.08 71.75,60.73 70.36,65.02 74,62.37 77.64,65.02 76.25,60.73 79.90,58.08 75.39,58.08"/>
+    <polygon points="50,67.5 51.24,71.30 55.23,71.30 52.00,73.65 53.23,77.45 50,75.10 46.77,77.45 48.00,73.65 44.77,71.30 48.76,71.30"/>
+  </g>
 
-  <!-- étoile affinée -->
-  <polygon points="50,23 53.9,32.1 63.7,33 56.3,39.5 58.5,49.1 50,44 41.5,49.1 43.7,39.5 36.3,33 46.1,32.1"
+  <!-- étoile héroïne (dominante, au centre) -->
+  <polygon points="50,30 54.04,42.44 67.12,42.44 56.54,50.13 60.58,62.56 50,54.88 39.42,62.56 43.46,50.13 32.88,42.44 45.96,42.44"
            fill="url(#ldcStar)" stroke="#fff6d8" stroke-width=".7" stroke-linejoin="round"/>
-
-  <!-- séparateur -->
-  <circle cx="33" cy="60.5" r="1.5" fill="#f5b50a"/>
-  <rect x="37.5" y="59.7" width="25" height="1.6" rx=".8" fill="#f5b50a" fill-opacity=".5"/>
-  <circle cx="67" cy="60.5" r="1.5" fill="#f5b50a"/>
-
-  <!-- monogramme -->
-  <text x="50" y="81.5" text-anchor="middle" font-family="Impact, 'Arial Black', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="23" letter-spacing="1.2" fill="#ffffff">LDC</text>
 </svg>
