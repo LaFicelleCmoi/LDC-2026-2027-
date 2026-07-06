@@ -291,6 +291,7 @@
 
 <script src="i18n.js?v=18"></script>
 <script src="espn.js?v=10"></script>
+<script src="share.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.js"></script>
 <script>
 (function(){
@@ -653,6 +654,7 @@
       '<button class="btn star-border" id="runRandom">'+esc(I18N.t('trk.run.random'))+'</button>'+
       '<button class="btn star-border" id="runReset">'+esc(I18N.t('trk.run.reset'))+'</button>'+
       '<button class="btn star-border" id="runShare">'+esc(I18N.t('trk.run.share'))+'</button>'+
+      '<button class="btn star-border" id="runShareImg">📸 '+esc(lang()==='en'?'Card':'Carte')+'</button>'+
       '<span class="run-copied" id="runCopied" style="display:none">'+esc(I18N.t('trk.run.copied'))+'</span></div>';
     var banner='<div class="run-champion'+(champ?' show':'')+'">'+(champ?((champ.logo?'<img src="'+esc(champ.logo)+'" alt="">':'')+'<div><div class="lbl">'+esc(I18N.t('trk.run.champion'))+'</div><div class="nm">'+esc(champ.name||champ.shortName||'')+'</div></div>'):'')+'</div>';
     var cols=rounds.map(function(r){
@@ -664,6 +666,21 @@
     el('runRandom').addEventListener('click',runRandom);
     el('runReset').addEventListener('click',function(){ runPicks={}; saveRun(); writeRunUrl(); renderRun(); });
     el('runShare').addEventListener('click',shareRun);
+    var si=el('runShareImg'); if(si) si.addEventListener('click',function(){ var d=runChampionData(); if(!d||!window.ShareCard) return; si.disabled=true; Promise.resolve(ShareCard.champion(d)).then(function(){si.disabled=false;},function(){si.disabled=false;}); });
+  }
+  function runChampionData(){
+    var rounds=computeRunBracket();
+    var fin=rounds[rounds.length-1].ties[0], fp=runPicks['final:0'];
+    var champ = fp==='A'?fin.teamA:(fp==='B'?fin.teamB:null);
+    if(!champ) return null;
+    function k(t){ return t?(t.teamId||t.name):null; }
+    var ck=k(champ), road=[];
+    rounds.forEach(function(r){
+      for(var i=0;i<r.ties.length;i++){ var tie=r.ties[i], a=k(tie.teamA), b=k(tie.teamB);
+        if(a===ck||b===ck){ var opp=(a===ck)?tie.teamB:tie.teamA; if(opp) road.push({ round:esc(I18N.t(RUN_LABEL[r.key])||r.key), opp:(opp.abbr||opp.shortName||opp.name||'') }); break; }
+      }
+    });
+    return { champ:{ name:champ.name, abbr:champ.abbr, logo:champ.logo, color:champ.color }, season:(ESPN.seasonLabel?ESPN.seasonLabel():''), road:road };
   }
   function invalidateRunDownstream(rk){ var idx=RUN_ROUNDS.indexOf(rk); for(var i=idx+1;i<RUN_ROUNDS.length;i++){ var d=RUN_ROUNDS[i]; Object.keys(runPicks).forEach(function(k){ if(k.indexOf(d+':')===0) delete runPicks[k]; }); } }
   function setRunPick(rk,ti,side){ runPicks[rk+':'+ti]=side; invalidateRunDownstream(rk); saveRun(); writeRunUrl(); renderRun(); }
