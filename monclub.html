@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mon club — Tracker Ligue des Champions</title>
+<link rel="icon" href="logo.svg?v=3" type="image/svg+xml" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=18" />
+<style>
+  .mc-wrap{ max-width:900px; }
+  /* Héros club */
+  .mc-hero{ display:flex; align-items:center; gap:22px; padding:22px; position:relative; overflow:hidden; }
+  .mc-hero::before{ content:""; position:absolute; inset:0; background:radial-gradient(120% 140% at 20% 0%, rgba(var(--fav-rgb,245,181,10),.16), transparent 60%); pointer-events:none; }
+  .mc-crest{ width:96px; height:96px; object-fit:contain; flex:none; filter:drop-shadow(0 6px 16px rgba(0,0,0,.5)); }
+  .mc-crest.ph{ display:flex; align-items:center; justify-content:center; border-radius:50%; background:var(--card); border:1px solid var(--line); }
+  .mc-htxt{ min-width:0; }
+  .mc-eyebrow{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:rgb(var(--fav-rgb,245,181,10)); }
+  .mc-name{ font-family:'Bebas Neue',Impact,sans-serif; font-size:clamp(2em,7vw,3.2em); line-height:.95; margin-top:2px; }
+  .mc-meta{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .mc-chip{ font-size:12px; font-weight:700; padding:5px 11px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--txt); }
+  .mc-chip.gold{ color:rgb(var(--fav-rgb,245,181,10)); border-color:rgba(var(--fav-rgb,245,181,10),.4); background:rgba(var(--fav-rgb,245,181,10),.1); }
+  .mc-years{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .mc-year{ font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums; padding:3px 8px; border-radius:6px; background:rgba(var(--fav-rgb,245,181,10),.12); color:rgb(var(--fav-rgb,245,181,10)); border:1px solid rgba(var(--fav-rgb,245,181,10),.28); }
+
+  .mc-section-title{ font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:26px 4px 12px; }
+  .mc-camps{ display:flex; flex-direction:column; gap:9px; }
+  .mc-camp{ display:flex; align-items:center; gap:12px; padding:12px 15px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+  .mc-camp .mc-season{ font-family:'Bebas Neue',Impact,sans-serif; font-size:1.5em; letter-spacing:.02em; min-width:92px; color:var(--txt); }
+  .mc-camp .mc-res{ flex:1; min-width:0; }
+  .mc-res .mc-round{ font-weight:800; font-size:14.5px; }
+  .mc-res .mc-detail{ font-size:12.5px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mc-badge{ font-size:10.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:4px 9px; border-radius:7px; white-space:nowrap; }
+  .mc-badge.champion{ background:rgba(var(--fav-rgb,245,181,10),.18); color:rgb(var(--fav-rgb,245,181,10)); border:1px solid rgba(var(--fav-rgb,245,181,10),.45); }
+  .mc-badge.finalist{ background:rgba(200,210,230,.14); color:#cfd8ec; border:1px solid rgba(200,210,230,.3); }
+  .mc-badge.deep{ background:rgba(46,213,115,.14); color:#7ff0b0; border:1px solid rgba(46,213,115,.3); }
+  .mc-badge.mid{ background:rgba(74,168,255,.14); color:#9fd0ff; border:1px solid rgba(74,168,255,.3); }
+  .mc-badge.out{ background:rgba(255,255,255,.06); color:var(--muted); border:1px solid var(--line); }
+  .mc-relive{ font-size:11.5px; font-weight:700; color:rgb(var(--fav-rgb,245,181,10)); white-space:nowrap; }
+  .mc-relive:hover{ text-decoration:underline; }
+  .mc-camp.skel{ opacity:.5; }
+  .mc-camp.skel .mc-res{ height:34px; border-radius:8px; background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04)); background-size:200% 100%; animation:mcSk 1.2s infinite; }
+  @keyframes mcSk{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  .mc-empty{ text-align:center; padding:46px 20px; }
+  .mc-empty .em-star{ font-size:44px; }
+  .mc-empty p{ color:var(--muted); margin:12px 0 20px; }
+  @media (max-width:560px){
+    .mc-hero{ flex-direction:column; text-align:center; gap:14px; }
+    .mc-meta,.mc-years{ justify-content:center; }
+    .mc-camp .mc-season{ font-size:1.25em; min-width:74px; }
+    .mc-relive{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="cl-ball"></div>
+<canvas id="starfield"></canvas>
+<header class="site-header">
+  <a class="brand" href="dashboard.html">
+    <span class="star">★</span>
+    <span><span class="t1" data-i18n="app.title">Tracker Ligue des Champions</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="dashboard.html" data-i18n="nav.dashboard">Accueil</a>
+    <a href="tracker.html" data-i18n="nav.tracker">Classement</a>
+    <a href="palmares.html" data-i18n="nav.palmares">Palmarès</a>
+    <a href="calendrier.html" data-i18n="nav.calendar">Calendrier</a>
+    <a href="jeu.html" data-i18n="nav.game">Jeu</a>
+    <a href="monclub.html" class="active" id="navMyClub">Mon club</a>
+    <a href="overlay.html" data-i18n="nav.overlay">Overlay OBS</a>
+    <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+  </nav>
+  <div class="header-right">
+    <div class="lang-switch" id="langSwitch"></div>
+  </div>
+</header>
+
+<div class="container">
+  <h1 class="page-title"><span class="shiny" id="mcTitle">Mon club</span></h1>
+  <div id="mcContent"><div class="card pad mc-wrap"><div class="empty-state" id="mcLoading">…</div></div></div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="dashboard.html" data-i18n="common.back">← Retour</a>
+</footer>
+
+<script src="i18n.js?v=18"></script>
+<script src="espn.js?v=10"></script>
+<script>
+(function(){
+  'use strict';
+  function el(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function lang(){ try{ return (window.I18N&&I18N.getLang&&I18N.getLang())||'fr'; }catch(e){ return 'fr'; } }
+  function T(fr,en){ return lang()==='en'?en:fr; }
+
+  if(window.I18N) I18N.mountToggle('#langSwitch');
+  function applyFavAccent(){ if(!window.ESPN||!ESPN.favAccent) return; var a=ESPN.favAccent(), r=document.documentElement; if(a) r.style.setProperty('--fav-rgb',a); else r.style.removeProperty('--fav-rgb'); }
+  applyFavAccent();
+
+  var RLBL={ po:['Barrages','Play-offs'], r16:['Huitièmes de finale','Round of 16'], qf:['Quarts de finale','Quarter-finals'], sf:['Demi-finales','Semi-finals'], final:['Finale','Final'] };
+  function rlbl(k){ var e=RLBL[k]; return e?(lang()==='en'?e[1]:e[0]):k; }
+
+  function sameClub(t, fav){
+    if(!t||!fav) return false;
+    if(fav.id && String(t.teamId)===String(fav.id)) return true;
+    var n=(t.name||'').toLowerCase(), fn=(fav.name||'').toLowerCase();
+    if(!n||!fn) return false;
+    return n===fn || n.indexOf(fn)>=0 || fn.indexOf(n)>=0;
+  }
+  function seasonDates(y){ return { start:y+'0901', end:(y+1)+'0831' }; }
+  function fetchYear(y){
+    return ESPN.fetchScoreboard(seasonDates(y).start+'-'+seasonDates(y).end, {limit:500, ttl:900000})
+      .then(function(events){ return (events||[]).filter(function(e){ return !e||!e.season||e.season.year==null||e.season.year===y; }); });
+  }
+  function other(tie, side){ var t=side==='A'?tie.teamB:tie.teamA; return t?(t.abbr||t.shortName||t.name||''):''; }
+  function outcome(events, fav){
+    var norm=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
+    var mine=norm.filter(function(m){ return sameClub(m.home,fav)||sameClub(m.away,fav); });
+    if(!mine.length) return { key:'none' };
+    var rounds=ESPN.buildBracket(events);
+    var order=['final','sf','qf','r16','po'];
+    for(var oi=0;oi<order.length;oi++){
+      var rk=order[oi], r=rounds.filter(function(x){return x.key===rk;})[0]; if(!r) continue;
+      for(var i=0;i<r.ties.length;i++){ var tie=r.ties[i], side=sameClub(tie.teamA,fav)?'A':(sameClub(tie.teamB,fav)?'B':null);
+        if(side){ var won=tie.decided&&tie.winner===side;
+          if(rk==='final') return won?{key:'champion',opp:other(tie,side)}:{key:'finalist',opp:other(tie,side)};
+          return { key:'out', round:rk, opp:other(tie,side) };
+        }
+      }
+    }
+    return { key:'league', league:mine.some(function(m){return m.round==='league';}) };
+  }
+  function outcomeHTML(o, y){
+    if(o.key==='champion') return { cls:'champion', round:'🏆 '+T('Champion','Champion'), detail:T('Vainqueur en finale contre ','Beat ')+esc(o.opp||'')+(lang()==='en'?' in the final':''), badge:T('Sacré','Winner') };
+    if(o.key==='finalist') return { cls:'finalist', round:T('Finaliste','Runner-up'), detail:T('Défaite en finale contre ','Lost the final vs ')+esc(o.opp||''), badge:T('Finale','Final') };
+    if(o.key==='out'){ var deep=(o.round==='sf'||o.round==='qf'); return { cls:deep?'deep':'mid', round:rlbl(o.round), detail:T('Éliminé contre ','Out vs ')+esc(o.opp||''), badge:rlbl(o.round) }; }
+    if(o.key==='league'){ var nf=(window.ESPN&&ESPN.isLeaguePhaseFormat)?ESPN.isLeaguePhaseFormat(y):(y>=2024); var lab=nf?T('Phase de ligue','League phase'):T('Phase de poules','Group stage'); return { cls:'out', round:lab, detail:T('Pas de phase finale','No knockout stage'), badge:lab }; }
+    return { cls:'out', round:T('Non qualifié','Did not qualify'), detail:'—', badge:T('Absent','Absent') };
+  }
+
+  var YEARS=[]; (function(){ var c=ESPN.CURRENT_SEASON||2026; for(var y=c-1;y>=c-7;y--) YEARS.push(y); })();
+
+  function renderShell(fav){
+    var titles=(window.ESPN&&ESPN.clubTitles)?ESPN.clubTitles(fav.name):null;
+    var rank=null; try{ var pr=ESPN.palmaresRanking?ESPN.palmaresRanking():[]; for(var i=0;i<pr.length;i++){ if(String(pr[i].id)===String(fav.id) || (pr[i].name||'').toLowerCase().indexOf((fav.name||'').toLowerCase())>=0){ rank=pr[i].rank; break; } } }catch(e){}
+    var chips='';
+    if(titles){ chips+='<span class="mc-chip gold">🏆 '+titles.n+' '+esc(titles.n>1?T('titres','titles'):T('titre','title'))+'</span>'; }
+    if(rank){ chips+='<span class="mc-chip">'+T('Nº','No.')+' '+rank+' '+T('au palmarès','all-time')+'</span>'; }
+    chips+='<span class="mc-chip">'+esc((fav.abbr||'').toUpperCase())+'</span>';
+    var years=titles&&titles.years&&titles.years.length? '<div class="mc-years">'+titles.years.slice().sort(function(a,b){return b-a;}).map(function(y){return '<span class="mc-year">'+y+'</span>';}).join('')+'</div>' : '';
+    var hero='<div class="card mc-hero mc-wrap">'+
+      (fav.logo?'<img class="mc-crest" src="'+esc(fav.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'<span class="mc-crest ph">★</span>')+
+      '<div class="mc-htxt"><div class="mc-eyebrow">★ '+esc(T('Mon club favori','My favourite club'))+'</div>'+
+        '<div class="mc-name">'+esc(fav.name)+'</div>'+
+        '<div class="mc-meta">'+chips+'</div>'+years+
+      '</div></div>';
+    var skel='<div class="mc-section-title">'+esc(T('Campagnes récentes en Ligue des Champions','Recent Champions League campaigns'))+'</div><div class="mc-camps" id="mcCamps">'+
+      YEARS.map(function(y){ return '<div class="mc-camp skel" id="mc-y'+y+'"><span class="mc-season">'+ESPN.seasonLabel(y)+'</span><div class="mc-res"></div></div>'; }).join('')+'</div>';
+    el('mcContent').innerHTML=hero+skel;
+  }
+  function loadCampaigns(fav){ // séquentiel (doux pour l'API)
+    var i=0; (function next(){ if(i>=YEARS.length) return; var y=YEARS[i++]; fetchYearThenNext(y); })();
+    function fetchYearThenNext(y){ fetchYear(y).then(function(events){ paint(y,events); },function(){ paint(y,null); }).then(function(){ if(i<YEARS.length){ var ny=YEARS[i++]; fetchYearThenNext(ny); } }); }
+    function paint(y,events){ var row=el('mc-y'+y); if(!row) return;
+      if(!events){ row.className='mc-camp'; row.innerHTML='<span class="mc-season">'+ESPN.seasonLabel(y)+'</span><div class="mc-res"><div class="mc-detail">'+esc(T('Données indisponibles','Data unavailable'))+'</div></div>'; return; }
+      var h=outcomeHTML(outcome(events,fav), y);
+      row.className='mc-camp';
+      row.innerHTML='<span class="mc-season">'+ESPN.seasonLabel(y)+'</span>'+
+        '<div class="mc-res"><div class="mc-round">'+h.round+'</div><div class="mc-detail">'+h.detail+'</div></div>'+
+        '<span class="mc-badge '+h.cls+'">'+esc(h.badge)+'</span>'+
+        '<a class="mc-relive" href="dashboard.html?season='+y+'">'+esc(T('Revivre','Relive'))+' →</a>';
+    }
+  }
+
+  function renderEmpty(){
+    el('mcContent').innerHTML='<div class="card pad mc-wrap"><div class="mc-empty"><div class="em-star">★</div>'+
+      '<p>'+esc(T('Choisis ton club favori sur l’accueil pour découvrir son histoire en Ligue des Champions.','Pick your favourite club on the home page to explore its Champions League history.'))+'</p>'+
+      '<a class="btn" href="dashboard.html">'+esc(T('Choisir mon club','Pick my club'))+'</a></div></div>';
+  }
+
+  function render(){
+    var t=el('navMyClub'); if(t) t.textContent=T('Mon club','My club');
+    el('mcTitle').textContent=T('Mon club','My club');
+    var fav=(window.ESPN&&ESPN.getFav)?ESPN.getFav():null;
+    if(!fav){ renderEmpty(); return; }
+    renderShell(fav);
+    loadCampaigns(fav);
+  }
+  render();
+
+  if(window.ESPN) ESPN.preserveSeasonLinks(document);
+  window.addEventListener('ldc:langchange', function(){ applyFavAccent(); render(); });
+
+  /* Starfield partagé */
+  (function starfield(){
+    var c=el('starfield'); if(!c||!c.getContext) return; var ctx=c.getContext('2d'); var stars=[], W=0, H=0;
+    function resize(){ var dpr=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight; c.width=W*dpr; c.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); build(); }
+    function build(){ stars=[]; var n=Math.min(110,Math.floor(W*H/14000)); for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+0.3,vy:0.04+Math.random()*0.16,tw:Math.random()*6.28}); }
+    function loop(){ if(document.visibilityState==='hidden'){ setTimeout(function(){requestAnimationFrame(loop);},700); return; } ctx.clearRect(0,0,W,H); for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y+=s.vy; s.tw+=0.03; if(s.y>H+2){ s.y=-2; s.x=Math.random()*W; } var a=0.16+0.28*Math.sin(s.tw); if(a<0)a=0; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28); ctx.fillStyle='rgba(150,170,210,'+a.toFixed(2)+')'; ctx.fill(); } requestAnimationFrame(loop); }
+    window.addEventListener('resize',resize); resize(); requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>
