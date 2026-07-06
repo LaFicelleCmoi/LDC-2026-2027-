@@ -467,9 +467,11 @@ a{ text-decoration:none; color:inherit; }
 .lanyard-card.grabbing{ cursor:grabbing; }
 .lanyard-card .lc-inner{
   position:relative; margin-top:11px; border-radius:16px; overflow:hidden; text-align:center;
-  background:linear-gradient(165deg,#132546,#0a1430 72%);
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow:0 26px 60px rgba(0,0,0,.6), inset 0 0 0 1px rgba(var(--club),.30), 0 0 34px rgba(var(--club),.15);
+  background:linear-gradient(165deg, rgba(20,38,72,.60), rgba(9,17,42,.70) 72%);
+  -webkit-backdrop-filter:blur(10px) saturate(1.15);
+  backdrop-filter:blur(10px) saturate(1.15);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 30px 70px rgba(0,0,0,.48), 0 0 58px rgba(var(--club),.22), inset 0 0 0 1px rgba(var(--club),.26);
   padding:0 0 15px;
 }
 .lc-hole{ position:absolute; top:4px; left:50%; transform:translateX(-50%); width:48px; height:9px; border-radius:6px;
@@ -478,8 +480,8 @@ a{ text-decoration:none; color:inherit; }
   background:linear-gradient(135deg, rgb(var(--club)), rgba(var(--club),.5)); }
 .lc-band span{ font-family:var(--font-d); letter-spacing:3px; font-size:15px; color:#fff; opacity:.94; text-shadow:0 1px 2px rgba(0,0,0,.45); }
 .lc-crest{ width:94px; height:94px; margin:15px auto 8px; border-radius:50%;
-  background:#0c1631; border:2px solid rgba(var(--club),.55); display:flex; align-items:center; justify-content:center;
-  box-shadow:0 8px 22px rgba(0,0,0,.55); }
+  background:rgba(12,22,49,.55); border:2px solid rgba(var(--club),.55); display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 22px rgba(0,0,0,.45), inset 0 0 22px rgba(var(--club),.16); }
 .lc-crest img{ width:66px; height:66px; object-fit:contain; filter:drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
 .lc-name{ font-family:var(--font-d); font-size:27px; line-height:1; padding:0 12px; color:#fff; letter-spacing:.02em; }
 .lc-tag{ margin-top:6px; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
@@ -1394,6 +1396,13 @@ window.LDCLanyard = (function(){
   }
   function render(){
     ctx.clearRect(0,0,W,H);
+    // halo d'ambiance aux couleurs du club, fondu dans le fond sombre (meilleure intégration)
+    var gcx=(pts[iL].x+pts[iR].x)/2, gcy=(pts[iL].y+pts[iR].y)/2+150;
+    var rg=ctx.createRadialGradient(gcx,gcy,8, gcx,gcy,250);
+    rg.addColorStop(0,'rgba('+clubCol+',0.20)');
+    rg.addColorStop(0.55,'rgba('+clubCol+',0.06)');
+    rg.addColorStop(1,'rgba('+clubCol+',0)');
+    ctx.fillStyle=rg; ctx.fillRect(gcx-260,gcy-260,520,520);
     ctx.lineCap='round'; ctx.lineJoin='round';
     ctx.strokeStyle='rgba(0,0,0,.30)'; ctx.lineWidth=20; strapPath(); ctx.stroke();
     ctx.strokeStyle='rgb('+clubCol+')'; ctx.lineWidth=16; strapPath(); ctx.stroke();
