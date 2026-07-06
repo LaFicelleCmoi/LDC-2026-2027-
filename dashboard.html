@@ -1394,6 +1394,49 @@ window.LDCLanyard = (function(){
     for(var i=1;i<=iSplit;i++) ctx.lineTo(pts[i].x,pts[i].y);
     var mx=(pts[iL].x+pts[iR].x)/2, my=(pts[iL].y+pts[iR].y)/2; ctx.lineTo(mx,my);
   }
+  function centerline(){
+    var P=[]; for(var i=0;i<=iSplit;i++) P.push({x:pts[i].x,y:pts[i].y});
+    P.push({x:(pts[iL].x+pts[iR].x)/2, y:(pts[iL].y+pts[iR].y)/2});
+    return P;
+  }
+  function ribbonPath(P,hw){
+    var Lt=[],Rt=[],i,pv,nx2,dx,dy,len,nx,ny;
+    for(i=0;i<P.length;i++){
+      pv=P[i>0?i-1:0]; nx2=P[i<P.length-1?i+1:P.length-1];
+      dx=nx2.x-pv.x; dy=nx2.y-pv.y; len=Math.sqrt(dx*dx+dy*dy)||1; nx=-dy/len; ny=dx/len;
+      Lt.push({x:P[i].x+nx*hw, y:P[i].y+ny*hw});
+      Rt.push({x:P[i].x-nx*hw, y:P[i].y-ny*hw});
+    }
+    ctx.beginPath(); ctx.moveTo(Lt[0].x,Lt[0].y);
+    for(i=1;i<Lt.length;i++) ctx.lineTo(Lt[i].x,Lt[i].y);
+    for(i=Rt.length-1;i>=0;i--) ctx.lineTo(Rt[i].x,Rt[i].y);
+    ctx.closePath();
+  }
+  // texte répété imprimé le long de la sangle (suit la courbe)
+  function drawStrapText(P){
+    var seg=[], total=0, i;
+    for(i=1;i<P.length;i++){ var dx=P[i].x-P[i-1].x, dy=P[i].y-P[i-1].y, d=Math.sqrt(dx*dx+dy*dy); seg.push({a:P[i-1],b:P[i],len:d,start:total}); total+=d; }
+    if(total<24 || !seg.length) return;
+    function at(s){
+      for(var i=0;i<seg.length;i++){ var e=seg[i]; if(s<=e.start+e.len || i===seg.length-1){ var t=e.len?(s-e.start)/e.len:0; t=t<0?0:(t>1?1:t);
+        return {x:e.a.x+(e.b.x-e.a.x)*t, y:e.a.y+(e.b.y-e.a.y)*t, ang:Math.atan2(e.b.y-e.a.y,e.b.x-e.a.x)}; } }
+      var e2=seg[seg.length-1]; return {x:e2.b.x,y:e2.b.y,ang:Math.atan2(e2.b.y-e2.a.y,e2.b.x-e2.a.x)};
+    }
+    ctx.save();
+    ctx.font='700 12px "Bebas Neue", Impact, sans-serif';
+    ctx.fillStyle='rgba(255,255,255,.92)';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    var unit='LIGUE DES CHAMPIONS ★ ';
+    var s=16, idx=0, guard=0;
+    while(s < total-10 && guard<500){ guard++;
+      var ch=unit.charAt(idx%unit.length);
+      var w=ctx.measureText(ch).width;
+      if(ch!==' '){ var p=at(s+w/2); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.ang); ctx.fillText(ch,0,0); ctx.restore(); }
+      s += (ch===' ')? w*0.6 : (w+1.2);
+      idx++;
+    }
+    ctx.restore();
+  }
   function render(){
     ctx.clearRect(0,0,W,H);
     // halo d'ambiance aux couleurs du club, fondu dans le fond sombre (meilleure intégration)
@@ -1404,9 +1447,12 @@ window.LDCLanyard = (function(){
     rg.addColorStop(1,'rgba('+clubCol+',0)');
     ctx.fillStyle=rg; ctx.fillRect(gcx-260,gcy-260,520,520);
     ctx.lineCap='round'; ctx.lineJoin='round';
-    ctx.strokeStyle='rgba(0,0,0,.30)'; ctx.lineWidth=20; strapPath(); ctx.stroke();
-    ctx.strokeStyle='rgb('+clubCol+')'; ctx.lineWidth=16; strapPath(); ctx.stroke();
-    ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.lineWidth=3; strapPath(); ctx.stroke();
+    var P=centerline();
+    ribbonPath(P,11.5); ctx.fillStyle='rgba(0,0,0,.28)'; ctx.fill();                         // ombre de la sangle
+    ribbonPath(P,9.5);  ctx.fillStyle='rgb('+clubCol+')'; ctx.fill();                          // sangle (couleur club)
+    ribbonPath(P,9.5);  ctx.strokeStyle='rgba(0,0,0,.20)'; ctx.lineWidth=1.4; ctx.stroke();    // liseré
+    ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.lineWidth=2; strapPath(); ctx.stroke();       // brillance centrale
+    drawStrapText(P);                                                                          // « LIGUE DES CHAMPIONS ★ » répété
     // clip métallique
     var Lp=pts[iL], Rp=pts[iR], ang=Math.atan2(Rp.y-Lp.y,Rp.x-Lp.x);
     ctx.save(); ctx.translate((Lp.x+Rp.x)/2,(Lp.y+Rp.y)/2); ctx.rotate(ang);
