@@ -455,9 +455,47 @@ a{ text-decoration:none; color:inherit; }
 .rp-full{ display:block; text-align:center; margin-top:16px; font-size:0.74em; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--gold); }
 .rp-full:hover{ text-decoration:underline; }
 @media (max-width:560px){ .rp-name{ font-size:2em; } .rp-crest{ width:70px; height:70px; } .rp-round{ width:64px; font-size:0.6em; } .rp-opp .nm{ font-size:12px; } }
+
+/* ---- Lanyard (badge du club favori suspendu à une lanière, physique + drag) ---- */
+#lanyard{ position:absolute; top:0; left:0; width:100%; height:620px; z-index:75; pointer-events:none; overflow:hidden; }
+#lanyardCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.lanyard-card{
+  position:absolute; top:0; left:0; width:214px; pointer-events:auto;
+  cursor:grab; user-select:none; -webkit-user-select:none; touch-action:none;
+  transform-origin:50% 0; will-change:transform; --club:245,181,10;
+}
+.lanyard-card.grabbing{ cursor:grabbing; }
+.lanyard-card .lc-inner{
+  position:relative; margin-top:11px; border-radius:16px; overflow:hidden; text-align:center;
+  background:linear-gradient(165deg,#132546,#0a1430 72%);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 26px 60px rgba(0,0,0,.6), inset 0 0 0 1px rgba(var(--club),.30), 0 0 34px rgba(var(--club),.15);
+  padding:0 0 15px;
+}
+.lc-hole{ position:absolute; top:4px; left:50%; transform:translateX(-50%); width:48px; height:9px; border-radius:6px;
+  background:#05070f; box-shadow:inset 0 1px 3px rgba(0,0,0,.9); z-index:3; }
+.lc-band{ height:54px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg, rgb(var(--club)), rgba(var(--club),.5)); }
+.lc-band span{ font-family:var(--font-d); letter-spacing:3px; font-size:15px; color:#fff; opacity:.94; text-shadow:0 1px 2px rgba(0,0,0,.45); }
+.lc-crest{ width:94px; height:94px; margin:15px auto 8px; border-radius:50%;
+  background:#0c1631; border:2px solid rgba(var(--club),.55); display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 22px rgba(0,0,0,.55); }
+.lc-crest img{ width:66px; height:66px; object-fit:contain; filter:drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
+.lc-name{ font-family:var(--font-d); font-size:27px; line-height:1; padding:0 12px; color:#fff; letter-spacing:.02em; }
+.lc-tag{ margin-top:6px; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+.lc-foot{ margin:13px 16px 0; padding-top:11px; border-top:1px solid rgba(255,255,255,.08);
+  display:flex; align-items:center; justify-content:center; gap:9px; }
+.lc-foot .lc-logo{ width:18px; height:18px; opacity:.85; }
+.lc-foot .lc-abbr{ font-family:var(--font-d); letter-spacing:2px; font-size:17px; color:rgb(var(--club)); }
+@media (max-width:600px){ #lanyard{ display:none; } }
 </style>
 </head>
 <body>
+
+<div id="lanyard" aria-hidden="true">
+  <canvas id="lanyardCanvas"></canvas>
+  <div class="lanyard-card" id="lanyardCard"></div>
+</div>
 
 <div id="cl-ball"></div>
 <canvas id="starfield"></canvas>
@@ -990,7 +1028,7 @@ a{ text-decoration:none; color:inherit; }
         '<button class="fav-btn" id="favRemove">'+esc(I18N.t('fav.remove'))+'</button>'+
       '</div>'+notifHintHTML()+'</div>';
     var ch=el('favChange'); if(ch) ch.addEventListener('click',function(e){ e.stopPropagation(); openFavChooser(); });
-    var rm=el('favRemove'); if(rm) rm.addEventListener('click',function(e){ e.stopPropagation(); ESPN.clearFav(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); });
+    var rm=el('favRemove'); if(rm) rm.addEventListener('click',function(e){ e.stopPropagation(); ESPN.clearFav(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); if(window.LDCLanyard) LDCLanyard.refresh(); });
     var nb=el('favNotif'); if(nb) nb.addEventListener('click', toggleNotif);
   }
   function openFavChooser(){
@@ -1021,7 +1059,7 @@ a{ text-decoration:none; color:inherit; }
     Array.prototype.forEach.call(g.querySelectorAll('.fav-club'),function(btn){
       btn.addEventListener('click',function(){
         ESPN.setFav({ id:this.getAttribute('data-fid'), name:this.getAttribute('data-fname'), abbr:this.getAttribute('data-fabbr'), logo:this.getAttribute('data-flogo'), color:this.getAttribute('data-fcolor') });
-        closeFavChooser(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif();
+        closeFavChooser(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); if(window.LDCLanyard) LDCLanyard.refresh();
       });
     });
   }
@@ -1264,8 +1302,163 @@ a{ text-decoration:none; color:inherit; }
   setInterval(function(){ try{ loadSeason(); }catch(e){} }, 60000);
   setInterval(function(){ try{ document.querySelectorAll('.live-countdown[data-kickoff], .fav-cd[data-kickoff]').forEach(function(c){ var ts=parseInt(c.getAttribute('data-kickoff'),10); if(ts) c.textContent=countdown(new Date(ts)); }); var _nm=nextMilestone(); if(_nm && el('cdRow')) renderCountdown(_nm.ts); }catch(e){} }, 1000);
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'){ loadToday(); loadSeason(); scheduleFavNotif(); } });
-  window.addEventListener('ldc:langchange',function(){ buildHero(); applySeasonUI(); lastStatsKey=''; renderLive(); renderZones(); renderMarquee(); renderFav(); renderOffseason(); });
+  window.addEventListener('ldc:langchange',function(){ buildHero(); applySeasonUI(); lastStatsKey=''; renderLive(); renderZones(); renderMarquee(); renderFav(); renderOffseason(); if(window.LDCLanyard) LDCLanyard.refresh(); });
 
+})();
+</script>
+
+<!-- ===================== LANYARD (badge club favori suspendu) ===================== -->
+<script>
+window.LDCLanyard = (function(){
+  var host=document.getElementById('lanyard');
+  var canvas=document.getElementById('lanyardCanvas');
+  var card=document.getElementById('lanyardCard');
+  if(!host||!canvas||!card) return { refresh:function(){} };
+  var ctx=canvas.getContext('2d');
+  var reduce=false; try{ reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+
+  var W=0,H=0,dpr=1;
+  var CARDW=214, CLIPW=104, BANDLEN=176, SEG=17, DROP=30;
+  var pts=[], sticks=[], iSplit=0, iL=0, iR=0;
+  var dragging=false, gx=0, gy=0, offL={x:0,y:0}, offR={x:0,y:0}, tt=0, clubCol='245,181,10';
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function L(){ try{ return (window.I18N&&I18N.getLang&&I18N.getLang())||'fr'; }catch(e){ return 'fr'; } }
+  function T(fr,en){ return L()==='en'?en:fr; }
+  function mk(x,y){ return {x:x,y:y,ox:x,oy:y,pin:false}; }
+
+  function sizeFor(){
+    var w=window.innerWidth;
+    if(w<820){ CARDW=190; CLIPW=90; BANDLEN=140; }
+    else { CARDW=214; CLIPW=104; BANDLEN=176; }
+    card.style.width=CARDW+'px';
+  }
+  function resize(){
+    dpr=Math.min(2,window.devicePixelRatio||1);
+    W=host.clientWidth||window.innerWidth; H=host.clientHeight||620;
+    canvas.width=Math.round(W*dpr); canvas.height=Math.round(H*dpr);
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function local(e){ var r=host.getBoundingClientRect(); return { x:e.clientX-r.left, y:e.clientY-r.top }; }
+  function build(){
+    sizeFor(); resize();
+    var ax=W/2, ay=4;
+    pts=[ {x:ax,y:ay,ox:ax,oy:ay,pin:true} ];
+    var N=Math.max(6,Math.round(BANDLEN/SEG));
+    for(var i=1;i<=N;i++) pts.push(mk(ax, ay+i*SEG));
+    iSplit=pts.length-1;
+    var cy=ay+BANDLEN+DROP;
+    pts.push(mk(ax-CLIPW/2, cy)); iL=pts.length-1;
+    pts.push(mk(ax+CLIPW/2, cy)); iR=pts.length-1;
+    sticks=[];
+    for(var s=0;s<iSplit;s++) sticks.push([s,s+1,SEG,1]);
+    var clipLeg=Math.sqrt((CLIPW/2)*(CLIPW/2)+DROP*DROP);   // brin en V faisable (triangle valide)
+    sticks.push([iSplit,iL,clipLeg,1]);
+    sticks.push([iSplit,iR,clipLeg,1]);
+    sticks.push([iL,iR,CLIPW,1]);
+  }
+
+  function solve(st){
+    var a=pts[st[0]], b=pts[st[1]], len=st[2];
+    var dx=b.x-a.x, dy=b.y-a.y, d=Math.sqrt(dx*dx+dy*dy)||0.0001;
+    var diff=(len-d)/d*0.5*st[3], ox=dx*diff, oy=dy*diff;
+    if(!a.pin){ a.x-=ox; a.y-=oy; } if(!b.pin){ b.x+=ox; b.y+=oy; }
+  }
+  function setDrag(){
+    pts[iL].x=gx+offL.x; pts[iL].y=gy+offL.y;
+    pts[iR].x=gx+offR.x; pts[iR].y=gy+offR.y;
+  }
+  function step(){
+    var g=0.6, damp=0.985;
+    var wind=(dragging||reduce)?0:(Math.sin(tt*0.9)*0.05+Math.sin(tt*0.37)*0.03);
+    for(var i=0;i<pts.length;i++){ var p=pts[i]; if(p.pin) continue;
+      var vx=(p.x-p.ox)*damp, vy=(p.y-p.oy)*damp;
+      p.ox=p.x; p.oy=p.y;
+      p.x+=vx+wind; p.y+=vy+g;
+    }
+    for(var k=0;k<18;k++){
+      pts[0].x=W/2; pts[0].y=4;
+      if(dragging) setDrag();
+      for(var j=0;j<sticks.length;j++) solve(sticks[j]);
+    }
+    pts[0].x=W/2; pts[0].y=4;
+    if(dragging) setDrag();
+  }
+
+  function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function strapPath(){
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(var i=1;i<=iSplit;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    var mx=(pts[iL].x+pts[iR].x)/2, my=(pts[iL].y+pts[iR].y)/2; ctx.lineTo(mx,my);
+  }
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.strokeStyle='rgba(0,0,0,.30)'; ctx.lineWidth=20; strapPath(); ctx.stroke();
+    ctx.strokeStyle='rgb('+clubCol+')'; ctx.lineWidth=16; strapPath(); ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.lineWidth=3; strapPath(); ctx.stroke();
+    // clip métallique
+    var Lp=pts[iL], Rp=pts[iR], ang=Math.atan2(Rp.y-Lp.y,Rp.x-Lp.x);
+    ctx.save(); ctx.translate((Lp.x+Rp.x)/2,(Lp.y+Rp.y)/2); ctx.rotate(ang);
+    var cw=CLIPW+18, ch=14, grd=ctx.createLinearGradient(0,-ch/2,0,ch/2);
+    grd.addColorStop(0,'#eef2f8'); grd.addColorStop(.5,'#aab3c4'); grd.addColorStop(1,'#79808f');
+    ctx.fillStyle=grd; roundRect(-cw/2,-ch/2,cw,ch,5); ctx.fill();
+    ctx.restore();
+    // position de la carte
+    var midx=(Lp.x+Rp.x)/2, midy=(Lp.y+Rp.y)/2;
+    card.style.transform='translate('+(midx-CARDW/2)+'px,'+midy+'px) rotate('+ang+'rad)';
+  }
+
+  var raf=null;
+  function loop(){
+    raf=requestAnimationFrame(loop);
+    if(document.hidden) return;
+    if(getComputedStyle(host).display==='none') return;
+    tt+=0.016; step(); render();
+  }
+
+  function refresh(){
+    var f=(window.ESPN&&ESPN.getFav)?ESPN.getFav():null;
+    clubCol=(window.ESPN&&ESPN.favAccent&&ESPN.favAccent())||'245,181,10';
+    card.style.setProperty('--club', clubCol);
+    var crest, name, abbr, tag;
+    if(f){ crest=f.logo||'logo.svg?v=1'; name=f.name||''; abbr=(f.abbr||'LDC').toUpperCase(); tag=T('Supporter','Supporter'); }
+    else { crest='logo.svg?v=1'; name=T('Mon club','My club'); abbr='LDC'; tag=T('Choisis ton équipe','Pick your team'); }
+    card.innerHTML='<div class="lc-inner">'+
+        '<span class="lc-hole"></span>'+
+        '<div class="lc-band"><span>LIGUE DES CHAMPIONS</span></div>'+
+        '<div class="lc-crest"><img src="'+esc(crest)+'" alt="" onerror="this.onerror=null;this.src=\'logo.svg?v=1\'"></div>'+
+        '<div class="lc-name">'+esc(name)+'</div>'+
+        '<div class="lc-tag">'+esc(tag)+' · 2026-27</div>'+
+        '<div class="lc-foot"><img class="lc-logo" src="logo.svg?v=1" alt=""><span class="lc-abbr">'+esc(abbr)+'</span></div>'+
+      '</div>';
+  }
+
+  // ---- drag ----
+  card.addEventListener('pointerdown', function(e){
+    dragging=true; card.classList.add('grabbing');
+    try{ card.setPointerCapture(e.pointerId); }catch(_){}
+    var p=local(e); gx=p.x; gy=p.y;
+    offL={x:pts[iL].x-gx, y:pts[iL].y-gy};
+    offR={x:pts[iR].x-gx, y:pts[iR].y-gy};
+    pts[iL].pin=true; pts[iR].pin=true;
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', function(e){
+    if(!dragging) return;
+    pts[iL].ox=pts[iL].x; pts[iL].oy=pts[iL].y;
+    pts[iR].ox=pts[iR].x; pts[iR].oy=pts[iR].y;
+    var p=local(e); gx=p.x; gy=p.y; setDrag();
+  });
+  function endDrag(){ if(!dragging) return; dragging=false; card.classList.remove('grabbing'); pts[iL].pin=false; pts[iR].pin=false; }
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt=setTimeout(build, 200); });
+
+  build(); refresh(); loop();
+  return { refresh:refresh, rebuild:build };
 })();
 </script>
 </body>
