@@ -585,6 +585,7 @@ a{ text-decoration:none; color:inherit; }
 
 <script src="i18n.js?v=18"></script>
 <script src="espn.js?v=10"></script>
+<script src="share.js?v=1"></script>
 <script>
 (function(){
   'use strict';
@@ -1024,10 +1025,12 @@ a{ text-decoration:none; color:inherit; }
       '<div class="fav-name">'+esc(f.name)+'</div>'+
       '<div class="fav-status">'+favStatusHTML(f)+'</div></div></div>'+
       '<div class="fav-actions">'+
+        '<button class="fav-btn primary" id="favShare">📸 '+esc(lang()==='en'?'Share my pass':'Partager mon pass')+'</button>'+
         notifBtnHTML()+
         '<button class="fav-btn" id="favChange">'+esc(I18N.t('fav.change'))+'</button>'+
         '<button class="fav-btn" id="favRemove">'+esc(I18N.t('fav.remove'))+'</button>'+
       '</div>'+notifHintHTML()+'</div>';
+    var sh=el('favShare'); if(sh) sh.addEventListener('click',function(e){ e.stopPropagation(); if(window.ShareCard){ sh.disabled=true; Promise.resolve(ShareCard.pass(ESPN.getFav())).then(function(){ sh.disabled=false; },function(){ sh.disabled=false; }); } });
     var ch=el('favChange'); if(ch) ch.addEventListener('click',function(e){ e.stopPropagation(); openFavChooser(); });
     var rm=el('favRemove'); if(rm) rm.addEventListener('click',function(e){ e.stopPropagation(); ESPN.clearFav(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); if(window.LDCLanyard) LDCLanyard.refresh(); });
     var nb=el('favNotif'); if(nb) nb.addEventListener('click', toggleNotif);
