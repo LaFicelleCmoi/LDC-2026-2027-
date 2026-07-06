@@ -1025,6 +1025,7 @@ a{ text-decoration:none; color:inherit; }
       '<div class="fav-name">'+esc(f.name)+'</div>'+
       '<div class="fav-status">'+favStatusHTML(f)+'</div></div></div>'+
       '<div class="fav-actions">'+
+        '<a class="fav-btn" href="monclub.html" id="favMyClub">📊 '+esc(lang()==='en'?'My club':'Mon club')+'</a>'+
         '<button class="fav-btn primary" id="favShare">📸 '+esc(lang()==='en'?'Share my pass':'Partager mon pass')+'</button>'+
         notifBtnHTML()+
         '<button class="fav-btn" id="favChange">'+esc(I18N.t('fav.change'))+'</button>'+
