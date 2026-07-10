@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Jeu — Ligue des Champions</title>
 <link rel="icon" href="logo.svg?v=3" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=18" />
 <style>
@@ -114,6 +118,7 @@
     <a href="palmares.html" data-i18n="nav.palmares">Palmarès</a>
     <a href="calendrier.html" data-i18n="nav.calendar">Calendrier</a>
     <a href="jeu.html" class="active" data-i18n="nav.game">Jeu</a>
+    <a href="monclub.html" data-i18n="nav.myclub">Mon club</a>
     <a href="overlay.html" data-i18n="nav.overlay">Overlay OBS</a>
     <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
   </nav>
@@ -163,7 +168,7 @@
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=17"></script>
+<script src="i18n.js?v=19"></script>
 <script src="espn.js?v=10"></script>
 <script src="share.js?v=1"></script>
 <script>
@@ -413,7 +418,7 @@
     function resize(){ var dpr=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight; c.width=W*dpr; c.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); build(); }
     function build(){ stars=[]; var n=Math.min(110,Math.floor(W*H/14000)); for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+0.3,vy:0.04+Math.random()*0.16,tw:Math.random()*6.28}); }
     function loop(){ if(document.visibilityState==='hidden'){ setTimeout(function(){requestAnimationFrame(loop);},700); return; } ctx.clearRect(0,0,W,H); for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y+=s.vy; s.tw+=0.03; if(s.y>H+2){ s.y=-2; s.x=Math.random()*W; } var a=0.16+0.28*Math.sin(s.tw); if(a<0)a=0; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28); ctx.fillStyle='rgba(150,170,210,'+a.toFixed(2)+')'; ctx.fill(); } requestAnimationFrame(loop); }
-    window.addEventListener('resize',resize); resize(); requestAnimationFrame(loop);
+    window.addEventListener('resize',resize); resize(); if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)) requestAnimationFrame(loop);
   })();
 })();
 </script>
