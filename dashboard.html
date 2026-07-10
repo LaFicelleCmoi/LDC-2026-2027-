@@ -7,6 +7,10 @@
 <meta name="description" content="Tracker et simulateur non officiel de la Ligue des Champions : scores en direct, classement de la phase de ligue et phase finale.">
 <meta name="theme-color" content="#081027">
 <link rel="icon" href="logo.svg?v=3" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -519,6 +523,7 @@ a{ text-decoration:none; color:inherit; }
     <a href="palmares.html" class="nav-ghost" data-i18n="nav.palmares">Palmarès</a>
     <a href="calendrier.html" class="nav-ghost" data-i18n="nav.calendar">Calendrier</a>
     <a href="jeu.html" class="nav-ghost" data-i18n="nav.game">Jeu</a>
+    <a href="monclub.html" class="nav-ghost" data-i18n="nav.myclub">Mon club</a>
     <div id="seasonDD"></div>
     <a href="overlay.html" class="nav-ghost" data-i18n="nav.overlay">Overlay OBS</a>
   </div>
@@ -583,7 +588,7 @@ a{ text-decoration:none; color:inherit; }
   </p>
 </footer>
 
-<script src="i18n.js?v=18"></script>
+<script src="i18n.js?v=19"></script>
 <script src="espn.js?v=10"></script>
 <script src="share.js?v=1"></script>
 <script>
@@ -910,7 +915,7 @@ a{ text-decoration:none; color:inherit; }
       for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y+=s.vy; s.tw+=0.03; if(s.y>H+2){ s.y=-2; s.x=Math.random()*W; } var a=0.16+0.28*Math.sin(s.tw); if(a<0)a=0;
         ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle='rgba(150,170,210,'+a.toFixed(2)+')'; ctx.fill(); }
       requestAnimationFrame(loop); }
-    window.addEventListener('resize',resize); resize(); requestAnimationFrame(loop);
+    window.addEventListener('resize',resize); resize(); if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)) requestAnimationFrame(loop);
   })();
 
   /* ================= CountUp (ReactBits) ================= */
