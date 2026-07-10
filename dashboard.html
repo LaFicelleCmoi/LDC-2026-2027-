@@ -6,7 +6,7 @@
 <title>Accueil — Tracker Ligue des Champions</title>
 <meta name="description" content="Tracker et simulateur non officiel de la Ligue des Champions : scores en direct, classement de la phase de ligue et phase finale.">
 <meta name="theme-color" content="#081027">
-<link rel="icon" href="logo.svg?v=3" type="image/svg+xml">
+<link rel="icon" href="logo.svg?v=4" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="preconnect" href="https://site.api.espn.com" />
@@ -56,7 +56,7 @@ a{ text-decoration:none; color:inherit; }
 #langSwitch{ display:flex; gap:5px; }
 .tb-left{ display:flex; align-items:center; gap:13px; }
 .dash-brand{ display:inline-flex; }
-.dash-brand .db-logo{ width:40px; height:40px; display:block; background:url('logo.svg?v=3') center/contain no-repeat; filter:drop-shadow(0 2px 6px rgba(0,0,0,.45)); transition:transform .15s; }
+.dash-brand .db-logo{ width:40px; height:40px; display:block; background:url('logo.svg?v=4') center/contain no-repeat; filter:drop-shadow(0 2px 6px rgba(0,0,0,.45)); transition:transform .15s; }
 .dash-brand:hover .db-logo{ transform:scale(1.06); }
 @media (max-width:600px){ .dash-brand .db-logo{ width:34px; height:34px; } }
 .lang-toggle{ position:relative; display:inline-flex; align-items:center; padding:3px; border-radius:999px;
@@ -1125,7 +1125,7 @@ a{ text-decoration:none; color:inherit; }
     var id=f.id, meHome=m.home.teamId===id, opp=meHome?m.away:m.home;
     var mins=Math.max(0,Math.round((m.dateObj.getTime()-Date.now())/60000));
     var line=(f.abbr||f.name)+' '+I18N.t('fav.vs')+' '+(opp.abbr||opp.name)+' — '+I18N.t('fav.notif.inMin').replace('{min}',mins);
-    try{ var n=new Notification(I18N.t('fav.notif.title'),{ body:line, tag:'ldc-fav-'+m.id, icon:(f.logo||'logo.svg?v=3') }); n.onclick=function(){ window.focus(); n.close(); }; }catch(e){}
+    try{ var n=new Notification(I18N.t('fav.notif.title'),{ body:line, tag:'ldc-fav-'+m.id, icon:(f.logo||'logo.svg?v=4') }); n.onclick=function(){ window.focus(); n.close(); }; }catch(e){}
     markNotifSent(m.id); scheduleFavNotif();
   }
   function requestNotifPermission(){ if(!notifSupported()) return; Promise.resolve(Notification.requestPermission()).then(function(p){ setNotifEnabled(p==='granted'); renderFav(); scheduleFavNotif(); }); }
@@ -1500,15 +1500,15 @@ window.LDCLanyard = (function(){
     clubCol=(window.ESPN&&ESPN.favAccent&&ESPN.favAccent())||'245,181,10';
     card.style.setProperty('--club', clubCol);
     var crest, name, abbr, tag;
-    if(f){ crest=f.logo||'logo.svg?v=3'; name=f.name||''; abbr=(f.abbr||'LDC').toUpperCase(); tag=T('Supporter','Supporter'); }
-    else { crest='logo.svg?v=3'; name=T('Mon club','My club'); abbr='LDC'; tag=T('Choisis ton équipe','Pick your team'); }
+    if(f){ crest=f.logo||'logo.svg?v=4'; name=f.name||''; abbr=(f.abbr||'LDC').toUpperCase(); tag=T('Supporter','Supporter'); }
+    else { crest='logo.svg?v=4'; name=T('Mon club','My club'); abbr='LDC'; tag=T('Choisis ton équipe','Pick your team'); }
     card.innerHTML='<div class="lc-inner">'+
         '<span class="lc-hole"></span>'+
         '<div class="lc-band"><span>LIGUE DES CHAMPIONS</span></div>'+
-        '<div class="lc-crest"><img src="'+esc(crest)+'" alt="" onerror="this.onerror=null;this.src=\'logo.svg?v=3\'"></div>'+
+        '<div class="lc-crest"><img src="'+esc(crest)+'" alt="" onerror="this.onerror=null;this.src=\'logo.svg?v=4\'"></div>'+
         '<div class="lc-name">'+esc(name)+'</div>'+
         '<div class="lc-tag">'+esc(tag)+' · 2026-27</div>'+
-        '<div class="lc-foot"><img class="lc-logo" src="logo.svg?v=3" alt=""><span class="lc-abbr">'+esc(abbr)+'</span></div>'+
+        '<div class="lc-foot"><img class="lc-logo" src="logo.svg?v=4" alt=""><span class="lc-abbr">'+esc(abbr)+'</span></div>'+
       '</div>';
   }
 
