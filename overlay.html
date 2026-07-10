@@ -278,15 +278,23 @@
 
   /* ---- Toggle langue : discret, visible au survol seulement ----------- */
   #langToggle{
-    position:fixed; top:6px; right:8px; display:flex; gap:4px;
+    position:fixed; top:6px; right:8px; display:flex; gap:2px; padding:2px;
+    border-radius:8px; background:rgba(11,14,26,.92);
+    border:1px solid rgba(var(--fav-rgb),.4);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.5);
     opacity:0; transition:opacity .25s; pointer-events:auto; z-index:10;
   }
-  #stage:hover #langToggle{ opacity:.85; }
+  #stage:hover #langToggle{ opacity:.92; }
   #langToggle button{
-    background:rgba(11,14,26,.9); color:#cdd4f0; border:1px solid var(--line);
-    border-radius:6px; font-size:10px; font-weight:800; padding:3px 7px; cursor:pointer;
+    background:none; color:#9aa3c4; border:none;
+    border-radius:6px; font-size:10px; font-weight:800; letter-spacing:.06em; padding:3px 8px; cursor:pointer;
+    transition:color .2s, background .2s;
   }
-  #langToggle button.active{ background:var(--accent); color:#fff; }
+  #langToggle button.active{
+    background:linear-gradient(180deg,#ffe9a8,#f7bd39 55%,#d68d06); color:#1a1300;
+    box-shadow:0 1px 5px rgba(var(--fav-rgb),.5), inset 0 1px 0 rgba(255,255,255,.55);
+  }
+  #langToggle button:not(.active):hover{ color:#f4f6ff; }
 
   /* Garde-fou téléphone (aperçu hors OBS) */
   @media (max-width:480px){
