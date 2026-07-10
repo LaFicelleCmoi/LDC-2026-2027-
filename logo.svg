@@ -2,8 +2,11 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
  "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
 <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
- width="164.000000pt" height="148.000000pt" viewBox="0 0 164.000000 148.000000"
+ width="184.000000pt" height="168.000000pt" viewBox="-10 -10 184 168"
  preserveAspectRatio="xMidYMid meet">
+
+<!-- fond blanc léger (pastille arrondie) pour la lisibilité sur fond sombre -->
+<rect x="-10" y="-10" width="184" height="168" rx="30" fill="#ffffff" fill-opacity="0.93"/>
 
 <g transform="translate(0.000000,148.000000) scale(0.100000,-0.100000)"
 fill="#000000" stroke="none">
