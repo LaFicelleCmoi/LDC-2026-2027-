@@ -25,6 +25,20 @@
   .score-pill .l{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
   .score-pill.best .v{ color:var(--upcoming); }
   .score-pill.streak .v{ color:var(--finished); }
+  /* Flair de série : paliers x3 / x5 / x10 */
+  .score-pill.streak{ transition:border-color .3s, box-shadow .3s; }
+  .score-pill.streak.s3{ border-color:rgba(var(--gold-rgb,245,181,10),.45); }
+  .score-pill.streak.s3 .v::after{ content:' 🔥'; font-size:13px; }
+  .score-pill.streak.s5{ border-color:rgba(var(--gold-rgb,245,181,10),.7); box-shadow:0 0 14px rgba(var(--gold-rgb,245,181,10),.3); }
+  .score-pill.streak.s5 .v::after{ content:' 🔥'; font-size:14px; }
+  .score-pill.streak.s10{ border-color:rgb(var(--gold-rgb,245,181,10)); animation:stPulse 1.6s infinite; }
+  .score-pill.streak.s10 .v::after{ content:' 🔥🔥'; font-size:14px; }
+  @keyframes stPulse{ 0%,100%{ box-shadow:0 0 18px rgba(var(--gold-rgb,245,181,10),.45);} 50%{ box-shadow:0 0 30px rgba(var(--gold-rgb,245,181,10),.75);} }
+  @media (prefers-reduced-motion:reduce){ .score-pill.streak.s10{ animation:none; box-shadow:0 0 18px rgba(var(--gold-rgb,245,181,10),.45); } }
+  /* Aide clavier */
+  .kbd-hint{ text-align:center; margin-top:10px; font-size:11px; color:var(--muted); opacity:.75; }
+  .kbd-hint kbd{ font-family:inherit; font-weight:800; background:var(--card); border:1px solid var(--line-2); border-radius:5px; padding:1px 6px; }
+  @media (pointer:coarse){ .kbd-hint{ display:none; } }
 
   .quiz-card{ background:var(--card); border:1px solid var(--line-2); border-radius:16px; padding:24px 22px; }
   .quiz-q{ text-align:center; margin-bottom:20px; }
@@ -157,6 +171,7 @@
         <span class="quiz-msg" id="quizMsg"></span>
         <button class="quiz-next" id="quizNext" hidden>Suivante →</button>
       </div>
+      <div class="kbd-hint" id="kbdHint"></div>
     </div>
   </div>
 </div>
@@ -257,6 +272,13 @@
   function refreshScore(){
     if(mode==='daily'){ el('scVal').textContent=dailyScore; el('stVal').textContent=Math.min(dailyIdx,5); el('beVal').textContent=best2.daily||0; }
     else { el('scVal').textContent=score; el('stVal').textContent=streak; el('beVal').textContent=best2[mode]||0; }
+    /* flair de série : la pastille s'embrase par paliers */
+    var pill=document.querySelector('.score-pill.streak');
+    if(pill){ var s=(mode==='daily')?0:streak;
+      pill.classList.toggle('s3', s>=3&&s<5);
+      pill.classList.toggle('s5', s>=5&&s<10);
+      pill.classList.toggle('s10', s>=10);
+    }
   }
 
   /* PRNG déterministe (défi quotidien) + helpers aléatoires injectables */
@@ -378,6 +400,21 @@
   });
   el('quizNext').addEventListener('click', function(){ if(mode==='daily') dailyNext(); else newQuestion(); });
 
+  /* ---- raccourcis clavier : 1-4 pour répondre, Entrée/Espace pour la suite ---- */
+  document.addEventListener('keydown', function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey) return;
+    var a=document.activeElement;
+    if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+    if(e.key>='1' && e.key<='4'){
+      var opts=document.querySelectorAll('#quizOpts .opt');
+      var b=opts[parseInt(e.key,10)-1];
+      if(b && !b.disabled){ e.preventDefault(); b.click(); }
+    } else if(e.key==='Enter' || e.key===' '){
+      var nx=el('quizNext');
+      if(nx && !nx.hidden && a!==nx){ e.preventDefault(); nx.click(); }
+    }
+  });
+
   /* ---- partage des scores (image) ---- */
   function shareQuiz(){
     if(!window.ShareCard) return;
@@ -393,6 +430,7 @@
   function applyTexts(){
     var qs=el('quizShareLbl'); if(qs) qs.textContent=T('Partager mes scores','Share my scores');
     var al=el('achBtnLbl'); if(al) al.textContent=T('Récompenses','Rewards');
+    var kh=el('kbdHint'); if(kh) kh.innerHTML='⌨️ <kbd>1</kbd>–<kbd>4</kbd> '+esc(T('pour répondre','to answer'))+' · <kbd>'+esc(T('Entrée','Enter'))+'</kbd> '+esc(T('question suivante','next question'));
     el('gameTitle').textContent=T('Jeu','Game');
     el('gameSub').textContent=T('En attendant la nouvelle saison, teste tes connaissances.','While waiting for the new season, test your knowledge.');
     el('modeChampion').innerHTML='🏆 '+T('Champion de l’année','Champion of the year');
