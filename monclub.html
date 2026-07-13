@@ -28,6 +28,12 @@
   .mc-year{ font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums; padding:3px 8px; border-radius:6px; background:rgba(var(--fav-rgb,245,181,10),.12); color:rgb(var(--fav-rgb,245,181,10)); border:1px solid rgba(var(--fav-rgb,245,181,10),.28); }
 
   .mc-section-title{ font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:26px 4px 12px; }
+  /* Bilan chiffré (7 saisons) */
+  .mc-totals{ display:grid; grid-template-columns:repeat(auto-fit,minmax(108px,1fr)); gap:9px; }
+  .mc-tot{ text-align:center; padding:13px 8px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+  .mc-tot b{ display:block; font-family:'Bebas Neue',Impact,sans-serif; font-weight:400; font-size:1.9em; line-height:1; color:rgb(var(--fav-rgb,245,181,10)); font-variant-numeric:tabular-nums; }
+  .mc-tot span{ display:block; margin-top:5px; font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  @media (max-width:560px){ .mc-totals{ grid-template-columns:repeat(3,1fr); } }
   .mc-camps{ display:flex; flex-direction:column; gap:9px; }
   .mc-camp{ display:flex; align-items:center; gap:12px; padding:12px 15px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
   .mc-camp .mc-season{ font-family:'Bebas Neue',Impact,sans-serif; font-size:1.5em; letter-spacing:.02em; min-width:92px; color:var(--txt); }
@@ -162,15 +168,41 @@
         '<div class="mc-name">'+esc(fav.name)+'</div>'+
         '<div class="mc-meta">'+chips+'</div>'+years+
       '</div></div>';
-    var skel='<div class="mc-section-title">'+esc(T('Campagnes récentes en Ligue des Champions','Recent Champions League campaigns'))+'</div><div class="mc-camps" id="mcCamps">'+
+    var skel='<div id="mcTotals"></div>'+
+      '<div class="mc-section-title">'+esc(T('Campagnes récentes en Ligue des Champions','Recent Champions League campaigns'))+'</div><div class="mc-camps" id="mcCamps">'+
       YEARS.map(function(y){ return '<div class="mc-camp skel" id="mc-y'+y+'"><span class="mc-season">'+ESPN.seasonLabel(y)+'</span><div class="mc-res"></div></div>'; }).join('')+'</div>';
     el('mcContent').innerHTML=hero+skel;
   }
+  function renderTotals(t){
+    var host=el('mcTotals'); if(!host || !t.mp) return;
+    function tile(v,l){ return '<div class="mc-tot"><b>'+v+'</b><span>'+esc(l)+'</span></div>'; }
+    var diff=t.gf-t.ga;
+    host.innerHTML='<div class="mc-section-title">'+esc(T('Bilan sur les 7 dernières saisons','Record over the last 7 seasons'))+'</div>'+
+      '<div class="mc-totals">'+
+        tile(t.mp, T('Matchs','Matches'))+
+        tile(t.w, T('Victoires','Wins'))+
+        tile(t.d, T('Nuls','Draws'))+
+        tile(t.l, T('Défaites','Losses'))+
+        tile(t.gf+'–'+t.ga, T('Buts P/C','Goals F/A'))+
+        tile((diff>0?'+':'')+diff, T('Différence','Goal diff'))+
+      '</div>';
+  }
   function loadCampaigns(fav){ // séquentiel (doux pour l'API)
+    var totals={mp:0,w:0,d:0,l:0,gf:0,ga:0};
+    function tally(events){
+      (events||[]).map(ESPN.normalizeEvent).filter(Boolean).forEach(function(m){
+        if(m.state!=='post') return;
+        var side=sameClub(m.home,fav)?'h':(sameClub(m.away,fav)?'a':null); if(!side) return;
+        var mg=side==='h'?m.home.score:m.away.score, og=side==='h'?m.away.score:m.home.score;
+        totals.mp++; totals.gf+=mg; totals.ga+=og;
+        if(mg>og) totals.w++; else if(mg<og) totals.l++; else totals.d++;
+      });
+    }
     var i=0; (function next(){ if(i>=YEARS.length) return; var y=YEARS[i++]; fetchYearThenNext(y); })();
-    function fetchYearThenNext(y){ fetchYear(y).then(function(events){ paint(y,events); },function(){ paint(y,null); }).then(function(){ if(i<YEARS.length){ var ny=YEARS[i++]; fetchYearThenNext(ny); } }); }
+    function fetchYearThenNext(y){ fetchYear(y).then(function(events){ paint(y,events); },function(){ paint(y,null); }).then(function(){ if(i<YEARS.length){ var ny=YEARS[i++]; fetchYearThenNext(ny); } else { renderTotals(totals); } }); }
     function paint(y,events){ var row=el('mc-y'+y); if(!row) return;
       if(!events){ row.className='mc-camp'; row.innerHTML='<span class="mc-season">'+ESPN.seasonLabel(y)+'</span><div class="mc-res"><div class="mc-detail">'+esc(T('Données indisponibles','Data unavailable'))+'</div></div>'; return; }
+      tally(events);
       var h=outcomeHTML(outcome(events,fav), y);
       row.className='mc-camp';
       row.innerHTML='<span class="mc-season">'+ESPN.seasonLabel(y)+'</span>'+
