@@ -27,7 +27,8 @@
   .pod.p3{ min-height:146px; background:rgba(224,160,106,.10); border-color:rgba(224,160,106,.35); border-top-color:#e0a06a; }
   .pod.p3 .ptitles{ color:#eab27e; }
   /* Podium cliquable : années de victoire repliées */
-  .pod.has-detail{ cursor:pointer; transition:transform .15s; }
+  .pod{ transition:transform .18s ease; will-change:transform; }
+  .pod.has-detail{ cursor:pointer; }
   .pod.has-detail:hover{ transform:translateY(-2px); }
   .pod-years{ display:none; margin-top:10px; padding-top:9px; border-top:1px solid rgba(255,255,255,.16); font-size:11px; line-height:1.65; color:#eef2fb; }
   .pod-years .pdl{ display:block; font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--upcoming); margin-bottom:4px; }
@@ -203,11 +204,12 @@
         }).join('');
         return '<div class="pod '+cls+' has-detail" role="button" tabindex="0" aria-expanded="false">'+
           '<div class="medal">'+medal+'</div>'+names+
-          '<div class="ptitles">🏆 '+cl[0].n+' <small>'+esc(lbl)+'</small></div>'+
+          '<div class="ptitles">🏆 <span class="pt-n" data-n="'+cl[0].n+'">'+cl[0].n+'</span> <small>'+esc(lbl)+'</small></div>'+
           '<div class="pod-years"><span class="pdl">'+esc(yearsLbl)+'</span>'+years+'</div>'+
           '<div class="prank">'+rk+'</div></div>';
       }
       pod.innerHTML=block(2,'p2','🥈')+block(1,'p1','👑')+block(3,'p3','🥉');
+      animatePodium();
     }
     var body=document.getElementById('palBody'); if(!body) return;
     // Le tableau exclut le podium (top 3) — aucune répétition
@@ -295,6 +297,43 @@
     pod.addEventListener('click', function(ev){
       var b=ev.target.closest('.pod.has-detail');
       if(b && pod.contains(b)){ var op=b.classList.toggle('open'); b.setAttribute('aria-expanded', op?'true':'false'); }
+    });
+  })();
+
+  /* Compteurs animés du podium (0 -> n titres, easing, repli garanti) */
+  function animatePodium(){
+    var reduce=false; try{ reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+    Array.prototype.forEach.call(document.querySelectorAll('#podium .pt-n'), function(sp){
+      var target=parseInt(sp.getAttribute('data-n'),10)||0;
+      if(reduce || !window.requestAnimationFrame){ sp.textContent=String(target); return; }
+      var t0=null, dur=900;
+      sp.textContent='0';
+      requestAnimationFrame(function step(ts){
+        if(t0==null) t0=ts;
+        var p=Math.min(1,(ts-t0)/dur), e=1-Math.pow(1-p,3);
+        sp.textContent=String(Math.round(e*target));
+        if(p<1) requestAnimationFrame(step);
+      });
+      setTimeout(function(){ sp.textContent=String(target); }, dur+400);  // filet (onglet caché)
+    });
+  }
+
+  /* Inclinaison 3D des cartes du podium au survol (souris uniquement) */
+  (function podiumTilt(){
+    var fine=false, reduce=false;
+    try{ fine=window.matchMedia&&matchMedia('(pointer:fine)').matches; }catch(e){}
+    try{ reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+    if(!fine || reduce) return;
+    var pod=document.getElementById('podium'); if(!pod) return;
+    pod.addEventListener('pointermove', function(e){
+      var card=e.target.closest('.pod'); if(!card||!pod.contains(card)) return;
+      var r=card.getBoundingClientRect();
+      var rx=((e.clientY-r.top)/r.height-.5)*-7, ry=((e.clientX-r.left)/r.width-.5)*9;
+      card.style.transform='perspective(700px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg) translateY(-3px)';
+    }, {passive:true});
+    pod.addEventListener('pointerout', function(e){
+      var card=e.target.closest('.pod');
+      if(card && !card.contains(e.relatedTarget)) card.style.transform='';
     });
   })();
   if(window.I18N) window.addEventListener('ldc:langchange',function(){ render(); renderWall(); applyFavAccent(); setLabels(); requestAnimationFrame(moveThumb); if(window.ESPN) ESPN.mountSeasonMenu('#seasonDD','tracker.html'); });
