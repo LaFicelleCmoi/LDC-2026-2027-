@@ -15,6 +15,12 @@
   .cal-wrap{ max-width:920px; }
   /* Filtres */
   .cal-filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:20px; }
+  /* Bouton flottant « prochain match » */
+  .cal-next{ position:fixed; right:16px; bottom:16px; z-index:60; display:inline-flex; align-items:center; gap:7px;
+    padding:11px 16px; border:none; border-radius:999px; cursor:pointer; font-family:inherit; font-weight:800; font-size:13px;
+    background:linear-gradient(180deg,#ffe9a8,#f7bd39 55%,#d68d06); color:#1a1300;
+    box-shadow:0 10px 26px rgba(0,0,0,.45), 0 0 18px rgba(var(--gold-rgb,245,181,10),.35); }
+  .cal-next:hover{ filter:brightness(1.06); }
   .cal-select{ flex:1 1 200px; max-width:280px; padding:9px 12px; border-radius:10px; border:1px solid var(--line-2); background:var(--card); color:var(--txt); font-family:inherit; font-size:13px; cursor:pointer; }
   .cal-select:focus{ outline:none; border-color:rgba(245,181,10,.5); }
   .cal-myteam{ display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border-radius:10px; border:1px solid rgba(var(--fav-rgb,245,181,10),.5); background:rgba(var(--fav-rgb,245,181,10),.12); color:rgb(var(--fav-rgb,245,181,10)); font-family:inherit; font-weight:800; font-size:12px; cursor:pointer; transition:.15s; }
@@ -105,7 +111,10 @@
   <div class="cal-filters cal-wrap">
     <select class="cal-select" id="cal-team"><option value="" data-i18n="cal.allClubs">Tous les clubs</option></select>
     <button class="cal-myteam" id="cal-myteam" style="display:none">★ <span data-i18n="fav.myTeam">Mon équipe</span></button>
+    <button class="cal-myteam" id="cal-ics" title="Google Agenda, Apple Calendar, Outlook…">📆 <span id="calIcsLbl">Exporter (.ics)</span></button>
   </div>
+
+  <button class="cal-next" id="cal-next" style="display:none">⤓ <span id="calNextLbl">Prochain match</span></button>
 
   <div class="cal-wrap" id="cal-body">
     <div class="empty-state" data-i18n="common.loading">Chargement…</div>
@@ -145,6 +154,9 @@
     }
     ESPN.mountSeasonMenu('#seasonDD','calendrier.html');
     ESPN.preserveSeasonLinks(document);
+    var en=I18N.getLang()==='en';
+    var il=el('calIcsLbl'); if(il) il.textContent=en?'Export (.ics)':'Exporter (.ics)';
+    var nl=el('calNextLbl'); if(nl) nl.textContent=en?'Next match':'Prochain match';
   }
 
   /* Découpe les matchs de phase de ligue en journées (saut > 5 jours = nouvelle journée). */
@@ -254,8 +266,72 @@
       grp(en?'Knockout phase':'Phase finale', SCHEDULE.ko);
   }
 
+  /* ---- Export .ics (agenda) : matchs (filtre/favori) ou dates clés officielles ---- */
+  var KEY_DATES=[
+    {d:'20260707',fr:'1er tour de qualification',en:'1st qualifying round'},
+    {d:'20260721',fr:'2e tour de qualification',en:'2nd qualifying round'},
+    {d:'20260804',fr:'3e tour de qualification',en:'3rd qualifying round'},
+    {d:'20260818',fr:'Barrages (aller)',en:'Play-offs (1st leg)'},
+    {d:'20260827',fr:'Tirage de la phase de ligue',en:'League phase draw'},
+    {d:'20260908',fr:'Journée 1',en:'Matchday 1'},
+    {d:'20261013',fr:'Journée 2',en:'Matchday 2'},
+    {d:'20261020',fr:'Journée 3',en:'Matchday 3'},
+    {d:'20261103',fr:'Journée 4',en:'Matchday 4'},
+    {d:'20261124',fr:'Journée 5',en:'Matchday 5'},
+    {d:'20261208',fr:'Journée 6',en:'Matchday 6'},
+    {d:'20270119',fr:'Journée 7',en:'Matchday 7'},
+    {d:'20270127',fr:'Journée 8',en:'Matchday 8'},
+    {d:'20270216',fr:'Barrages de la phase finale',en:'Knockout play-offs'},
+    {d:'20270309',fr:'Huitièmes de finale',en:'Round of 16'},
+    {d:'20270406',fr:'Quarts de finale',en:'Quarter-finals'},
+    {d:'20270427',fr:'Demi-finales',en:'Semi-finals'},
+    {d:'20270605',fr:'Finale · Madrid',en:'Final · Madrid'}
+  ];
+  function icsEscape(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); }
+  function icsDT(d){ return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z'; }
+  function buildICS(){
+    var en=I18N.getLang()==='en';
+    var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//LDC Tracker//NONSGML//FR','CALSCALE:GREGORIAN'];
+    var now=icsDT(new Date()), count=0;
+    if(allMatches.length){
+      var fav=ESPN.getFav();
+      var scope=filterTeam || (fav?fav.id:'');            // priorité au filtre affiché, sinon club favori, sinon tout
+      var ms=allMatches.filter(function(m){ return m.round!=='qualifying' && m.dateObj; });
+      if(scope){ var scoped=ms.filter(function(m){ return m.home.teamId===scope||m.away.teamId===scope; }); if(scoped.length) ms=scoped; }
+      ms.forEach(function(m){
+        var end=new Date(m.dateObj.getTime()+2*3600*1000);
+        L.push('BEGIN:VEVENT','UID:ldc-'+m.id+'@ldc-tracker','DTSTAMP:'+now,
+          'DTSTART:'+icsDT(m.dateObj),'DTEND:'+icsDT(end),
+          'SUMMARY:'+icsEscape('⚽ '+m.home.name+' – '+m.away.name),
+          'DESCRIPTION:'+icsEscape(en?'Champions League (unofficial tracker)':'Ligue des Champions (tracker non officiel)'),
+          'END:VEVENT');
+        count++;
+      });
+    } else {
+      KEY_DATES.forEach(function(k){
+        L.push('BEGIN:VEVENT','UID:ldc-key-'+k.d+'@ldc-tracker','DTSTAMP:'+now,
+          'DTSTART;VALUE=DATE:'+k.d,
+          'SUMMARY:'+icsEscape('⭐ '+(en?k.en:k.fr)+' — '+(en?'Champions League':'Ligue des Champions')),
+          'END:VEVENT');
+        count++;
+      });
+    }
+    L.push('END:VCALENDAR');
+    return { text:L.join('\r\n'), count:count };
+  }
+  function exportICS(){
+    var r=buildICS(); if(!r.count) return;
+    try{
+      var blob=new Blob([r.text],{type:'text/calendar;charset=utf-8'});
+      var url=URL.createObjectURL(blob), a=document.createElement('a');
+      a.href=url; a.download='ldc-calendrier.ics'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} }, 3000);
+    }catch(e){}
+  }
+
   function render(){
     var host=el('cal-body'); if(!host) return;
+    var nextBtn=el('cal-next'); if(nextBtn) nextBtn.style.display='none';
     var fav=ESPN.getFav(), fid=fav?fav.id:null;
     var aggMap=computeAggregates();
     if(!allMatches.length){
@@ -268,6 +344,10 @@
     if(filterTeam) matches=matches.filter(function(m){return m.home.teamId===filterTeam||m.away.teamId===filterTeam;});
     if(!matches.length){ host.innerHTML='<div class="empty-state">'+esc(I18N.t('cal.empty'))+'</div>'; return; }
 
+    /* prochain match à venir (pour le bouton flottant) */
+    var now=Date.now(), nextId=null, nextTs=Infinity;
+    matches.forEach(function(m){ if(m.state==='pre'&&m.dateObj&&m.dateObj.getTime()>now&&m.dateObj.getTime()<nextTs){ nextTs=m.dateObj.getTime(); nextId=m.id; } });
+
     var groups=[];
     var league=matches.filter(function(m){return m.round==='league';});
     clusterMatchdays(league).forEach(function(md,i){ groups.push({title:I18N.t('cal.matchday')+' '+(i+1), matches:md}); });
@@ -279,8 +359,9 @@
 
     host.innerHTML=groups.map(function(g){
       return '<div class="cal-group"><div class="cal-group-head">'+esc(g.title)+' <span class="cal-count">'+g.matches.length+'</span></div>'+
-        g.matches.map(function(m){ return matchRow(m,fid,aggMap); }).join('')+'</div>';
+        g.matches.map(function(m){ return (nextId&&m.id===nextId?'<div id="nextMatchAnchor"></div>':'')+matchRow(m,fid,aggMap); }).join('')+'</div>';
     }).join('');
+    if(nextBtn && nextId) nextBtn.style.display='inline-flex';
   }
 
   function buildFilter(){
@@ -305,6 +386,10 @@
     el('cal-team').value=filterTeam;
     this.classList.toggle('active', filterTeam===fav.id);
     render();
+  });
+  el('cal-ics').addEventListener('click', exportICS);
+  el('cal-next').addEventListener('click', function(){
+    var a=el('nextMatchAnchor'); if(a) a.scrollIntoView({behavior:'smooth', block:'center'});
   });
 
   function load(){
