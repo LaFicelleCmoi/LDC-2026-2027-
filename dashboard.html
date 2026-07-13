@@ -420,10 +420,26 @@ a{ text-decoration:none; color:inherit; }
 .os-title{ font-family:var(--font-d); font-size:1.9em; line-height:1; color:#fff; margin:7px 0 4px; letter-spacing:.02em; }
 .os-milestone{ font-size:0.82em; color:var(--muted); margin-bottom:14px; }
 .os-milestone b{ color:#fff; }
-.cd-row{ display:flex; gap:9px; }
-.cd-unit{ flex:1; text-align:center; background:rgba(0,0,0,.28); border:1px solid var(--border); border-radius:12px; padding:11px 4px; }
-.cd-num{ font-family:var(--font-d); font-size:2.5em; line-height:1; color:var(--gold); font-variant-numeric:tabular-nums; }
-.cd-lbl{ font-size:0.58em; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
+/* Compte à rebours façon horloge à volets (split-flap) */
+.cd-row{ display:flex; gap:9px; perspective:640px; }
+.cd-unit{ flex:1; text-align:center; min-width:0; }
+.cd-flap{ position:relative; border-radius:12px; padding:12px 4px 10px;
+  background:linear-gradient(180deg,#16224a 0%,#0c1329 49.6%,#090e1e 50.4%,#0e1631 100%);
+  border:1px solid rgba(var(--gold-rgb,245,181,10),.28);
+  box-shadow:0 10px 24px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.07);
+  transform-style:preserve-3d; }
+.cd-flap::before{ content:""; position:absolute; left:0; right:0; top:50%; height:1px;
+  background:rgba(0,0,0,.6); box-shadow:0 1px 0 rgba(255,255,255,.05); }
+.cd-flap::after{ content:""; position:absolute; inset:0 0 50% 0; border-radius:12px 12px 0 0;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),transparent); pointer-events:none; }
+.cd-flap.cd-flip{ animation:cdFlip .5s cubic-bezier(.3,.7,.3,1); }
+@keyframes cdFlip{ 0%{ transform:rotateX(0); } 42%{ transform:rotateX(-84deg); filter:brightness(.65); }
+  58%{ transform:rotateX(-84deg); } 100%{ transform:rotateX(0); filter:none; } }
+.cd-num{ font-family:var(--font-d); font-size:2.5em; line-height:1; font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#ffffff 0%, rgb(var(--gold-rgb,245,181,10)) 58%, rgba(var(--gold-rgb,245,181,10),.6) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent; }
+.cd-lbl{ font-size:0.58em; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:7px; }
+@media (prefers-reduced-motion:reduce){ .cd-flap.cd-flip{ animation:none; } }
 .os-dates{ display:flex; flex-direction:column; gap:8px; margin-top:16px; }
 .os-date{ display:flex; align-items:center; justify-content:space-between; font-size:0.82em; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,.04); border:1px solid var(--border); }
 .os-date .d{ color:var(--gold); font-weight:800; }
@@ -1160,8 +1176,26 @@ a{ text-decoration:none; color:inherit; }
     var d=Math.floor(s/86400), h=Math.floor(s%86400/3600), m=Math.floor(s%3600/60), sec=s%60;
     function p(n){ return n<10?'0'+n:''+n; }
     var L=lang()==='en'?['Days','Hrs','Min','Sec']:['Jours','Heures','Min','Sec'];
-    function unit(v,l){ return '<div class="cd-unit"><div class="cd-num">'+v+'</div><div class="cd-lbl">'+esc(l)+'</div></div>'; }
-    row.innerHTML=unit(d,L[0])+unit(p(h),L[1])+unit(p(m),L[2])+unit(p(sec),L[3]);
+    var vals=[String(d), p(h), p(m), p(sec)];
+    // structure absente ou langue changée : (re)construction
+    if(row.querySelectorAll('.cd-unit').length!==4 || row.getAttribute('data-lang')!==lang()){
+      row.setAttribute('data-lang', lang());
+      row.innerHTML=vals.map(function(v,i){
+        return '<div class="cd-unit"><div class="cd-flap"><div class="cd-num">'+v+'</div></div><div class="cd-lbl">'+esc(L[i])+'</div></div>';
+      }).join('');
+      return;
+    }
+    // mise à jour en place : bascule "volet" uniquement sur les chiffres qui changent
+    var nums=row.querySelectorAll('.cd-num');
+    for(var i=0;i<4;i++){
+      if(nums[i].textContent!==vals[i]){
+        nums[i].textContent=vals[i];
+        var flap=nums[i].parentNode;
+        flap.classList.remove('cd-flip');
+        void flap.offsetWidth;   // relance l'animation
+        flap.classList.add('cd-flip');
+      }
+    }
   }
   function fetchRetro(){
     if(retroData) return Promise.resolve(retroData);
