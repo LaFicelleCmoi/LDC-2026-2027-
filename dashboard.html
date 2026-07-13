@@ -420,26 +420,49 @@ a{ text-decoration:none; color:inherit; }
 .os-title{ font-family:var(--font-d); font-size:1.9em; line-height:1; color:#fff; margin:7px 0 4px; letter-spacing:.02em; }
 .os-milestone{ font-size:0.82em; color:var(--muted); margin-bottom:14px; }
 .os-milestone b{ color:#fff; }
-/* Compte à rebours façon horloge à volets (split-flap) */
-.cd-row{ display:flex; gap:9px; perspective:640px; }
+/* Compte à rebours split-flap : chaque chiffre est une carte en deux moitiés,
+   le volet haut retombe sur charnière et la moitié basse se déploie (rebond). */
+.cd-row{ display:flex; gap:10px; }
 .cd-unit{ flex:1; text-align:center; min-width:0; }
-.cd-flap{ position:relative; border-radius:12px; padding:12px 4px 10px;
-  background:linear-gradient(180deg,#16224a 0%,#0c1329 49.6%,#090e1e 50.4%,#0e1631 100%);
-  border:1px solid rgba(var(--gold-rgb,245,181,10),.28);
-  box-shadow:0 10px 24px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.07);
-  transform-style:preserve-3d; }
-.cd-flap::before{ content:""; position:absolute; left:0; right:0; top:50%; height:1px;
-  background:rgba(0,0,0,.6); box-shadow:0 1px 0 rgba(255,255,255,.05); }
-.cd-flap::after{ content:""; position:absolute; inset:0 0 50% 0; border-radius:12px 12px 0 0;
-  background:linear-gradient(180deg,rgba(255,255,255,.06),transparent); pointer-events:none; }
-.cd-flap.cd-flip{ animation:cdFlip .5s cubic-bezier(.3,.7,.3,1); }
-@keyframes cdFlip{ 0%{ transform:rotateX(0); } 42%{ transform:rotateX(-84deg); filter:brightness(.65); }
-  58%{ transform:rotateX(-84deg); } 100%{ transform:rotateX(0); filter:none; } }
-.cd-num{ font-family:var(--font-d); font-size:2.5em; line-height:1; font-variant-numeric:tabular-nums;
-  background:linear-gradient(180deg,#ffffff 0%, rgb(var(--gold-rgb,245,181,10)) 58%, rgba(var(--gold-rgb,245,181,10),.6) 100%);
+.fc-group{ display:flex; gap:4px; justify-content:center; perspective:420px; }
+.fc-digit{ --fch:46px; --fcw:30px; position:relative; width:var(--fcw); height:var(--fch); border-radius:7px;
+  background:#080d1d; box-shadow:0 9px 22px rgba(0,0,0,.45), inset 0 0 0 1px rgba(var(--gold-rgb,245,181,10),.22); }
+.fc-half{ position:absolute; left:0; right:0; height:50%; overflow:hidden; backface-visibility:hidden; }
+.fc-top,.fc-flap-top{ top:0; border-radius:7px 7px 0 0; background:linear-gradient(180deg,#1b2952,#111b3a); }
+.fc-bottom,.fc-flap-bottom{ bottom:0; border-radius:0 0 7px 7px; background:linear-gradient(180deg,#0e1732,#0a1024); }
+.fc-top::after,.fc-flap-top::after{ content:""; position:absolute; inset:0; border-radius:7px 7px 0 0;
+  background:linear-gradient(180deg,rgba(255,255,255,.09),transparent 70%); pointer-events:none; }
+.fc-half span{ position:absolute; left:0; right:0; height:var(--fch); line-height:var(--fch); text-align:center;
+  font-family:var(--font-d); font-size:34px; font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#ffffff 10%, rgb(var(--gold-rgb,245,181,10)) 58%, rgba(var(--gold-rgb,245,181,10),.55) 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent; }
-.cd-lbl{ font-size:0.58em; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:7px; }
-@media (prefers-reduced-motion:reduce){ .cd-flap.cd-flip{ animation:none; } }
+.fc-top span,.fc-flap-top span{ top:0; }
+.fc-bottom span,.fc-flap-bottom span{ top:calc(var(--fch) / -2); }
+/* charnière + pivots métalliques */
+.fc-digit::after{ content:""; position:absolute; left:0; right:0; top:50%; height:1.5px; margin-top:-0.75px;
+  background:rgba(0,0,0,.75); box-shadow:0 1px 0 rgba(255,255,255,.05); z-index:5; }
+.fc-pin{ position:absolute; top:50%; width:3.5px; height:9px; margin-top:-4.5px; border-radius:2px; z-index:6;
+  background:linear-gradient(180deg,#c9d3e8,#7c879f 55%,#59637a); box-shadow:0 1px 2px rgba(0,0,0,.6); }
+.fc-pin.l{ left:-1.5px; } .fc-pin.r{ right:-1.5px; }
+/* volets animés (masqués au repos) */
+.fc-flap{ visibility:hidden; z-index:4; will-change:transform; }
+.fc-flap-top{ transform-origin:50% 100%; }
+.fc-flap-bottom{ transform-origin:50% 0%; transform:rotateX(90deg); }
+.fc-anim .fc-flap{ visibility:visible; }
+.fc-anim .fc-flap-top{ animation:fcTop .3s ease-in forwards; }
+.fc-anim .fc-flap-bottom{ animation:fcBottom .34s .27s cubic-bezier(.34,1.5,.5,1) forwards; }
+@keyframes fcTop{ from{ transform:rotateX(0); filter:brightness(1);} to{ transform:rotateX(-90deg); filter:brightness(.5);} }
+@keyframes fcBottom{ from{ transform:rotateX(90deg); filter:brightness(.55);} to{ transform:rotateX(0); filter:brightness(1);} }
+/* ombre portée du volet sur la moitié basse pendant la bascule */
+.fc-anim .fc-bottom::before{ content:""; position:absolute; inset:0; background:rgba(0,0,0,.38);
+  animation:fcShade .6s ease forwards; pointer-events:none; }
+@keyframes fcShade{ 0%{opacity:0} 45%{opacity:1} 100%{opacity:0} }
+.cd-lbl{ font-size:0.58em; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:8px; }
+@media (max-width:560px){ .fc-digit{ --fch:38px; --fcw:24px; } .fc-half span{ font-size:27px; } .fc-group{ gap:3px; } }
+@media (prefers-reduced-motion:reduce){
+  .fc-anim .fc-flap{ visibility:hidden; animation:none; }
+  .fc-anim .fc-bottom::before{ animation:none; opacity:0; }
+}
 .os-dates{ display:flex; flex-direction:column; gap:8px; margin-top:16px; }
 .os-date{ display:flex; align-items:center; justify-content:space-between; font-size:0.82em; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,.04); border:1px solid var(--border); }
 .os-date .d{ color:var(--gold); font-weight:800; }
@@ -1170,6 +1193,35 @@ a{ text-decoration:none; color:inherit; }
   function osMonths(){ return lang()==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']; }
   function fmtDate(ts){ var d=new Date(ts); return d.getDate()+' '+osMonths()[d.getMonth()]+' '+d.getFullYear(); }
   function nextMilestone(){ var now=Date.now(); for(var i=0;i<SEASON_DATES.length;i++){ if(SEASON_DATES[i].ts>now) return SEASON_DATES[i]; } return null; }
+  var cdReduce=(function(){ try{ return window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){ return false; } })();
+  function fcDigitHTML(ch){
+    return '<div class="fc-digit" data-v="'+ch+'">'+
+      '<div class="fc-half fc-top"><span>'+ch+'</span></div>'+
+      '<div class="fc-half fc-bottom"><span>'+ch+'</span></div>'+
+      '<div class="fc-half fc-flap fc-flap-top"><span>'+ch+'</span></div>'+
+      '<div class="fc-half fc-flap fc-flap-bottom"><span>'+ch+'</span></div>'+
+      '<i class="fc-pin l"></i><i class="fc-pin r"></i>'+
+    '</div>';
+  }
+  /* bascule d'un chiffre : le volet haut (ancien) retombe, la moitié basse (nouveau) se déploie */
+  function fcSet(dg, ch){
+    if(dg.getAttribute('data-v')===ch) return;
+    function q(s){ return dg.querySelector(s); }
+    if(cdReduce){
+      q('.fc-top span').textContent=ch; q('.fc-bottom span').textContent=ch;
+      q('.fc-flap-top span').textContent=ch; q('.fc-flap-bottom span').textContent=ch;
+      dg.setAttribute('data-v', ch); return;
+    }
+    var old=dg.getAttribute('data-v');
+    q('.fc-top span').textContent=ch;        // nouveau, révélé sous le volet
+    q('.fc-bottom span').textContent=old;    // ancien, recouvert à la fin
+    q('.fc-flap-top span').textContent=old;  // volet qui retombe
+    q('.fc-flap-bottom span').textContent=ch;// moitié qui se déploie
+    dg.classList.remove('fc-anim'); void dg.offsetWidth; dg.classList.add('fc-anim');
+    if(dg._fcT) clearTimeout(dg._fcT);
+    dg._fcT=setTimeout(function(){ q('.fc-bottom span').textContent=ch; dg.classList.remove('fc-anim'); }, 640);
+    dg.setAttribute('data-v', ch);
+  }
   function renderCountdown(ts){
     var row=el('cdRow'); if(!row) return;
     var ms=Math.max(0, ts-Date.now()), s=Math.floor(ms/1000);
@@ -1177,24 +1229,23 @@ a{ text-decoration:none; color:inherit; }
     function p(n){ return n<10?'0'+n:''+n; }
     var L=lang()==='en'?['Days','Hrs','Min','Sec']:['Jours','Heures','Min','Sec'];
     var vals=[String(d), p(h), p(m), p(sec)];
-    // structure absente ou langue changée : (re)construction
-    if(row.querySelectorAll('.cd-unit').length!==4 || row.getAttribute('data-lang')!==lang()){
+    /* (re)construction : structure absente, langue changée, ou nb de chiffres modifié (ex. 100 -> 99 jours) */
+    var rebuild = row.getAttribute('data-lang')!==lang() || row.querySelectorAll('.cd-unit').length!==4;
+    if(!rebuild){
+      var gs=row.querySelectorAll('.fc-group');
+      for(var i=0;i<4;i++){ if(!gs[i] || gs[i].querySelectorAll('.fc-digit').length!==vals[i].length){ rebuild=true; break; } }
+    }
+    if(rebuild){
       row.setAttribute('data-lang', lang());
       row.innerHTML=vals.map(function(v,i){
-        return '<div class="cd-unit"><div class="cd-flap"><div class="cd-num">'+v+'</div></div><div class="cd-lbl">'+esc(L[i])+'</div></div>';
+        return '<div class="cd-unit"><div class="fc-group">'+v.split('').map(fcDigitHTML).join('')+'</div><div class="cd-lbl">'+esc(L[i])+'</div></div>';
       }).join('');
       return;
     }
-    // mise à jour en place : bascule "volet" uniquement sur les chiffres qui changent
-    var nums=row.querySelectorAll('.cd-num');
-    for(var i=0;i<4;i++){
-      if(nums[i].textContent!==vals[i]){
-        nums[i].textContent=vals[i];
-        var flap=nums[i].parentNode;
-        flap.classList.remove('cd-flip');
-        void flap.offsetWidth;   // relance l'animation
-        flap.classList.add('cd-flip');
-      }
+    var groups=row.querySelectorAll('.fc-group');
+    for(var u=0;u<4;u++){
+      var digs=groups[u].querySelectorAll('.fc-digit'), chars=vals[u].split('');
+      for(var k=0;k<digs.length;k++) fcSet(digs[k], chars[k]);
     }
   }
   function fetchRetro(){
