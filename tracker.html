@@ -107,6 +107,11 @@
 
   #confetti{ position:fixed; inset:0; pointer-events:none; z-index:70; display:none; }
 
+  /* ---- Évolution des positions (▲▼) ------------------------------------- */
+  .standings .pos .pd{ display:block; font-size:9px; font-weight:800; line-height:1; margin-top:2px; }
+  .standings .pos .pd.up{ color:var(--finished); }
+  .standings .pos .pd.dn{ color:var(--live); }
+
   /* ---- Prédicteur de classement ----------------------------------------- */
   .predict-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .predict-badge{ display:inline-flex; align-items:center; font-size:10.5px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; color:#1a1300; background:var(--upcoming); padding:3px 9px; border-radius:999px; }
@@ -315,6 +320,10 @@
   try{ predictions=JSON.parse(localStorage.getItem(PRED_KEY)||'{}')||{}; }catch(e){ predictions={}; }
   if(typeof predictions!=='object'||!predictions) predictions={};
   function savePred(){ try{ localStorage.setItem(PRED_KEY, JSON.stringify(predictions)); }catch(e){} }
+  /* Évolution des positions : instantané de la dernière visite (par saison) */
+  var POS_KEY='ldc_pos_'+PRED_YEAR;
+  var posBase=(function(){ try{ var o=JSON.parse(localStorage.getItem(POS_KEY)||'null'); return (o&&typeof o==='object')?o:null; }catch(e){ return null; } })();
+  function savePosSnapshot(rows){ try{ var o={}; rows.forEach(function(t){ o[t.teamId||t.name]=t.pos; }); localStorage.setItem(POS_KEY, JSON.stringify(o)); }catch(e){} }
 
   /* ---- Starfield (ReactBits Particles) ---- */
   (function starfield(){
@@ -358,13 +367,26 @@
     }
     var nf=ESPN.isLeaguePhaseFormat();
     var fav=ESPN.getFav(), fid=fav?fav.id:null;
+    /* base de comparaison : classement réel en mode prédiction, dernière visite sinon */
+    var baseMap=null;
+    if(predictMode && lastStandings){ baseMap={}; lastStandings.forEach(function(x){ baseMap[x.teamId||x.name]=x.pos; }); }
+    else if(!predictMode && posBase){ baseMap=posBase; }
+    var pdTitle = predictMode ? (lang()==='en'?'vs real table':'vs classement réel')
+                              : (lang()==='en'?'vs last visit':'vs dernière visite');
     body.innerHTML = rows.map(function(t){
       var zone = nf ? (t.pos<=8?'z-q':(t.pos<=24?'z-po':'z-out')) : '';
       var gdCls = t.gd>0?'pos-v':(t.gd<0?'neg-v':'');
       var gd = (t.gd>0?'+':'')+t.gd;
       var isFav = fid && t.teamId===fid;
+      var pd='';
+      if(baseMap){ var prev=baseMap[t.teamId||t.name];
+        if(prev!=null){ var dlt=prev-t.pos;
+          if(dlt>0) pd='<span class="pd up" title="'+esc(pdTitle)+'">▲'+dlt+'</span>';
+          else if(dlt<0) pd='<span class="pd dn" title="'+esc(pdTitle)+'">▼'+(-dlt)+'</span>';
+        }
+      }
       return '<tr class="'+zone+(isFav?' is-fav':'')+'">'+
-        '<td class="pos">'+t.pos+'</td>'+
+        '<td class="pos">'+t.pos+pd+'</td>'+
         '<td class="live-dot">'+(t.live?'<span class="dot live"></span>':'')+'</td>'+
         '<td class="club"><span class="club-cell">'+
           (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
@@ -748,6 +770,7 @@
       showOffline(false);
       lastEvents = events;
       lastStandings = ESPN.computeStandings(events);
+      if(lastStandings && lastStandings.length) savePosSnapshot(lastStandings);   // base de la prochaine visite
       lastBracket = ESPN.buildBracket(events);
       (function(){ var lg=(events||[]).map(ESPN.normalizeEvent).filter(function(m){return m&&m.round==='league';}); replayAll=(lg.length>0 && lg.filter(function(m){return m.state==='pre';}).length===0); })();
       renderStandings(predictMode?predictedStandings():lastStandings);
