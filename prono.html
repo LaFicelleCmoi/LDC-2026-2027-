@@ -105,6 +105,15 @@
   .plg-table .me .ps{ color:rgb(var(--fav-rgb,245,181,10)); }
   .plg-table .pt{ font-weight:900; font-variant-numeric:tabular-nums; }
   .plg-sync{ font-size:11px; color:var(--muted); margin-top:8px; }
+  .plg-chips{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px; }
+  .plg-chip{ font-family:inherit; font-size:12px; font-weight:800; padding:6px 13px; border-radius:999px; cursor:pointer;
+    background:var(--bg-soft); color:var(--muted); border:1px solid var(--line-2); transition:.15s; max-width:180px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .plg-chip:hover{ color:var(--txt); border-color:rgba(var(--gold-rgb,245,181,10),.5); }
+  .plg-chip.active{ background:rgba(var(--gold-rgb,245,181,10),.16); border-color:rgb(var(--gold-rgb,245,181,10)); color:rgb(var(--fav-rgb,245,181,10)); }
+  .plg-chip.add{ font-weight:900; }
+  .plg-invite{ font-size:12.5px; font-weight:700; color:rgb(var(--fav-rgb,245,181,10)); padding:8px 12px;
+    background:rgba(var(--gold-rgb,245,181,10),.1); border:1px dashed rgba(var(--gold-rgb,245,181,10),.45); border-radius:10px; }
   .pac-ok{ font-size:12px; font-weight:700; color:var(--finished); }
   .plg-head .plg-sync{ flex:1; min-width:160px; margin-top:0; }
   .btn-twitch{ background:#9146FF !important; border-color:#9146FF !important; color:#fff !important; font-weight:800; }
@@ -242,9 +251,38 @@
     return fetch(SUPA_URL+'/rest/v1/rpc/'+name, o).then(function(r){ clearTimeout(tm); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); },
       function(e){ clearTimeout(tm); throw e; });
   }
-  var LKEY='ldc_league_'+YEAR;
-  var league=(function(){ try{ var o=JSON.parse(localStorage.getItem(LKEY)||'null'); return (o&&o.code&&o.pseudo&&o.secret)?o:null; }catch(e){ return null; } })();
-  function saveLeague(){ try{ if(league) localStorage.setItem(LKEY, JSON.stringify(league)); else localStorage.removeItem(LKEY); }catch(e){} state._ts=Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} if(typeof cloudPushSoon==='function') cloudPushSoon(); }
+  /* Plusieurs ligues à la fois : { list:[{code,name,pseudo,secret}…], active:index } */
+  var LKEY='ldc_leagues_'+YEAR;
+  var LG=(function(){
+    try{ var o=JSON.parse(localStorage.getItem(LKEY)||'null');
+      if(o && o.list && o.list.length) return { list:o.list, active:Math.min(o.active||0, o.list.length-1) };
+    }catch(e){}
+    try{ var old=JSON.parse(localStorage.getItem('ldc_league_'+YEAR)||'null');   // migration ancienne ligue unique
+      if(old && old.code){ localStorage.removeItem('ldc_league_'+YEAR); localStorage.setItem(LKEY, JSON.stringify({list:[old],active:0})); return { list:[old], active:0 }; }
+    }catch(e){}
+    return { list:[], active:0 };
+  })();
+  function activeLeague(){ return LG.list[LG.active]||null; }
+  function lgPersistOnly(){ try{ if(LG.list.length) localStorage.setItem(LKEY, JSON.stringify(LG)); else localStorage.removeItem(LKEY); }catch(e){} }
+  function saveLG(){ lgPersistOnly(); state._ts=Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} if(typeof cloudPushSoon==='function') cloudPushSoon(); }
+  function addLeague(lg){
+    for(var i=0;i<LG.list.length;i++){ if(LG.list[i].code===lg.code){ LG.list[i]=lg; LG.active=i; saveLG(); return; } }
+    LG.list.push(lg); LG.active=LG.list.length-1; saveLG();
+  }
+  function removeLeague(lg){
+    LG.list=LG.list.filter(function(x){ return x.code!==lg.code; });
+    if(LG.active>=LG.list.length) LG.active=Math.max(0, LG.list.length-1);
+    saveLG();
+  }
+  /* Lien d'invitation : prono.html?ligue=CODE */
+  var INVITE=(function(){ try{ var c=(new URLSearchParams(location.search).get('ligue')||'').trim().toUpperCase(); return /^[A-Z0-9]{6}$/.test(c)?c:''; }catch(e){ return ''; } })();
+  var invitePending=false;
+  (function(){
+    if(!INVITE) return;
+    var idx=-1; for(var i=0;i<LG.list.length;i++){ if(LG.list[i].code===INVITE){ idx=i; break; } }
+    if(idx>=0){ LG.active=idx; lgPersistOnly(); }
+    else invitePending=true;
+  })();
   function genSecret(){
     try{ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.prototype.map.call(a,function(b){ return ('0'+b.toString(16)).slice(-2); }).join(''); }
     catch(e){ return 's'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2); }
@@ -256,18 +294,24 @@
       unauthorized:T('Accès refusé.','Unauthorized.') };
     return map[code]||T('Erreur réseau — réessaie.','Network error — try again.');
   }
-  function renderLeagueForms(err){
-    el('prLeague').innerHTML='<div class="plg-title">🏟️ '+esc(T('Ma ligue entre amis','My friends league'))+'</div>'+
+  function renderLeagueForms(err, inviteCode){
+    var invite=inviteCode||'';
+    el('prLeague').innerHTML='<div class="plg-title">🏟️ '+esc(T('Mes ligues entre amis','My friends leagues'))+'</div>'+
       '<div class="plg-forms">'+
+        (invite?'<div class="plg-invite" id="plgInvite">📩 '+esc(T('Invitation : rejoindre la ligue','Invitation: join league'))+' <b>'+esc(invite)+'</b></div>':'')+
         '<div class="plg-row"><input id="plgPseudo" maxlength="20" placeholder="'+esc(T('Ton pseudo','Your nickname'))+'"></div>'+
-        '<div class="plg-row"><input id="plgName" maxlength="40" placeholder="'+esc(T('Nom de la ligue (ex. Les Potos)','League name (e.g. The Crew)'))+'">'+
+        (invite?'':'<div class="plg-row"><input id="plgName" maxlength="40" placeholder="'+esc(T('Nom de la ligue (ex. Les Potos)','League name (e.g. The Crew)'))+'">'+
           '<button class="btn" id="plgCreate">'+esc(T('Créer la ligue','Create league'))+'</button></div>'+
-        '<div class="plg-or">'+esc(T('— OU —','— OR —'))+'</div>'+
-        '<div class="plg-row"><input id="plgCode" maxlength="6" placeholder="'+esc(T('Code à 6 caractères','6-character code'))+'" style="text-transform:uppercase">'+
-          '<button class="btn" id="plgJoin">'+esc(T('Rejoindre','Join'))+'</button></div>'+
+        '<div class="plg-or">'+esc(T('— OU —','— OR —'))+'</div>')+
+        '<div class="plg-row"><input id="plgCode" maxlength="6" placeholder="'+esc(T('Code à 6 caractères','6-character code'))+'" style="text-transform:uppercase" value="'+esc(invite)+'">'+
+          '<button class="btn" id="plgJoin">'+esc(T('Rejoindre','Join'))+'</button>'+
+          (LG.list.length?'<button class="btn" id="plgBack">← '+esc(T('Retour','Back'))+'</button>':'')+'</div>'+
         (err?'<div class="plg-err">'+esc(err)+'</div>':'')+
-        '<div class="plg-note">'+esc(T('Ton pseudo et tes points sont stockés en ligne, uniquement pour le classement de ta ligue. Les points se synchronisent automatiquement à chaque visite.','Your nickname and points are stored online, only for your league standings. Points sync automatically on each visit.'))+'</div>'+
+        '<div class="plg-note">'+esc(T('Ton pseudo et tes points sont stockés en ligne, uniquement pour le classement. Tu peux rejoindre plusieurs ligues : un seul prono compte partout.','Your nickname and points are stored online, only for standings. You can join several leagues: one prediction counts everywhere.'))+'</div>'+
       '</div>';
+    if(invite){ rpc('ldc_get_league',{p_code:invite}).then(function(res){
+      var n=el('plgInvite'); if(n && res && res.ok) n.innerHTML='📩 '+esc(T('Invitation : rejoindre la ligue','Invitation: join league'))+' <b>« '+esc(res.name)+' »</b>';
+    }, function(){}); }
     function act(kind){
       if(leagueBusy) return; leagueBusy=true;
       var pseudo=(el('plgPseudo').value||'').trim();
@@ -277,68 +321,94 @@
         : rpc('ldc_join_league',{ p_code:(el('plgCode').value||'').trim(), p_pseudo:pseudo, p_secret:secret });
       call.then(function(res){
         leagueBusy=false;
-        if(!res||!res.ok){ renderLeagueForms(leagueErrMsg(res&&res.error)); return; }
-        league={ code:res.code, name:res.name, pseudo:pseudo, secret:secret };
-        saveLeague(); lastPushSig=null;
+        if(!res||!res.ok){ renderLeagueForms(leagueErrMsg(res&&res.error), invite); return; }
+        invitePending=false;
+        addLeague({ code:res.code, name:res.name, pseudo:pseudo, secret:secret });
+        lastPushSig=null;
         renderLeagueTable(res.standings);
-        syncLeague();
-      }, function(){ leagueBusy=false; renderLeagueForms(leagueErrMsg('network')); });
+        syncLeague(true);   // pousse tout de suite mes points dans la nouvelle ligue
+      }, function(){ leagueBusy=false; renderLeagueForms(leagueErrMsg('network'), invite); });
     }
-    el('plgCreate').addEventListener('click', function(){ act('create'); });
+    if(el('plgCreate')) el('plgCreate').addEventListener('click', function(){ act('create'); });
     el('plgJoin').addEventListener('click', function(){ act('join'); });
+    if(el('plgBack')) el('plgBack').addEventListener('click', function(){ invitePending=false; renderLeague(); });
+    var ps=el('plgPseudo'); if(invite && ps) ps.focus();
+  }
+  function leagueChipsHTML(){
+    return '<div class="plg-chips">'+LG.list.map(function(lg,i){
+      return '<button class="plg-chip'+(i===LG.active?' active':'')+'" data-lg="'+i+'" title="'+esc(lg.code)+'">'+esc(lg.name||lg.code)+'</button>';
+    }).join('')+'<button class="plg-chip add" id="plgAdd">＋ '+esc(T('Ligue','League'))+'</button></div>';
   }
   function renderLeagueTable(standings, note){
+    var al=activeLeague(); if(!al){ renderLeagueForms(); return; }
     var rows=(standings||[]).map(function(s,i){
-      var me=league && s.pseudo===league.pseudo;
+      var me=s.pseudo===al.pseudo;
       return '<tr'+(me?' class="me"':'')+'><td class="rk">'+(i+1)+'</td>'+
         '<td class="ps">'+(me?'★ ':'')+esc(s.pseudo)+'</td>'+
         '<td class="pt">'+s.pts+'</td><td>'+s.exact+'</td><td>'+s.good+'/'+s.played+'</td></tr>';
     }).join('');
-    el('prLeague').innerHTML='<div class="plg-title">🏟️ '+esc(T('Ma ligue entre amis','My friends league'))+'</div>'+
-      '<div class="plg-head"><span class="plg-name">'+esc(league.name||'')+'</span>'+
-        '<span class="plg-code" id="plgCodeChip">'+esc(league.code)+'</span>'+
-        '<button class="btn" id="plgCopy">'+esc(T('Copier le code','Copy code'))+'</button>'+
-        '<button class="btn" id="plgRefresh">↻ '+esc(T('Actualiser','Refresh'))+'</button>'+
+    el('prLeague').innerHTML='<div class="plg-title">🏟️ '+esc(T('Mes ligues entre amis','My friends leagues'))+'</div>'+
+      leagueChipsHTML()+
+      '<div class="plg-head"><span class="plg-name">'+esc(al.name||'')+'</span>'+
+        '<span class="plg-code" id="plgCodeChip">'+esc(al.code)+'</span>'+
+        '<button class="btn" id="plgInviteBtn">🔗 '+esc(T('Lien d’invitation','Invite link'))+'</button>'+
+        '<button class="btn" id="plgCopy">'+esc(T('Code','Code'))+'</button>'+
+        '<button class="btn" id="plgRefresh">↻</button>'+
         '<button class="btn" id="plgLeave">'+esc(T('Quitter','Leave'))+'</button></div>'+
       '<table class="plg-table"><thead><tr><th>#</th><th>'+esc(T('Joueur','Player'))+'</th><th>'+esc(T('Pts','Pts'))+'</th><th>'+esc(T('Exacts','Exact'))+'</th><th>'+esc(T('Bons','Correct'))+'</th></tr></thead>'+
       '<tbody>'+rows+'</tbody></table>'+
-      '<div class="plg-sync">'+esc(note||T('Partage le code pour inviter tes amis. Départage : points, puis scores exacts, puis bons résultats.','Share the code to invite friends. Tie-break: points, then exact scores, then correct results.'))+'</div>';
-    el('plgCopy').addEventListener('click', function(){
-      var b=this;
-      function ok(){ b.textContent=T('Copié !','Copied!'); setTimeout(function(){ b.textContent=T('Copier le code','Copy code'); },1800); }
-      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(league.code).then(ok,ok);
+      '<div class="plg-sync">'+esc(note||T('Envoie le lien d’invitation : ton ami arrive directement sur le formulaire, code déjà rempli. Départage : points, puis exacts, puis bons résultats.','Send the invite link: your friend lands straight on the form with the code prefilled. Tie-break: points, then exact, then correct.'))+'</div>';
+    Array.prototype.forEach.call(el('prLeague').querySelectorAll('.plg-chip[data-lg]'), function(ch){
+      ch.addEventListener('click', function(){ LG.active=parseInt(this.getAttribute('data-lg'),10)||0; lgPersistOnly(); renderLeague(); });
     });
+    el('plgAdd').addEventListener('click', function(){ renderLeagueForms(); });
+    function copyBtn(btn, text, label){
+      function ok(){ btn.textContent=T('Copié !','Copied!'); setTimeout(function(){ btn.innerHTML=label; },1800); }
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok,ok);
+    }
+    el('plgInviteBtn').addEventListener('click', function(){
+      copyBtn(this, location.origin+location.pathname+'?ligue='+al.code, '🔗 '+esc(T('Lien d’invitation','Invite link')));
+    });
+    el('plgCopy').addEventListener('click', function(){ copyBtn(this, al.code, esc(T('Code','Code'))); });
     el('plgRefresh').addEventListener('click', function(){ lastPushSig=null; syncLeague(true); });
     el('plgLeave').addEventListener('click', function(){
-      if(!confirm(T('Quitter la ligue « '+league.name+' » ?','Leave the “'+league.name+'” league?'))) return;
-      rpc('ldc_leave_league',{ p_code:league.code, p_pseudo:league.pseudo, p_secret:league.secret }).catch(function(){});
-      league=null; saveLeague(); renderLeagueForms();
+      if(!confirm(T('Quitter la ligue « '+(al.name||al.code)+' » ?','Leave the “'+(al.name||al.code)+'” league?'))) return;
+      rpc('ldc_leave_league',{ p_code:al.code, p_pseudo:al.pseudo, p_secret:al.secret })['catch'](function(){});
+      removeLeague(al); renderLeague();
     });
   }
+  function handleLeagueRes(lg, res, isActive){
+    if(!res||!res.ok){
+      if(res && res.error==='not_found'){ removeLeague(lg); if(isActive) renderLeague(); return; }
+      if(isActive) renderLeagueTable([], leagueErrMsg(res&&res.error));
+      return;
+    }
+    lg.name=res.name; lgPersistOnly();
+    if(isActive) renderLeagueTable(res.standings, DEMO?T('Mode simulation : les points fictifs ne sont pas envoyés aux ligues.','Simulation mode: fictional points are not sent to leagues.'):null);
+  }
   function syncLeague(force){
-    if(!league){ return; }
+    var al=activeLeague(); if(!al) return;
     var t=totals();
     var sig=[t.pts,t.good,t.exact,t.played].join('|');
     var doPush = (!DEMO) && (force || sig!==lastPushSig);
-    var call = doPush
-      ? rpc('ldc_push_score',{ p_code:league.code, p_pseudo:league.pseudo, p_secret:league.secret, p_pts:t.pts, p_good:t.good, p_exact:t.exact, p_played:t.played })
-      : rpc('ldc_get_league',{ p_code:league.code });
-    call.then(function(res){
-      if(!res||!res.ok){
-        if(res&&(res.error==='not_found'||res.error==='unauthorized')){ league=null; saveLeague(); renderLeagueForms(leagueErrMsg(res.error)); }
-        else renderLeagueTable([], leagueErrMsg(res&&res.error));
-        return;
-      }
-      if(doPush) lastPushSig=sig;
-      league.name=res.name; saveLeague();
-      renderLeagueTable(res.standings, DEMO?T('Mode simulation : les points fictifs ne sont pas envoyés à la ligue.','Simulation mode: fictional points are not sent to the league.'):null);
-    }, function(){
-      renderLeagueTable(null, T('Ligue injoignable (hors-ligne ?) — tes pronos restent enregistrés.','League unreachable (offline?) — your predictions are still saved.'));
-    });
+    if(doPush){
+      lastPushSig=sig;
+      LG.list.forEach(function(lg){
+        var isActive = lg.code===al.code;
+        rpc('ldc_push_score',{ p_code:lg.code, p_pseudo:lg.pseudo, p_secret:lg.secret, p_pts:t.pts, p_good:t.good, p_exact:t.exact, p_played:t.played })
+          .then(function(res){ handleLeagueRes(lg, res, isActive); },
+                function(){ if(isActive) renderLeagueTable(null, T('Ligue injoignable (hors-ligne ?) — tes pronos restent enregistrés.','League unreachable (offline?) — your predictions are still saved.')); });
+      });
+    } else {
+      rpc('ldc_get_league',{ p_code:al.code })
+        .then(function(res){ handleLeagueRes(al, res, true); },
+              function(){ renderLeagueTable(null, T('Ligue injoignable (hors-ligne ?) — tes pronos restent enregistrés.','League unreachable (offline?) — your predictions are still saved.')); });
+    }
   }
   function renderLeague(){
     if(!el('prLeague')) return;
-    if(league){ renderLeagueTable([], T('Chargement du classement…','Loading standings…')); syncLeague(); }
+    if(invitePending){ renderLeagueForms(null, INVITE); return; }
+    if(LG.list.length){ renderLeagueTable([], T('Chargement du classement…','Loading standings…')); syncLeague(); }
     else renderLeagueForms();
   }
 
@@ -441,14 +511,13 @@
   /* ---- synchro cloud (table ldc_saves, RLS par utilisateur) ---- */
   var cloudTimer=null, cloudNote='', cloudInit=false;
   function updateSyncNote(){ var n=el('pacSync'); if(n && cloudNote) n.textContent=cloudNote; }
-  function leaguePersist(){ try{ if(league) localStorage.setItem(LKEY, JSON.stringify(league)); else localStorage.removeItem(LKEY); }catch(e){} }
   function cloudPushSoon(){ if(DEMO||!auth) return; if(cloudTimer) clearTimeout(cloudTimer); cloudTimer=setTimeout(cloudPush, 1500); }
   function cloudPush(){
     if(DEMO||!auth) return;
     ensureToken().then(function(tk){
       if(!tk||!auth||!auth.user_id) return;
       var payload={ user_id:auth.user_id, season:YEAR, updated_at:new Date().toISOString(),
-                    data:{ ts:(state._ts||Date.now()), state:state, league:league } };
+                    data:{ ts:(state._ts||Date.now()), state:state, leagues:LG.list } };
       fetch(SUPA_URL+'/rest/v1/ldc_saves?on_conflict=user_id,season', { method:'POST',
         headers:{ 'Content-Type':'application/json', 'apikey':SUPA_KEY, 'Authorization':'Bearer '+tk,
                   'Prefer':'resolution=merge-duplicates,return=minimal' },
@@ -466,13 +535,15 @@
       .then(function(rows){
         if(rows===null) return;
         var localTs=state._ts||0;
-        var hasLocal = localTs>0 || Object.keys(state.picks).length>0 || !!state.x2 || !!state.champ || !!league;
+        var hasLocal = localTs>0 || Object.keys(state.picks).length>0 || !!state.x2 || !!state.champ || LG.list.length>0;
         if(rows.length){
           var remote=rows[0].data||{}, remoteTs=remote.ts||Date.parse(rows[0].updated_at)||0;
           if(remoteTs>localTs && remote.state){
             state=remote.state; if(!state.picks) state.picks={}; state._ts=remoteTs;
             try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
-            if(remote.league && remote.league.code){ league=remote.league; leaguePersist(); }
+            if(remote.leagues && remote.leagues.length){ LG={ list:remote.leagues, active:0 }; lgPersistOnly(); }
+            else if(remote.league && remote.league.code){ LG={ list:[remote.league], active:0 }; lgPersistOnly(); }
+            el('prLeague').innerHTML='';
             lastPushSig=null;
             cloudNote='☁️ '+T('Restauré depuis le cloud','Restored from cloud');
             render(); updateSyncNote();
@@ -751,8 +822,8 @@
 
   function render(){
     renderDemoBanner(); renderHero(); renderFavPick(); renderRules();
-    if(league){ if(!el('prLeague').innerHTML) renderLeagueTable([], T('Chargement du classement…','Loading standings…')); syncLeague(); }
-    else if(!el('prLeague').innerHTML){ renderLeagueForms(); }
+    if(!el('prLeague').innerHTML){ renderLeague(); }
+    else if(LG.list.length && !document.getElementById('plgPseudo')){ syncLeague(); }
     if(!el('prAccount').innerHTML) renderAccount();
     if(!cloudInit && !DEMO){ cloudInit=true; if(auth) cloudPullThenReconcile(); }
     el('prTitle').textContent=T('Mes Pronos','My Predictions');
@@ -790,7 +861,7 @@
   loadAuthSettings();    // affiche le bouton Twitch si le provider est activé
   load();
   setInterval(function(){ try{ load(); }catch(e){} }, 60000);
-  if(window.I18N) window.addEventListener('ldc:langchange', function(){ el('prLeague').innerHTML=''; el('prAccount').innerHTML=''; if(league){ renderLeagueTable([], T('Chargement…','Loading…')); } render(); });
+  if(window.I18N) window.addEventListener('ldc:langchange', function(){ el('prLeague').innerHTML=''; el('prAccount').innerHTML=''; render(); });
 
   /* Starfield (fond étoilé partagé) */
   (function starfield(){
