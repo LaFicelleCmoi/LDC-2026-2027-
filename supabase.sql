@@ -25,6 +25,50 @@ create policy ldc_saves_own on public.ldc_saves
   with check (auth.uid() = user_id);
 grant select, insert, update, delete on public.ldc_saves to authenticated;
 
+-- Inscription instantanée (compte créé déjà confirmé, AUCUN e-mail envoyé)
+-- => contourne la limite d'envoi (~2/h) du SMTP intégré de Supabase.
+create or replace function public.ldc_signup(p_email text, p_password text)
+returns json language plpgsql security definer set search_path = public, extensions, pg_temp as $$
+declare v_email text := lower(trim(coalesce(p_email,'')));
+        v_id uuid := gen_random_uuid();
+begin
+  if v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then return json_build_object('ok',false,'error','email_address_invalid'); end if;
+  if length(coalesce(p_password,'')) < 6 then return json_build_object('ok',false,'error','weak_password'); end if;
+  if exists(select 1 from auth.users where lower(email) = v_email) then return json_build_object('ok',false,'error','user_already_exists'); end if;
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+      confirmation_token, recovery_token, email_change, email_change_token_new, email_change_token_current,
+      phone_change, phone_change_token, reauthentication_token, is_sso_user, is_anonymous)
+  values ('00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated', v_email,
+      crypt(p_password, gen_salt('bf')), now(),
+      '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(),
+      '', '', '', '', '', '', '', '', false, false);
+  insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+  values (gen_random_uuid(), v_id, v_id::text,
+      jsonb_build_object('sub', v_id::text, 'email', v_email, 'email_verified', true, 'phone_verified', false),
+      'email', now(), now(), now());
+  return json_build_object('ok', true);
+end $$;
+
+-- Auto-réparation : confirme un compte créé avant ce correctif, si le mot de passe est correct
+create or replace function public.ldc_confirm_email(p_email text, p_password text)
+returns json language plpgsql security definer set search_path = public, extensions, pg_temp as $$
+declare v_u auth.users;
+begin
+  select * into v_u from auth.users where lower(email) = lower(trim(coalesce(p_email,'')));
+  if v_u.id is null or v_u.encrypted_password is null
+     or crypt(coalesce(p_password,''), v_u.encrypted_password) <> v_u.encrypted_password then
+    return json_build_object('ok', false, 'error', 'invalid_credentials');
+  end if;
+  update auth.users set email_confirmed_at = coalesce(email_confirmed_at, now()) where id = v_u.id;
+  return json_build_object('ok', true);
+end $$;
+
+revoke all on function public.ldc_signup(text, text) from public;
+revoke all on function public.ldc_confirm_email(text, text) from public;
+grant execute on function public.ldc_signup(text, text) to anon, authenticated;
+grant execute on function public.ldc_confirm_email(text, text) to anon, authenticated;
+
 create table if not exists public.ldc_leagues (
   id uuid primary key default gen_random_uuid(),
   code text unique not null,
