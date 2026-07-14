@@ -105,6 +105,8 @@
   .plg-table .me .ps{ color:rgb(var(--fav-rgb,245,181,10)); }
   .plg-table .pt{ font-weight:900; font-variant-numeric:tabular-nums; }
   .plg-sync{ font-size:11px; color:var(--muted); margin-top:8px; }
+  .pac-ok{ font-size:12px; font-weight:700; color:var(--finished); }
+  .plg-head .plg-sync{ flex:1; min-width:160px; margin-top:0; }
   @media (max-width:640px){
     .pr-row{ grid-template-columns:44px 1fr auto 1fr; grid-auto-rows:auto; row-gap:6px; }
     .pr-x2{ grid-column:1 / 3; justify-self:start; }
@@ -145,6 +147,7 @@
   <div class="pr-wrap">
     <div id="prDemo"></div>
     <div class="card pr-hero" id="prHero"></div>
+    <div class="card pr-league" id="prAccount"></div>
     <div class="card pr-league" id="prLeague"></div>
     <div class="pr-fav" id="prFav" style="display:none"></div>
     <details class="pr-rules" id="prRules">
@@ -183,7 +186,7 @@
   var KEY=DEMO ? 'ldc_prono_sim' : ('ldc_prono_'+YEAR);
   var state=(function(){ try{ var o=JSON.parse(localStorage.getItem(KEY)||'null'); return (o&&typeof o==='object')?o:{picks:{},x2:null,champ:null}; }catch(e){ return {picks:{},x2:null,champ:null}; } })();
   if(!state.picks) state.picks={};
-  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+  function save(){ state._ts=Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} if(typeof cloudPushSoon==='function') cloudPushSoon(); }
 
   var allMatches=[], rawSeason=[], champion=null;
 
@@ -237,7 +240,7 @@
   }
   var LKEY='ldc_league_'+YEAR;
   var league=(function(){ try{ var o=JSON.parse(localStorage.getItem(LKEY)||'null'); return (o&&o.code&&o.pseudo&&o.secret)?o:null; }catch(e){ return null; } })();
-  function saveLeague(){ try{ if(league) localStorage.setItem(LKEY, JSON.stringify(league)); else localStorage.removeItem(LKEY); }catch(e){} }
+  function saveLeague(){ try{ if(league) localStorage.setItem(LKEY, JSON.stringify(league)); else localStorage.removeItem(LKEY); }catch(e){} state._ts=Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} if(typeof cloudPushSoon==='function') cloudPushSoon(); }
   function genSecret(){
     try{ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.prototype.map.call(a,function(b){ return ('0'+b.toString(16)).slice(-2); }).join(''); }
     catch(e){ return 's'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2); }
@@ -333,6 +336,138 @@
     if(!el('prLeague')) return;
     if(league){ renderLeagueTable([], T('Chargement du classement…','Loading standings…')); syncLeague(); }
     else renderLeagueForms();
+  }
+
+  /* ================= COMPTE (Supabase Auth, fetch direct — sans SDK) =================
+     Sert uniquement à synchroniser pronos/X2/champion/ligue entre appareils.
+     Ce projet exige la confirmation d'e-mail à l'inscription. */
+  var AKEY='ldc_auth';
+  var auth=(function(){ try{ var o=JSON.parse(localStorage.getItem(AKEY)||'null'); return (o&&o.refresh_token)?o:null; }catch(e){ return null; } })();
+  function saveAuth(){ try{ if(auth) localStorage.setItem(AKEY, JSON.stringify(auth)); else localStorage.removeItem(AKEY); }catch(e){} }
+  function gotrue(path, body, token){
+    var h={ 'Content-Type':'application/json', 'apikey':SUPA_KEY };
+    if(token) h['Authorization']='Bearer '+token;
+    return fetch(SUPA_URL+'/auth/v1/'+path, { method:'POST', headers:h, body:JSON.stringify(body||{}) })
+      .then(function(r){ return r.text().then(function(t){ var j={}; try{ j=t?JSON.parse(t):{}; }catch(e){} j.__status=r.status; return j; }); });
+  }
+  function setSession(j){
+    auth={ access_token:j.access_token, refresh_token:j.refresh_token,
+           expires_at:Date.now()+(((j.expires_in||3600)-90)*1000),
+           email:(j.user&&j.user.email)||(auth&&auth.email)||'',
+           user_id:(j.user&&j.user.id)||(auth&&auth.user_id)||'' };
+    saveAuth();
+  }
+  function ensureToken(){
+    if(!auth) return Promise.resolve(null);
+    if(auth.access_token && Date.now()<auth.expires_at) return Promise.resolve(auth.access_token);
+    return gotrue('token?grant_type=refresh_token',{ refresh_token:auth.refresh_token }).then(function(j){
+      if(j && j.access_token){ setSession(j); return auth.access_token; }
+      if(j && j.__status>=400 && j.__status<500){ auth=null; saveAuth(); renderAccount(); }
+      return null;
+    }, function(){ return null; });
+  }
+  function authErrMsg(j){
+    var c=(j&&j.error_code)||'';
+    var m={
+      user_already_exists:T('Un compte existe déjà avec cet e-mail.','An account already exists for this email.'),
+      email_exists:T('Un compte existe déjà avec cet e-mail.','An account already exists for this email.'),
+      email_address_invalid:T('Adresse e-mail invalide.','Invalid email address.'),
+      weak_password:T('Mot de passe trop faible (6 caractères min).','Password too weak (min 6 characters).'),
+      invalid_credentials:T('E-mail ou mot de passe incorrect.','Wrong email or password.'),
+      email_not_confirmed:T('E-mail non confirmé — clique le lien reçu, puis reviens te connecter.','Email not confirmed — click the link you received, then log in.'),
+      over_email_send_rate_limit:T('Trop de tentatives — réessaie dans une minute.','Too many attempts — retry in a minute.'),
+      validation_failed:T('Champs invalides.','Invalid fields.')
+    };
+    return m[c] || (j&&j.msg) || T('Erreur — réessaie.','Error — try again.');
+  }
+
+  /* ---- synchro cloud (table ldc_saves, RLS par utilisateur) ---- */
+  var cloudTimer=null, cloudNote='', cloudInit=false;
+  function updateSyncNote(){ var n=el('pacSync'); if(n && cloudNote) n.textContent=cloudNote; }
+  function leaguePersist(){ try{ if(league) localStorage.setItem(LKEY, JSON.stringify(league)); else localStorage.removeItem(LKEY); }catch(e){} }
+  function cloudPushSoon(){ if(DEMO||!auth) return; if(cloudTimer) clearTimeout(cloudTimer); cloudTimer=setTimeout(cloudPush, 1500); }
+  function cloudPush(){
+    if(DEMO||!auth) return;
+    ensureToken().then(function(tk){
+      if(!tk||!auth||!auth.user_id) return;
+      var payload={ user_id:auth.user_id, season:YEAR, updated_at:new Date().toISOString(),
+                    data:{ ts:(state._ts||Date.now()), state:state, league:league } };
+      fetch(SUPA_URL+'/rest/v1/ldc_saves?on_conflict=user_id,season', { method:'POST',
+        headers:{ 'Content-Type':'application/json', 'apikey':SUPA_KEY, 'Authorization':'Bearer '+tk,
+                  'Prefer':'resolution=merge-duplicates,return=minimal' },
+        body:JSON.stringify(payload) })
+      .then(function(r){ if(r.ok){ cloudNote='☁️ '+T('Synchronisé','Synced'); updateSyncNote(); } }, function(){});
+    });
+  }
+  function cloudPullThenReconcile(){
+    if(DEMO||!auth) return;
+    ensureToken().then(function(tk){
+      if(!tk) return;
+      fetch(SUPA_URL+'/rest/v1/ldc_saves?season=eq.'+YEAR+'&select=data,updated_at',
+        { headers:{ 'apikey':SUPA_KEY, 'Authorization':'Bearer '+tk } })
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(rows){
+        if(rows===null) return;
+        var localTs=state._ts||0;
+        var hasLocal = localTs>0 || Object.keys(state.picks).length>0 || !!state.x2 || !!state.champ || !!league;
+        if(rows.length){
+          var remote=rows[0].data||{}, remoteTs=remote.ts||Date.parse(rows[0].updated_at)||0;
+          if(remoteTs>localTs && remote.state){
+            state=remote.state; if(!state.picks) state.picks={}; state._ts=remoteTs;
+            try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+            if(remote.league && remote.league.code){ league=remote.league; leaguePersist(); }
+            lastPushSig=null;
+            cloudNote='☁️ '+T('Restauré depuis le cloud','Restored from cloud');
+            render(); updateSyncNote();
+          } else if(localTs>remoteTs){ cloudPush(); }
+          else { cloudNote='☁️ '+T('À jour','Up to date'); updateSyncNote(); }
+        } else if(hasLocal){ cloudPush(); }
+      }, function(){});
+    });
+  }
+
+  /* ---- carte compte ---- */
+  function renderAccount(msg, isErr){
+    var host=el('prAccount'); if(!host) return;
+    if(auth){
+      host.innerHTML='<div class="plg-title">👤 '+esc(T('Mon compte','My account'))+'</div>'+
+        '<div class="plg-head"><span class="plg-name">'+esc(auth.email||'')+'</span>'+
+        '<span class="plg-sync" id="pacSync">'+esc(cloudNote||('☁️ '+T('Pronos, X2, champion et ligue synchronisés entre tes appareils.','Predictions, X2, champion and league synced across your devices.')))+'</span>'+
+        '<button class="btn" id="pacLogout">'+esc(T('Se déconnecter','Log out'))+'</button></div>';
+      el('pacLogout').addEventListener('click', function(){
+        var tk=auth&&auth.access_token;
+        if(tk) gotrue('logout',{},tk)['catch'](function(){});
+        auth=null; saveAuth(); cloudNote=''; renderAccount();
+      });
+      return;
+    }
+    host.innerHTML='<div class="plg-title">👤 '+esc(T('Mon compte','My account'))+'</div>'+
+      '<div class="plg-forms">'+
+        '<div class="plg-row"><input id="pacEmail" type="email" autocomplete="email" placeholder="'+esc(T('E-mail','Email'))+'">'+
+          '<input id="pacPass" type="password" autocomplete="current-password" placeholder="'+esc(T('Mot de passe (6+)','Password (6+)'))+'"></div>'+
+        '<div class="plg-row"><button class="btn" id="pacSignup">'+esc(T('Créer mon compte','Create my account'))+'</button>'+
+          '<button class="btn" id="pacLogin">'+esc(T('Se connecter','Log in'))+'</button></div>'+
+        (msg?('<div class="'+(isErr?'plg-err':'pac-ok')+'">'+esc(msg)+'</div>'):'')+
+        '<div class="plg-note">'+esc(T('Compte facultatif : il sert uniquement à retrouver tes pronos et ta ligue sur tous tes appareils (e-mail stocké chez Supabase). Une confirmation par e-mail est demandée à l’inscription — pense aux spams.','Optional account: it only lets you keep your predictions and league across devices (email stored with Supabase). Email confirmation is required at signup — check your spam folder.'))+'</div>'+
+      '</div>';
+    function creds(){ return { email:(el('pacEmail').value||'').trim(), password:(el('pacPass').value||'') }; }
+    el('pacSignup').addEventListener('click', function(){
+      var c=creds();
+      if(!c.email || c.password.length<6){ renderAccount(T('E-mail valide et mot de passe (6+) requis.','Valid email and password (6+) required.'), true); return; }
+      gotrue('signup', c).then(function(j){
+        if(j.access_token){ setSession(j); renderAccount(); cloudPullThenReconcile(); }
+        else if(j.__status>=200 && j.__status<300){ renderAccount(T('Compte créé ! Confirme ton e-mail (regarde les spams), puis connecte-toi ici.','Account created! Confirm your email (check spam), then log in here.'), false); }
+        else renderAccount(authErrMsg(j), true);
+      }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
+    });
+    el('pacLogin').addEventListener('click', function(){
+      var c=creds();
+      if(!c.email || !c.password){ renderAccount(T('E-mail et mot de passe requis.','Email and password required.'), true); return; }
+      gotrue('token?grant_type=password', c).then(function(j){
+        if(j.access_token){ setSession(j); renderAccount(); cloudPullThenReconcile(); }
+        else renderAccount(authErrMsg(j), true);
+      }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
+    });
   }
 
   /* ================= BARÈME (original, transparent) =================
@@ -545,6 +680,8 @@
     renderDemoBanner(); renderHero(); renderFavPick(); renderRules();
     if(league){ if(!el('prLeague').innerHTML) renderLeagueTable([], T('Chargement du classement…','Loading standings…')); syncLeague(); }
     else if(!el('prLeague').innerHTML){ renderLeagueForms(); }
+    if(!el('prAccount').innerHTML) renderAccount();
+    if(!cloudInit && !DEMO){ cloudInit=true; if(auth) cloudPullThenReconcile(); }
     el('prTitle').textContent=T('Mes Pronos','My Predictions');
     el('prSub').textContent=T('Pronostique le score exact de chaque match — les points suivent la difficulté.','Predict the exact score of every match — points follow difficulty.');
     var host=el('prBody');
@@ -578,7 +715,7 @@
 
   load();
   setInterval(function(){ try{ load(); }catch(e){} }, 60000);
-  if(window.I18N) window.addEventListener('ldc:langchange', function(){ el('prLeague').innerHTML=''; if(league){ renderLeagueTable([], T('Chargement…','Loading…')); } render(); });
+  if(window.I18N) window.addEventListener('ldc:langchange', function(){ el('prLeague').innerHTML=''; el('prAccount').innerHTML=''; if(league){ renderLeagueTable([], T('Chargement…','Loading…')); } render(); });
 
   /* Starfield (fond étoilé partagé) */
   (function starfield(){
