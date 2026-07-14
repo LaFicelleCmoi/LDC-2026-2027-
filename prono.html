@@ -114,6 +114,31 @@
   .plg-chip.add{ font-weight:900; }
   .plg-invite{ font-size:12.5px; font-weight:700; color:rgb(var(--fav-rgb,245,181,10)); padding:8px 12px;
     background:rgba(var(--gold-rgb,245,181,10),.1); border:1px dashed rgba(var(--gold-rgb,245,181,10),.45); border-radius:10px; }
+  /* Compte à rebours avant le prochain verrouillage */
+  .pr-nextlock{ display:inline-flex; align-items:center; gap:8px; margin:14px 0 0; padding:8px 14px; border-radius:999px;
+    background:var(--card); border:1px solid rgba(var(--gold-rgb,245,181,10),.4); font-size:12.5px; font-weight:700; color:var(--txt); }
+  .pr-nextlock b{ font-family:'Bebas Neue',Impact,sans-serif; font-weight:400; font-size:1.25em; letter-spacing:.06em;
+    color:rgb(var(--fav-rgb,245,181,10)); font-variant-numeric:tabular-nums; }
+  /* Sous-tête par jour (à la MPP) */
+  .pr-day{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    margin:10px 2px 2px; padding-left:10px; border-left:3px solid rgba(var(--gold-rgb,245,181,10),.55); }
+  /* Gain potentiel en direct */
+  .pr-pot{ font-size:11px; font-weight:800; color:rgb(var(--fav-rgb,245,181,10)); white-space:nowrap; }
+  .pr-pot .x2{ color:#fff; background:rgba(var(--gold-rgb,245,181,10),.25); border-radius:5px; padding:0 4px; margin-left:3px; }
+  /* Podium du classement de ligue */
+  .plg-podium{ display:flex; justify-content:center; align-items:flex-end; gap:16px; margin:6px 0 14px; }
+  .plg-pod{ text-align:center; min-width:72px; }
+  .plg-pod .pp-ava{ width:44px; height:44px; border-radius:50%; margin:0 auto 5px; display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:17px; color:#0b0e1a; box-shadow:0 6px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.5); }
+  .plg-pod.p1 .pp-ava{ width:54px; height:54px; font-size:21px; background:linear-gradient(180deg,#ffe9a8,#f7bd39 55%,#d68d06); }
+  .plg-pod.p2 .pp-ava{ background:linear-gradient(180deg,#f1f5fc,#c3cddf 55%,#97a3b8); }
+  .plg-pod.p3 .pp-ava{ background:linear-gradient(180deg,#f4c9a4,#dd9a62 55%,#b06f3a); }
+  .plg-pod .pp-medal{ font-size:14px; line-height:1; margin-bottom:3px; }
+  .plg-pod .pp-nm{ font-size:11.5px; font-weight:800; color:var(--txt); max-width:86px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .plg-pod .pp-pts{ font-family:'Bebas Neue',Impact,sans-serif; font-size:1.15em; color:rgb(var(--fav-rgb,245,181,10)); }
+  /* Rang affiché sur les chips de ligue */
+  .plg-chip .ck{ font-weight:900; color:rgb(var(--fav-rgb,245,181,10)); margin-left:5px; font-size:11px; }
+  .plg-chip.active .ck{ color:inherit; }
   .pac-ok{ font-size:12px; font-weight:700; color:var(--finished); }
   .plg-head .plg-sync{ flex:1; min-width:160px; margin-top:0; }
   .btn-twitch{ background:#9146FF !important; border-color:#9146FF !important; color:#fff !important; font-weight:800; }
@@ -160,6 +185,7 @@
   <div class="pr-wrap">
     <div id="prDemo"></div>
     <div class="card pr-hero" id="prHero"></div>
+    <div class="pr-nextlock" id="prNextLock" style="display:none">⏱️ <span id="pnlLbl">Prochain verrouillage dans</span> <b id="pnlTime">—</b></div>
     <div class="card pr-league" id="prAccount"></div>
     <div class="card pr-league" id="prLeague"></div>
     <div class="pr-fav" id="prFav" style="display:none"></div>
@@ -288,6 +314,27 @@
     catch(e){ return 's'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2); }
   }
   var lastPushSig=null, leagueBusy=false;
+  /* Rang du joueur dans chaque ligue (affiché sur les chips sans avoir à cliquer) */
+  var lgRanks={}, ranksLoaded=false;
+  function noteRank(lg, res){
+    if(!res || !res.ok || !res.standings) return;
+    for(var i=0;i<res.standings.length;i++){
+      if(res.standings[i].pseudo===lg.pseudo){ lgRanks[lg.code]={ r:i+1, n:res.standings.length }; return; }
+    }
+  }
+  function rankStr(code){
+    var k=lgRanks[code]; if(!k) return '';
+    return EN() ? ('#'+k.r+'/'+k.n) : (k.r+'ᵉ/'+k.n);
+  }
+  function refreshChipRanks(){
+    Array.prototype.forEach.call(document.querySelectorAll('.plg-chip[data-lg]'), function(ch){
+      var lg=LG.list[parseInt(ch.getAttribute('data-lg'),10)||0]; if(!lg) return;
+      var s=rankStr(lg.code); if(!s) return;
+      var sp=ch.querySelector('.ck');
+      if(sp) sp.textContent=s;
+      else ch.insertAdjacentHTML('beforeend','<span class="ck">'+esc(s)+'</span>');
+    });
+  }
   function leagueErrMsg(code){
     var map={ not_found:T('Code introuvable.','Code not found.'), pseudo_taken:T('Pseudo déjà pris dans cette ligue.','Nickname already taken in this league.'),
       full:T('Ligue complète (50 max).','League is full (50 max).'), invalid_input:T('Pseudo (2+ car.) et nom (2+ car.) requis.','Nickname (2+ chars) and name (2+ chars) required.'),
@@ -336,8 +383,19 @@
   }
   function leagueChipsHTML(){
     return '<div class="plg-chips">'+LG.list.map(function(lg,i){
-      return '<button class="plg-chip'+(i===LG.active?' active':'')+'" data-lg="'+i+'" title="'+esc(lg.code)+'">'+esc(lg.name||lg.code)+'</button>';
+      var rk=rankStr(lg.code);
+      return '<button class="plg-chip'+(i===LG.active?' active':'')+'" data-lg="'+i+'" title="'+esc(lg.code)+'">'+esc(lg.name||lg.code)+(rk?'<span class="ck">'+esc(rk)+'</span>':'')+'</button>';
     }).join('')+'<button class="plg-chip add" id="plgAdd">＋ '+esc(T('Ligue','League'))+'</button></div>';
+  }
+  function podiumHTML(st){
+    if(!st || st.length<2) return '';
+    var meds=['🥇','🥈','🥉'], order=[1,0,2];
+    return '<div class="plg-podium">'+order.map(function(idx){
+      var s=st[idx]; if(!s) return '';
+      return '<div class="plg-pod p'+(idx+1)+'"><div class="pp-medal">'+meds[idx]+'</div>'+
+        '<div class="pp-ava">'+esc((s.pseudo||'?').charAt(0).toUpperCase())+'</div>'+
+        '<div class="pp-nm">'+esc(s.pseudo)+'</div><div class="pp-pts">'+s.pts+'</div></div>';
+    }).join('')+'</div>';
   }
   function renderLeagueTable(standings, note){
     var al=activeLeague(); if(!al){ renderLeagueForms(); return; }
@@ -349,6 +407,7 @@
     }).join('');
     el('prLeague').innerHTML='<div class="plg-title">🏟️ '+esc(T('Mes ligues entre amis','My friends leagues'))+'</div>'+
       leagueChipsHTML()+
+      podiumHTML(standings)+
       '<div class="plg-head"><span class="plg-name">'+esc(al.name||'')+'</span>'+
         '<span class="plg-code" id="plgCodeChip">'+esc(al.code)+'</span>'+
         '<button class="btn" id="plgInviteBtn">🔗 '+esc(T('Lien d’invitation','Invite link'))+'</button>'+
@@ -384,7 +443,9 @@
       return;
     }
     lg.name=res.name; lgPersistOnly();
+    noteRank(lg, res);
     if(isActive) renderLeagueTable(res.standings, DEMO?T('Mode simulation : les points fictifs ne sont pas envoyés aux ligues.','Simulation mode: fictional points are not sent to leagues.'):null);
+    else refreshChipRanks();
   }
   function syncLeague(force){
     var al=activeLeague(); if(!al) return;
@@ -403,6 +464,14 @@
       rpc('ldc_get_league',{ p_code:al.code })
         .then(function(res){ handleLeagueRes(al, res, true); },
               function(){ renderLeagueTable(null, T('Ligue injoignable (hors-ligne ?) — tes pronos restent enregistrés.','League unreachable (offline?) — your predictions are still saved.')); });
+      /* précharge une fois les rangs des autres ligues (affichés sur les chips) */
+      if(!ranksLoaded){
+        ranksLoaded=true;
+        LG.list.forEach(function(lg){
+          if(lg.code===al.code) return;
+          rpc('ldc_get_league',{ p_code:lg.code }).then(function(res){ noteRank(lg,res); refreshChipRanks(); }, function(){});
+        });
+      }
     }
   }
   function renderLeague(){
@@ -631,6 +700,29 @@
     if(state.x2===m.id) pts*=2;
     return { pts:pts, good:good, exact:exact };
   }
+  /* Gain potentiel affiché en direct pendant la saisie */
+  function potHTML(id, pick){
+    if(!pick || pick.h==null || pick.a==null) return '<span class="lockico">🕐</span>';
+    var pot=PTS_RESULT+exactBonus(pick.h, pick.a);
+    return '<span class="pr-pot">≈ +'+pot+(state.x2===id?'<span class="x2">×2</span>':'')+'</span>';
+  }
+  /* "Mercredi 15 juillet" */
+  function fmtDay(d){
+    var s=d.toLocaleDateString(EN()?'en-GB':'fr-FR', { weekday:'long', day:'numeric', month:'long' });
+    return s.charAt(0).toUpperCase()+s.slice(1);
+  }
+  /* Compte à rebours avant le prochain verrouillage (coup d'envoi) */
+  function updateNextLock(){
+    var box=el('prNextLock'); if(!box) return;
+    var now=Date.now(), ts=Infinity;
+    for(var i=0;i<allMatches.length;i++){ var m=allMatches[i];
+      if(m.state==='pre' && m.dateObj && m.dateObj.getTime()>now && m.dateObj.getTime()<ts) ts=m.dateObj.getTime(); }
+    if(ts===Infinity){ box.style.display='none'; return; }
+    var s=Math.floor((ts-now)/1000), d=Math.floor(s/86400), h=Math.floor(s%86400/3600), mn=Math.floor(s%3600/60), sc=s%60;
+    function p(n){ return n<10?'0'+n:''+n; }
+    el('pnlTime').textContent=(d>0?p(d)+':':'')+p(h)+':'+p(mn)+':'+p(sc);
+    box.style.display='inline-flex';
+  }
 
   /* ================= CHARGEMENT (qualifs juil.-août + saison sept.-août) ================= */
   function load(){
@@ -803,7 +895,7 @@
       if(r!=null) res+='<span class="pts '+(r.pts>0?'win':'zero')+'">'+(r.pts>0?'+':'')+r.pts+(r.exact?' ✦':'')+'</span>';
       else res+='<span class="pts zero">—</span>';
     } else if(lk){ res='<span class="lockico">🔒 '+esc(T('En cours','Live'))+'</span>'; }
-    else { res='<span class="lockico">🕐</span>'; }
+    else { res=potHTML(m.id, pick); }
     var x2dis = lk || (state.x2 && state.x2!==m.id);
     var x2on = state.x2===m.id;
     return '<div class="pr-row'+(lk?' locked':'')+'" data-id="'+esc(m.id)+'">'+
@@ -835,9 +927,17 @@
       return;
     }
     host.innerHTML=buildGroups().map(function(g){
+      var prevDay='';
+      var rowsHTML=g.matches.map(function(m){
+        var k=m.dateObj.getFullYear()+'-'+m.dateObj.getMonth()+'-'+m.dateObj.getDate();
+        var hdr=''; if(k!==prevDay){ prevDay=k; hdr='<div class="pr-day">'+esc(fmtDay(m.dateObj))+'</div>'; }
+        return hdr+rowHTML(m);
+      }).join('');
       return '<div class="pr-group"><div class="pr-group-head">'+esc(g.title)+' <span class="n">'+g.matches.length+'</span></div>'+
-        '<div class="pr-rows">'+g.matches.map(rowHTML).join('')+'</div></div>';
+        '<div class="pr-rows">'+rowsHTML+'</div></div>';
     }).join('');
+    var pl=el('pnlLbl'); if(pl) pl.textContent=T('Prochain verrouillage dans','Next lock in');
+    updateNextLock();
   }
 
   /* ================= INTERACTIONS (délégation) ================= */
@@ -849,6 +949,8 @@
     if(h!==''&&a!==''){ var hh=Math.max(0,Math.min(20,parseInt(h,10)||0)), aa=Math.max(0,Math.min(20,parseInt(a,10)||0)); state.picks[id]={h:hh,a:aa}; }
     else delete state.picks[id];
     save(); renderHero();
+    var resEl=row.querySelector('.pr-res');                     // gain potentiel mis à jour en direct
+    if(resEl && !row.classList.contains('locked')) resEl.innerHTML=potHTML(id, state.picks[id]);
   });
   el('prBody').addEventListener('click', function(e){
     var b=e.target.closest?e.target.closest('.pr-x2'):null; if(!b||b.disabled) return;
@@ -861,6 +963,7 @@
   loadAuthSettings();    // affiche le bouton Twitch si le provider est activé
   load();
   setInterval(function(){ try{ load(); }catch(e){} }, 60000);
+  setInterval(function(){ try{ updateNextLock(); }catch(e){} }, 1000);
   if(window.I18N) window.addEventListener('ldc:langchange', function(){ el('prLeague').innerHTML=''; el('prAccount').innerHTML=''; render(); });
 
   /* Starfield (fond étoilé partagé) */
