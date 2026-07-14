@@ -374,8 +374,9 @@
       email_address_invalid:T('Adresse e-mail invalide.','Invalid email address.'),
       weak_password:T('Mot de passe trop faible (6 caractères min).','Password too weak (min 6 characters).'),
       invalid_credentials:T('E-mail ou mot de passe incorrect.','Wrong email or password.'),
-      email_not_confirmed:T('E-mail non confirmé — clique le lien reçu, puis reviens te connecter.','Email not confirmed — click the link you received, then log in.'),
-      over_email_send_rate_limit:T('Trop de tentatives — réessaie dans une minute.','Too many attempts — retry in a minute.'),
+      email_not_confirmed:T('E-mail non confirmé — reconnecte-toi, la confirmation est automatique.','Email not confirmed — log in again, confirmation is automatic.'),
+      over_email_send_rate_limit:T('Trop de tentatives — réessaie dans quelques minutes.','Too many attempts — retry in a few minutes.'),
+      over_request_rate_limit:T('Trop de tentatives — réessaie dans quelques minutes.','Too many attempts — retry in a few minutes.'),
       validation_failed:T('Champs invalides.','Invalid fields.')
     };
     return m[c] || (j&&j.msg) || T('Erreur — réessaie.','Error — try again.');
@@ -448,25 +449,36 @@
         '<div class="plg-row"><button class="btn" id="pacSignup">'+esc(T('Créer mon compte','Create my account'))+'</button>'+
           '<button class="btn" id="pacLogin">'+esc(T('Se connecter','Log in'))+'</button></div>'+
         (msg?('<div class="'+(isErr?'plg-err':'pac-ok')+'">'+esc(msg)+'</div>'):'')+
-        '<div class="plg-note">'+esc(T('Compte facultatif : il sert uniquement à retrouver tes pronos et ta ligue sur tous tes appareils (e-mail stocké chez Supabase). Une confirmation par e-mail est demandée à l’inscription — pense aux spams.','Optional account: it only lets you keep your predictions and league across devices (email stored with Supabase). Email confirmation is required at signup — check your spam folder.'))+'</div>'+
+        '<div class="plg-note">'+esc(T('Compte facultatif et instantané (aucun e-mail envoyé) : il sert uniquement à retrouver tes pronos et ta ligue sur tous tes appareils. E-mail stocké chez Supabase.','Optional, instant account (no email sent): it only lets you keep your predictions and league across devices. Email stored with Supabase.'))+'</div>'+
       '</div>';
     function creds(){ return { email:(el('pacEmail').value||'').trim(), password:(el('pacPass').value||'') }; }
+    function doLogin(c, healed){
+      gotrue('token?grant_type=password', { email:c.email, password:c.password }).then(function(j){
+        if(j.access_token){ setSession(j); renderAccount(); cloudPullThenReconcile(); return; }
+        /* compte créé avant le correctif (jamais confirmé) : confirmation auto — le mot de passe est vérifié côté serveur — puis nouvel essai */
+        if(!healed && j.error_code==='email_not_confirmed'){
+          rpc('ldc_confirm_email',{ p_email:c.email, p_password:c.password }).then(function(res){
+            if(res && res.ok) doLogin(c, true);
+            else renderAccount(authErrMsg({error_code:(res&&res.error)||'invalid_credentials'}), true);
+          }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
+          return;
+        }
+        renderAccount(authErrMsg(j), true);
+      }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
+    }
     el('pacSignup').addEventListener('click', function(){
       var c=creds();
       if(!c.email || c.password.length<6){ renderAccount(T('E-mail valide et mot de passe (6+) requis.','Valid email and password (6+) required.'), true); return; }
-      gotrue('signup', c).then(function(j){
-        if(j.access_token){ setSession(j); renderAccount(); cloudPullThenReconcile(); }
-        else if(j.__status>=200 && j.__status<300){ renderAccount(T('Compte créé ! Confirme ton e-mail (regarde les spams), puis connecte-toi ici.','Account created! Confirm your email (check spam), then log in here.'), false); }
-        else renderAccount(authErrMsg(j), true);
+      /* inscription instantanée via fonction sécurisée : aucun e-mail envoyé, pas de limite d'envoi */
+      rpc('ldc_signup',{ p_email:c.email, p_password:c.password }).then(function(res){
+        if(res && res.ok){ doLogin(c, false); }
+        else renderAccount(authErrMsg({error_code:(res&&res.error)||''}), true);
       }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
     });
     el('pacLogin').addEventListener('click', function(){
       var c=creds();
       if(!c.email || !c.password){ renderAccount(T('E-mail et mot de passe requis.','Email and password required.'), true); return; }
-      gotrue('token?grant_type=password', c).then(function(j){
-        if(j.access_token){ setSession(j); renderAccount(); cloudPullThenReconcile(); }
-        else renderAccount(authErrMsg(j), true);
-      }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
+      doLogin(c, false);
     });
   }
 
