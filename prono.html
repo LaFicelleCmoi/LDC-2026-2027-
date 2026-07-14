@@ -67,6 +67,15 @@
   .prc-ok{ width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:11px; font-weight:900; border:1px solid var(--line-2); color:var(--muted); flex:none; }
   .prc-ok.on{ color:#1a1300; background:linear-gradient(180deg,#ffe9a8,#f7bd39 60%,#d68d06); border-color:transparent; }
+  /* Points par issue (1 / N / 2) selon la cote — l'issue choisie est surlignée */
+  .prc-cen{ display:flex; flex-direction:column; align-items:center; }
+  .prc-odds{ display:flex; gap:5px; justify-content:center; margin-top:7px; }
+  .prc-odds .po{ min-width:36px; text-align:center; padding:3px 6px 4px; border-radius:8px;
+    background:var(--bg-soft); border:1px solid var(--line-2); }
+  .prc-odds .po i{ display:block; font-style:normal; font-size:8.5px; font-weight:800; letter-spacing:.08em; color:var(--muted); }
+  .prc-odds .po b{ display:block; font-size:12.5px; font-weight:900; color:var(--txt); font-variant-numeric:tabular-nums; }
+  .prc-odds .po.on{ background:rgba(var(--gold-rgb,245,181,10),.18); border-color:rgb(var(--gold-rgb,245,181,10)); }
+  .prc-odds .po.on b{ color:rgb(var(--fav-rgb,245,181,10)); }
   .pr-day{ display:flex; justify-content:space-between; align-items:baseline; }
   .pr-day .pdc{ font-variant-numeric:tabular-nums; color:rgb(var(--fav-rgb,245,181,10)); }
   .pr-x2{ font-size:10px; font-weight:900; letter-spacing:.04em; padding:5px 8px; border-radius:7px; cursor:pointer; border:1px solid var(--line-2); background:none; color:var(--muted); font-family:inherit; }
@@ -235,7 +244,7 @@
   if(!state.picks) state.picks={};
   function save(){ state._ts=Date.now(); try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} if(typeof cloudPushSoon==='function') cloudPushSoon(); }
 
-  var allMatches=[], rawSeason=[], champion=null;
+  var allMatches=[], rawSeason=[], champion=null, oddsMap={};
 
   /* ================= MODE SIMULATION (matchs fictifs pour tester) =================
      Déterministe (PRNG seedé) : scores stables d'une visite à l'autre. Les matchs
@@ -257,8 +266,12 @@
       if(now>=ko+105*60000){ st='post'; hs=simScore(rnd); as=simScore(rnd); }
       else { var r1=simScore(rnd), r2=simScore(rnd); /* consomme le PRNG pour garder les scores stables */
              if(now>=ko) st='in'; }
+      /* cotes simulées déterministes (favori / outsider variables) */
+      var o1=rnd(), o2=rnd();
+      var ph=0.2+0.5*o1, pd=0.18+0.14*o2, pa=Math.max(0.08, 1-ph-pd), s=ph+pd+pa;
       return { id:id, dateObj:new Date(ko), state:st, round:'league',
-               home:simTeam(home, hs), away:simTeam(away, as) };
+               home:simTeam(home, hs), away:simTeam(away, as),
+               oddsP:{ h:ph/s, d:pd/s, a:pa/s } };
     }
     for(var i=0;i<6;i++){ ms.push(mk('simA'+i, order[2*i], order[2*i+1], simBase-8*86400000+i*3*3600000)); }         // journée jouée (il y a 8 j)
     for(var j=0;j<6;j++){ ms.push(mk('simB'+j, order[(2*j+5)%16], order[(2*j+12)%16], simBase+2*3600000+j*22*3600000)); } // journée à venir (dans 2 h -> 5 j)
@@ -699,20 +712,44 @@
   var PTS_RESULT=12, PTS_CHAMP=60, EXACT_CAP=30;
   function exactBonus(h,a){ var tot=h+a, gap=Math.abs(h-a); return Math.min(EXACT_CAP, 8 + 2*tot + 3*Math.max(0,gap-1)); }
   function sign(x){ return x>0?1:(x<0?-1:0); }
+  /* Points par issue selon la cote : 12 pts à probabilité 1/3, plus si improbable (6-40).
+     Sans cote réelle disponible : barème standard 12 pts. */
+  function outcomePts(id){
+    var o=oddsMap[id];
+    if(!o) return { h:PTS_RESULT, d:PTS_RESULT, a:PTS_RESULT, real:false };
+    function pts(p){ return Math.max(6, Math.min(40, Math.round(4/Math.max(p,0.05)))); }
+    return { h:pts(o.h), d:pts(o.d), a:pts(o.a), real:true };
+  }
+  function pickOutcome(pick){ return pick.h>pick.a?'h':(pick.h<pick.a?'a':'d'); }
+  /* base de points du prono : cote GELÉE à la saisie (pick.op), sinon cote courante, sinon 12 */
+  function pickBase(id, pick){
+    if(pick && pick.op && pick.op.length===3){ return pick.op[ pick.h>pick.a?0:(pick.h===pick.a?1:2) ]; }
+    var op=outcomePts(id);
+    return op.real ? op[pickOutcome(pick)] : PTS_RESULT;
+  }
   function matchPoints(m, pick){
     if(!pick || pick.h==null || pick.a==null) return null;
     if(m.state!=='post') return null;
     var rh=m.home.score, ra=m.away.score;
     var pts=0, exact=false, good=false;
-    if(sign(pick.h-pick.a)===sign(rh-ra)){ good=true; pts=PTS_RESULT; if(pick.h===rh&&pick.a===ra){ exact=true; pts+=exactBonus(rh,ra); } }
+    if(sign(pick.h-pick.a)===sign(rh-ra)){ good=true; pts=pickBase(m.id, pick); if(pick.h===rh&&pick.a===ra){ exact=true; pts+=exactBonus(rh,ra); } }
     if(state.x2===m.id) pts*=2;
     return { pts:pts, good:good, exact:exact };
   }
   /* Gain potentiel affiché en direct pendant la saisie */
   function potHTML(id, pick){
     if(!pick || pick.h==null || pick.a==null) return '<span class="lockico">🕐</span>';
-    var pot=PTS_RESULT+exactBonus(pick.h, pick.a);
+    var pot=pickBase(id, pick)+exactBonus(pick.h, pick.a);
     return '<span class="pr-pot">≈ +'+pot+(state.x2===id?'<span class="x2">×2</span>':'')+'</span>';
+  }
+  /* Rangée 1 / N / 2 sous les cases (cote gelée du prono si présente, sinon cote courante) */
+  function oddsRowHTML(id, pick){
+    var frozen = pick && pick.op && pick.op.length===3;
+    var op = frozen ? { h:pick.op[0], d:pick.op[1], a:pick.op[2], real:true } : outcomePts(id);
+    if(!op.real) return '';
+    var sel = (pick && pick.h!=null && pick.a!=null) ? pickOutcome(pick) : null;
+    function po(k,lbl,v){ return '<span class="po'+(sel===k?' on':'')+'" data-o="'+k+'"><i>'+lbl+'</i><b>'+v+'</b></span>'; }
+    return '<div class="prc-odds">'+po('h','1',op.h)+po('d','N',op.d)+po('a','2',op.a)+'</div>';
   }
   /* "Mercredi 15 juillet" */
   function fmtDay(d){
@@ -743,16 +780,35 @@
   }
 
   /* ================= CHARGEMENT (qualifs juil.-août + saison sept.-août) ================= */
+  /* Cotes réelles ESPN (présentes seulement en fenêtre d'avant-match) -> probabilités 1/N/2 */
+  function parseOdds(ev){
+    try{
+      var o=(ev.competitions[0].odds||[])[0]; if(!o) return null;
+      function mlToP(ml){ ml=parseFloat(ml); if(isNaN(ml)||!ml) return null; return ml<0 ? (-ml)/((-ml)+100) : 100/(ml+100); }
+      var ph=mlToP(o.homeTeamOdds&&o.homeTeamOdds.moneyLine);
+      var pa=mlToP(o.awayTeamOdds&&o.awayTeamOdds.moneyLine);
+      var pd=mlToP(o.drawOdds&&o.drawOdds.moneyLine);
+      if(ph==null||pa==null||pd==null) return null;
+      var s=ph+pd+pa; if(s<=0) return null;
+      return { h:ph/s, d:pd/s, a:pa/s };
+    }catch(e){ return null; }
+  }
   function load(){
-    if(DEMO){ allMatches=simMatches(); rawSeason=[]; champion=null; render(); return; }
+    if(DEMO){
+      allMatches=simMatches(); rawSeason=[]; champion=null;
+      oddsMap={}; allMatches.forEach(function(m){ if(m.oddsP) oddsMap[m.id]=m.oddsP; });
+      render(); return;
+    }
     var qual=ESPN.fetchScoreboard(YEAR+'0701-'+YEAR+'0831',{limit:300,ttl:60000}).catch(function(){ return []; });
     var seas=ESPN.fetchSeasonEvents({ttl:60000}).catch(function(){ return []; });
     Promise.all([qual,seas]).then(function(rs){
       rawSeason=rs[1]||[];
       var seen={}, ms=[];
+      oddsMap={};
       [].concat(rs[0]||[],rs[1]||[]).forEach(function(ev){
         if(!ev||seen[ev.id]) return; seen[ev.id]=1;
         if(ev.season&&ev.season.year!=null&&ev.season.year!==YEAR) return;
+        var op=parseOdds(ev); if(op) oddsMap[ev.id]=op;
         var m=ESPN.normalizeEvent(ev); if(m&&m.dateObj) ms.push(m);
       });
       ms.sort(function(a,b){ return a.dateObj-b.dateObj; });
@@ -884,14 +940,14 @@
     el('prRulesTitle').textContent=T('Règles du jeu','How it works');
     el('prRulesBody').innerHTML=T(
       'Pronostique le <b>score exact</b> de chaque match — modifiable jusqu’au coup d’envoi, puis verrouillé.<br>'+
-      '• <b>Bon résultat</b> (victoire/nul/défaite) : <b>'+PTS_RESULT+' pts</b>.<br>'+
+      '• <b>Bon résultat</b> : les <b>points de la cote</b> (6 à 40, affichés sous les cases 1/N/2) quand une cote réelle est disponible — plus l’issue est improbable, plus elle rapporte. Les points affichés à la saisie sont <b>gelés</b> pour ton prono. Sans cote : <b>'+PTS_RESULT+' pts</b>.<br>'+
       '• <b>Score exact</b> : bonus de rareté <b>+8 à +'+EXACT_CAP+' pts</b> (plus le score est improbable — buts nombreux, gros écart — plus il rapporte).<br>'+
       '• <b>X2</b> : un seul pour toute la saison, à poser avant le coup d’envoi — il double tous les points du match.<br>'+
       '• <b>Mon champion</b> : choisis le vainqueur final avant le 1er match de la phase de ligue : <b>+'+PTS_CHAMP+' pts</b> s’il soulève la coupe.<br>'+
       '• À élimination directe, le prono vaut pour le score final (prolongations comprises) ; <b>les tirs au but ne comptent pas</b> — un match décidé aux TAB reste un nul.<br>'+
       '• Un seul prono par match, valable partout — compare tes points avec tes amis via ton code.',
       'Predict the <b>exact score</b> of every match — editable until kick-off, then locked.<br>'+
-      '• <b>Correct result</b> (win/draw/loss): <b>'+PTS_RESULT+' pts</b>.<br>'+
+      '• <b>Correct result</b>: the <b>odds points</b> (6 to 40, shown under the boxes as 1/N/2) when real odds are available — the more unlikely the outcome, the more it pays. Points shown when you predict are <b>frozen</b> for your pick. Without odds: <b>'+PTS_RESULT+' pts</b>.<br>'+
       '• <b>Exact score</b>: rarity bonus <b>+8 to +'+EXACT_CAP+' pts</b> (the more unlikely the scoreline — many goals, big gap — the more it pays).<br>'+
       '• <b>X2</b>: one for the whole season, placed before kick-off — doubles all points on that match.<br>'+
       '• <b>My champion</b>: pick the winner before the first league-phase match: <b>+'+PTS_CHAMP+' pts</b> if they lift the cup.<br>'+
@@ -923,11 +979,11 @@
       '<div class="prc-top">'+(lk&&m.state!=='post'?'🔒 ':'')+'<span class="t">'+hm2(m.dateObj)+'</span></div>'+
       '<div class="prc-main">'+
         side(m.home)+
-        '<div class="prc-mid">'+
+        '<div class="prc-cen"><div class="prc-mid">'+
           '<input type="number" min="0" max="20" inputmode="numeric" data-s="h" value="'+(pick.h!=null?pick.h:'')+'"'+(lk?' disabled':'')+'>'+
           '<span class="prc-ok'+(complete?' on':'')+'">'+(lk?'🔒':(complete?'✓':'–'))+'</span>'+
           '<input type="number" min="0" max="20" inputmode="numeric" data-s="a" value="'+(pick.a!=null?pick.a:'')+'"'+(lk?' disabled':'')+'>'+
-        '</div>'+
+        '</div>'+oddsRowHTML(m.id, pick)+'</div>'+
         side(m.away)+
       '</div>'+
       '<div class="pr-res">'+res+'</div>'+
@@ -968,13 +1024,21 @@
     var row=inp.closest('.pr-row'); if(!row) return;
     var id=row.getAttribute('data-id');
     var h=row.querySelector('input[data-s="h"]').value, a=row.querySelector('input[data-s="a"]').value;
-    if(h!==''&&a!==''){ var hh=Math.max(0,Math.min(20,parseInt(h,10)||0)), aa=Math.max(0,Math.min(20,parseInt(a,10)||0)); state.picks[id]={h:hh,a:aa}; }
+    if(h!==''&&a!==''){
+      var hh=Math.max(0,Math.min(20,parseInt(h,10)||0)), aa=Math.max(0,Math.min(20,parseInt(a,10)||0));
+      state.picks[id]={h:hh,a:aa};
+      var opc=outcomePts(id); if(opc.real) state.picks[id].op=[opc.h,opc.d,opc.a];   // gèle la cote vue à la saisie
+    }
     else delete state.picks[id];
     save(); renderHero();
     var resEl=row.querySelector('.pr-res');                     // gain potentiel mis à jour en direct
     if(resEl && !row.classList.contains('locked')) resEl.innerHTML=potHTML(id, state.picks[id]);
     var ok=row.querySelector('.prc-ok');                        // coche ✓ entre les deux cases
     if(ok && !row.classList.contains('locked')){ var c=!!state.picks[id]; ok.classList.toggle('on', c); ok.textContent=c?'✓':'–'; }
+    var oddsEl=row.querySelector('.prc-odds');                  // surligne l'issue choisie (1/N/2)
+    if(oddsEl){ var pk2=state.picks[id], sel=(pk2&&pk2.h!=null)?pickOutcome(pk2):null;
+      Array.prototype.forEach.call(oddsEl.querySelectorAll('.po'), function(s){ s.classList.toggle('on', sel===s.getAttribute('data-o')); });
+    }
     updateDayCounts();
   });
   el('prBody').addEventListener('click', function(e){
