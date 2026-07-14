@@ -71,6 +71,40 @@
   .pr-res .pts.zero{ background:rgba(255,255,255,.05); color:var(--muted); border:1px solid var(--line); }
   .pr-res .lockico{ color:var(--muted); font-size:11px; }
   .pr-empty{ text-align:center; padding:40px 16px; color:var(--muted); }
+  .pr-empty .btn{ margin-top:14px; }
+
+  /* Bandeau mode simulation */
+  .pr-demo{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; padding:11px 15px;
+    background:rgba(74,168,255,.10); border:1px dashed rgba(74,168,255,.5); border-radius:12px; font-size:13px; color:#bfe0ff; }
+  .pr-demo b{ color:#e8f4ff; }
+  .pr-demo a{ margin-left:auto; font-weight:800; font-size:12px; color:#9fd0ff; text-decoration:underline; }
+
+  /* Ligue entre amis */
+  .pr-league{ margin-top:14px; padding:16px 18px; }
+  .pr-league .plg-title{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:rgb(var(--fav-rgb,245,181,10)); margin-bottom:11px; }
+  .pr-league input{ background:var(--bg-soft); color:var(--txt); border:1px solid var(--line-2); border-radius:9px; padding:9px 11px; font-family:inherit; font-size:13px; }
+  .pr-league input:focus{ border-color:rgb(var(--fav-rgb,245,181,10)); outline:none; }
+  .plg-forms{ display:flex; flex-direction:column; gap:10px; }
+  .plg-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .plg-row input{ flex:1; min-width:140px; }
+  .plg-note{ font-size:11px; color:var(--muted); line-height:1.5; }
+  .plg-or{ text-align:center; font-size:10px; font-weight:800; letter-spacing:.14em; color:var(--muted); }
+  .plg-err{ font-size:12px; font-weight:700; color:var(--live); }
+  .plg-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .plg-name{ font-weight:800; font-size:15px; }
+  .plg-code{ font-family:'Bebas Neue',Impact,sans-serif; font-size:1.15em; letter-spacing:.12em; padding:3px 10px; border-radius:8px;
+    background:rgba(var(--gold-rgb,245,181,10),.14); color:rgb(var(--fav-rgb,245,181,10)); border:1px solid rgba(var(--gold-rgb,245,181,10),.4); }
+  .plg-head .btn{ font-size:11px; padding:7px 11px; }
+  .plg-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .plg-table th{ text-align:left; font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:6px 8px; border-bottom:1px solid var(--line); }
+  .plg-table td{ padding:8px; border-bottom:1px solid rgba(255,255,255,.05); }
+  .plg-table tr:last-child td{ border-bottom:none; }
+  .plg-table .me td{ background:rgba(var(--gold-rgb,245,181,10),.08); }
+  .plg-table .rk{ font-family:'Bebas Neue',Impact,sans-serif; font-size:1.15em; color:var(--muted); width:34px; }
+  .plg-table .ps{ font-weight:700; }
+  .plg-table .me .ps{ color:rgb(var(--fav-rgb,245,181,10)); }
+  .plg-table .pt{ font-weight:900; font-variant-numeric:tabular-nums; }
+  .plg-sync{ font-size:11px; color:var(--muted); margin-top:8px; }
   @media (max-width:640px){
     .pr-row{ grid-template-columns:44px 1fr auto 1fr; grid-auto-rows:auto; row-gap:6px; }
     .pr-x2{ grid-column:1 / 3; justify-self:start; }
@@ -109,7 +143,9 @@
   <p class="page-sub" id="prSub">Pronostique le score exact de chaque match — les points suivent la difficulté.</p>
 
   <div class="pr-wrap">
+    <div id="prDemo"></div>
     <div class="card pr-hero" id="prHero"></div>
+    <div class="card pr-league" id="prLeague"></div>
     <div class="pr-fav" id="prFav" style="display:none"></div>
     <details class="pr-rules" id="prRules">
       <summary id="prRulesTitle">Règles du jeu</summary>
@@ -143,12 +179,161 @@
 
   /* ================= ÉTAT ================= */
   var YEAR=(function(){ try{ var s=parseInt(new URLSearchParams(location.search).get('season'),10); if(!isNaN(s)&&s>2000&&s<2100) return s; }catch(e){} return ESPN.CURRENT_SEASON; })();
-  var KEY='ldc_prono_'+YEAR;
+  var DEMO=(function(){ try{ return new URLSearchParams(location.search).get('demo')==='1'; }catch(e){ return false; } })();
+  var KEY=DEMO ? 'ldc_prono_sim' : ('ldc_prono_'+YEAR);
   var state=(function(){ try{ var o=JSON.parse(localStorage.getItem(KEY)||'null'); return (o&&typeof o==='object')?o:{picks:{},x2:null,champ:null}; }catch(e){ return {picks:{},x2:null,champ:null}; } })();
   if(!state.picks) state.picks={};
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 
   var allMatches=[], rawSeason=[], champion=null;
+
+  /* ================= MODE SIMULATION (matchs fictifs pour tester) =================
+     Déterministe (PRNG seedé) : scores stables d'une visite à l'autre. Les matchs
+     "à venir" passent réellement en cours puis terminés quand leur heure arrive. */
+  function mulberry32(a){ return function(){ a|=0; a=(a+0x6D2B79F5)|0; var t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+  var SIM_CLUBS=[[86,'Real Madrid','RMA'],[83,'Barcelona','BAR'],[132,'Bayern Munich','BAY'],[364,'Liverpool','LIV'],
+    [160,'Paris Saint-Germain','PSG'],[110,'Inter Milan','INT'],[103,'AC Milan','MIL'],[382,'Manchester City','MCI'],
+    [360,'Manchester United','MUN'],[124,'Borussia Dortmund','BVB'],[111,'Juventus','JUV'],[363,'Chelsea','CHE'],
+    [139,'Ajax','AJA'],[437,'FC Porto','POR'],[176,'Marseille','OM'],[1929,'Benfica','BEN']];
+  var simBase=(function(){ var d=new Date(); d.setMinutes(0,0,0); return d.getTime(); })();
+  function simTeam(c,score){ return { teamId:'sim'+c[0], name:c[1], abbr:c[2], shortName:c[1],
+    logo:'https://a.espncdn.com/i/teamlogos/soccer/500/'+c[0]+'.png', score:(score==null?0:score) }; }
+  function simScore(rnd){ var r=rnd(); return r<0.28?0:(r<0.62?1:(r<0.85?2:(r<0.96?3:4))); }
+  function simMatches(){
+    var rnd=mulberry32(20262027), ms=[], now=Date.now();
+    var order=SIM_CLUBS.slice(); // appariements J1 : 1-2, 3-4… / J2 : décalés
+    function mk(id, home, away, ko){
+      var st='pre', hs=null, as=null;
+      if(now>=ko+105*60000){ st='post'; hs=simScore(rnd); as=simScore(rnd); }
+      else { var r1=simScore(rnd), r2=simScore(rnd); /* consomme le PRNG pour garder les scores stables */
+             if(now>=ko) st='in'; }
+      return { id:id, dateObj:new Date(ko), state:st, round:'league',
+               home:simTeam(home, hs), away:simTeam(away, as) };
+    }
+    for(var i=0;i<6;i++){ ms.push(mk('simA'+i, order[2*i], order[2*i+1], simBase-8*86400000+i*3*3600000)); }         // journée jouée (il y a 8 j)
+    for(var j=0;j<6;j++){ ms.push(mk('simB'+j, order[(2*j+5)%16], order[(2*j+12)%16], simBase+2*3600000+j*22*3600000)); } // journée à venir (dans 2 h -> 5 j)
+    ms.sort(function(a,b){ return a.dateObj-b.dateObj; });
+    return ms;
+  }
+  function renderDemoBanner(){
+    var host=el('prDemo'); if(!host) return;
+    host.innerHTML = DEMO
+      ? '<div class="pr-demo">🧪 <b>'+esc(T('Mode simulation','Simulation mode'))+'</b> — '+
+        esc(T('matchs fictifs pour tester le jeu (1re journée déjà jouée, 2e à venir). Tes vrais pronos ne sont pas touchés.','fictional matches to try the game (matchday 1 played, matchday 2 upcoming). Your real predictions are untouched.'))+
+        ' <a href="prono.html">'+esc(T('Quitter la simulation','Exit simulation'))+'</a></div>'
+      : '';
+  }
+
+  /* ================= LIGUES ENTRE AMIS (Supabase, accès par fonctions sécurisées) ================= */
+  var SUPA_URL='https://jcqpnhovhdxtystdarif.supabase.co';
+  var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjcXBuaG92aGR4dHlzdGRhcmlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc1Nzc2MDMsImV4cCI6MjA1MzE1MzYwM30.jTzlMS0QVmFZjdajuRkDLjjR5EAVhMVjUwjKdJDVVAI';
+  function rpc(name, body){
+    var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+    var tm=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 9000);
+    var o={ method:'POST', headers:{ 'Content-Type':'application/json', 'apikey':SUPA_KEY, 'Authorization':'Bearer '+SUPA_KEY }, body:JSON.stringify(body||{}) };
+    if(ctrl) o.signal=ctrl.signal;
+    return fetch(SUPA_URL+'/rest/v1/rpc/'+name, o).then(function(r){ clearTimeout(tm); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); },
+      function(e){ clearTimeout(tm); throw e; });
+  }
+  var LKEY='ldc_league_'+YEAR;
+  var league=(function(){ try{ var o=JSON.parse(localStorage.getItem(LKEY)||'null'); return (o&&o.code&&o.pseudo&&o.secret)?o:null; }catch(e){ return null; } })();
+  function saveLeague(){ try{ if(league) localStorage.setItem(LKEY, JSON.stringify(league)); else localStorage.removeItem(LKEY); }catch(e){} }
+  function genSecret(){
+    try{ var a=new Uint8Array(16); crypto.getRandomValues(a); return Array.prototype.map.call(a,function(b){ return ('0'+b.toString(16)).slice(-2); }).join(''); }
+    catch(e){ return 's'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2); }
+  }
+  var lastPushSig=null, leagueBusy=false;
+  function leagueErrMsg(code){
+    var map={ not_found:T('Code introuvable.','Code not found.'), pseudo_taken:T('Pseudo déjà pris dans cette ligue.','Nickname already taken in this league.'),
+      full:T('Ligue complète (50 max).','League is full (50 max).'), invalid_input:T('Pseudo (2+ car.) et nom (2+ car.) requis.','Nickname (2+ chars) and name (2+ chars) required.'),
+      unauthorized:T('Accès refusé.','Unauthorized.') };
+    return map[code]||T('Erreur réseau — réessaie.','Network error — try again.');
+  }
+  function renderLeagueForms(err){
+    el('prLeague').innerHTML='<div class="plg-title">🏟️ '+esc(T('Ma ligue entre amis','My friends league'))+'</div>'+
+      '<div class="plg-forms">'+
+        '<div class="plg-row"><input id="plgPseudo" maxlength="20" placeholder="'+esc(T('Ton pseudo','Your nickname'))+'"></div>'+
+        '<div class="plg-row"><input id="plgName" maxlength="40" placeholder="'+esc(T('Nom de la ligue (ex. Les Potos)','League name (e.g. The Crew)'))+'">'+
+          '<button class="btn" id="plgCreate">'+esc(T('Créer la ligue','Create league'))+'</button></div>'+
+        '<div class="plg-or">'+esc(T('— OU —','— OR —'))+'</div>'+
+        '<div class="plg-row"><input id="plgCode" maxlength="6" placeholder="'+esc(T('Code à 6 caractères','6-character code'))+'" style="text-transform:uppercase">'+
+          '<button class="btn" id="plgJoin">'+esc(T('Rejoindre','Join'))+'</button></div>'+
+        (err?'<div class="plg-err">'+esc(err)+'</div>':'')+
+        '<div class="plg-note">'+esc(T('Ton pseudo et tes points sont stockés en ligne, uniquement pour le classement de ta ligue. Les points se synchronisent automatiquement à chaque visite.','Your nickname and points are stored online, only for your league standings. Points sync automatically on each visit.'))+'</div>'+
+      '</div>';
+    function act(kind){
+      if(leagueBusy) return; leagueBusy=true;
+      var pseudo=(el('plgPseudo').value||'').trim();
+      var secret=genSecret();
+      var call = kind==='create'
+        ? rpc('ldc_create_league',{ p_name:(el('plgName').value||'').trim(), p_pseudo:pseudo, p_secret:secret })
+        : rpc('ldc_join_league',{ p_code:(el('plgCode').value||'').trim(), p_pseudo:pseudo, p_secret:secret });
+      call.then(function(res){
+        leagueBusy=false;
+        if(!res||!res.ok){ renderLeagueForms(leagueErrMsg(res&&res.error)); return; }
+        league={ code:res.code, name:res.name, pseudo:pseudo, secret:secret };
+        saveLeague(); lastPushSig=null;
+        renderLeagueTable(res.standings);
+        syncLeague();
+      }, function(){ leagueBusy=false; renderLeagueForms(leagueErrMsg('network')); });
+    }
+    el('plgCreate').addEventListener('click', function(){ act('create'); });
+    el('plgJoin').addEventListener('click', function(){ act('join'); });
+  }
+  function renderLeagueTable(standings, note){
+    var rows=(standings||[]).map(function(s,i){
+      var me=league && s.pseudo===league.pseudo;
+      return '<tr'+(me?' class="me"':'')+'><td class="rk">'+(i+1)+'</td>'+
+        '<td class="ps">'+(me?'★ ':'')+esc(s.pseudo)+'</td>'+
+        '<td class="pt">'+s.pts+'</td><td>'+s.exact+'</td><td>'+s.good+'/'+s.played+'</td></tr>';
+    }).join('');
+    el('prLeague').innerHTML='<div class="plg-title">🏟️ '+esc(T('Ma ligue entre amis','My friends league'))+'</div>'+
+      '<div class="plg-head"><span class="plg-name">'+esc(league.name||'')+'</span>'+
+        '<span class="plg-code" id="plgCodeChip">'+esc(league.code)+'</span>'+
+        '<button class="btn" id="plgCopy">'+esc(T('Copier le code','Copy code'))+'</button>'+
+        '<button class="btn" id="plgRefresh">↻ '+esc(T('Actualiser','Refresh'))+'</button>'+
+        '<button class="btn" id="plgLeave">'+esc(T('Quitter','Leave'))+'</button></div>'+
+      '<table class="plg-table"><thead><tr><th>#</th><th>'+esc(T('Joueur','Player'))+'</th><th>'+esc(T('Pts','Pts'))+'</th><th>'+esc(T('Exacts','Exact'))+'</th><th>'+esc(T('Bons','Correct'))+'</th></tr></thead>'+
+      '<tbody>'+rows+'</tbody></table>'+
+      '<div class="plg-sync">'+esc(note||T('Partage le code pour inviter tes amis. Départage : points, puis scores exacts, puis bons résultats.','Share the code to invite friends. Tie-break: points, then exact scores, then correct results.'))+'</div>';
+    el('plgCopy').addEventListener('click', function(){
+      var b=this;
+      function ok(){ b.textContent=T('Copié !','Copied!'); setTimeout(function(){ b.textContent=T('Copier le code','Copy code'); },1800); }
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(league.code).then(ok,ok);
+    });
+    el('plgRefresh').addEventListener('click', function(){ lastPushSig=null; syncLeague(true); });
+    el('plgLeave').addEventListener('click', function(){
+      if(!confirm(T('Quitter la ligue « '+league.name+' » ?','Leave the “'+league.name+'” league?'))) return;
+      rpc('ldc_leave_league',{ p_code:league.code, p_pseudo:league.pseudo, p_secret:league.secret }).catch(function(){});
+      league=null; saveLeague(); renderLeagueForms();
+    });
+  }
+  function syncLeague(force){
+    if(!league){ return; }
+    var t=totals();
+    var sig=[t.pts,t.good,t.exact,t.played].join('|');
+    var doPush = (!DEMO) && (force || sig!==lastPushSig);
+    var call = doPush
+      ? rpc('ldc_push_score',{ p_code:league.code, p_pseudo:league.pseudo, p_secret:league.secret, p_pts:t.pts, p_good:t.good, p_exact:t.exact, p_played:t.played })
+      : rpc('ldc_get_league',{ p_code:league.code });
+    call.then(function(res){
+      if(!res||!res.ok){
+        if(res&&(res.error==='not_found'||res.error==='unauthorized')){ league=null; saveLeague(); renderLeagueForms(leagueErrMsg(res.error)); }
+        else renderLeagueTable([], leagueErrMsg(res&&res.error));
+        return;
+      }
+      if(doPush) lastPushSig=sig;
+      league.name=res.name; saveLeague();
+      renderLeagueTable(res.standings, DEMO?T('Mode simulation : les points fictifs ne sont pas envoyés à la ligue.','Simulation mode: fictional points are not sent to the league.'):null);
+    }, function(){
+      renderLeagueTable(null, T('Ligue injoignable (hors-ligne ?) — tes pronos restent enregistrés.','League unreachable (offline?) — your predictions are still saved.'));
+    });
+  }
+  function renderLeague(){
+    if(!el('prLeague')) return;
+    if(league){ renderLeagueTable([], T('Chargement du classement…','Loading standings…')); syncLeague(); }
+    else renderLeagueForms();
+  }
 
   /* ================= BARÈME (original, transparent) =================
      - Bon résultat (1/N/2 sur le score final, TAB non comptés) : 12 pts
@@ -170,6 +355,7 @@
 
   /* ================= CHARGEMENT (qualifs juil.-août + saison sept.-août) ================= */
   function load(){
+    if(DEMO){ allMatches=simMatches(); rawSeason=[]; champion=null; render(); return; }
     var qual=ESPN.fetchScoreboard(YEAR+'0701-'+YEAR+'0831',{limit:300,ttl:60000}).catch(function(){ return []; });
     var seas=ESPN.fetchSeasonEvents({ttl:60000}).catch(function(){ return []; });
     Promise.all([qual,seas]).then(function(rs){
@@ -269,6 +455,7 @@
 
   function renderFavPick(){
     var host=el('prFav');
+    if(DEMO){ host.style.display='none'; return; }
     var lk=firstLeagueKickoff();
     var lockTime = lk!=null ? lk : null;
     var isLocked = lockTime!=null && Date.now()>=lockTime;
@@ -355,12 +542,15 @@
   }
 
   function render(){
-    renderHero(); renderFavPick(); renderRules();
+    renderDemoBanner(); renderHero(); renderFavPick(); renderRules();
+    if(league){ if(!el('prLeague').innerHTML) renderLeagueTable([], T('Chargement du classement…','Loading standings…')); syncLeague(); }
+    else if(!el('prLeague').innerHTML){ renderLeagueForms(); }
     el('prTitle').textContent=T('Mes Pronos','My Predictions');
     el('prSub').textContent=T('Pronostique le score exact de chaque match — les points suivent la difficulté.','Predict the exact score of every match — points follow difficulty.');
     var host=el('prBody');
     if(!allMatches.length){
-      host.innerHTML='<div class="card pad"><div class="pr-empty">'+esc(T('Aucun match à pronostiquer pour le moment — reviens au tirage !','No match to predict yet — come back at the draw!'))+'</div></div>';
+      host.innerHTML='<div class="card pad"><div class="pr-empty">'+esc(T('Aucun match à pronostiquer pour le moment — reviens au tirage !','No match to predict yet — come back at the draw!'))+
+        '<br><a class="btn" href="prono.html?demo=1">🧪 '+esc(T('Tester avec des matchs fictifs','Try with fictional matches'))+'</a></div></div>';
       return;
     }
     host.innerHTML=buildGroups().map(function(g){
@@ -388,7 +578,7 @@
 
   load();
   setInterval(function(){ try{ load(); }catch(e){} }, 60000);
-  if(window.I18N) window.addEventListener('ldc:langchange', render);
+  if(window.I18N) window.addEventListener('ldc:langchange', function(){ el('prLeague').innerHTML=''; if(league){ renderLeagueTable([], T('Chargement…','Loading…')); } render(); });
 
   /* Starfield (fond étoilé partagé) */
   (function starfield(){
