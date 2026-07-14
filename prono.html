@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pronos — Tracker Ligue des Champions</title>
+<link rel="icon" href="logo.svg?v=4" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=19" />
+<style>
+  .pr-wrap{ max-width:920px; }
+  /* Bandeau de tête : total + stats */
+  .pr-hero{ display:flex; align-items:center; gap:20px; padding:20px 22px; flex-wrap:wrap; position:relative; overflow:hidden; }
+  .pr-hero::before{ content:""; position:absolute; inset:0; background:radial-gradient(120% 150% at 12% 0%, rgba(var(--fav-rgb,245,181,10),.14), transparent 60%); pointer-events:none; }
+  .pr-total{ text-align:center; min-width:130px; }
+  .pr-total b{ display:block; font-family:'Bebas Neue',Impact,sans-serif; font-weight:400; font-size:3.4em; line-height:.95; color:rgb(var(--fav-rgb,245,181,10)); font-variant-numeric:tabular-nums; }
+  .pr-total span{ font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .pr-stats{ display:flex; gap:9px; flex-wrap:wrap; flex:1; }
+  .pr-chip{ text-align:center; padding:10px 14px; background:var(--card); border:1px solid var(--line); border-radius:11px; min-width:86px; }
+  .pr-chip b{ display:block; font-family:'Bebas Neue',Impact,sans-serif; font-weight:400; font-size:1.5em; line-height:1; color:var(--txt); }
+  .pr-chip span{ font-size:9.5px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .pr-actions{ display:flex; gap:8px; flex-wrap:wrap; width:100%; }
+  .pr-actions .btn{ font-size:12px; }
+  .pr-copied{ font-size:12px; font-weight:800; color:rgb(var(--fav-rgb,245,181,10)); align-self:center; }
+
+  /* Favori champion */
+  .pr-fav{ display:flex; align-items:center; gap:12px; padding:14px 16px; margin-top:14px; background:var(--card); border:1px solid rgba(var(--gold-rgb,245,181,10),.3); border-radius:13px; flex-wrap:wrap; }
+  .pr-fav .pf-lbl{ font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:rgb(var(--fav-rgb,245,181,10)); }
+  .pr-fav select{ background:var(--bg-soft); color:var(--txt); border:1px solid var(--line-2); border-radius:9px; padding:8px 10px; font-family:inherit; font-size:13px; max-width:230px; }
+  .pr-fav .pf-note{ font-size:11.5px; color:var(--muted); flex:1; min-width:180px; }
+  .pr-fav .pf-hit{ font-weight:800; color:var(--finished); font-size:13px; }
+
+  /* Règles */
+  .pr-rules{ margin-top:14px; }
+  .pr-rules summary{ cursor:pointer; font-weight:800; font-size:13.5px; color:var(--txt); padding:12px 16px; background:var(--card); border:1px solid var(--line); border-radius:13px; list-style:none; }
+  .pr-rules summary::before{ content:"📜 "; }
+  .pr-rules[open] summary{ border-radius:13px 13px 0 0; }
+  .pr-rules .pr-rbody{ border:1px solid var(--line); border-top:none; border-radius:0 0 13px 13px; padding:14px 18px; background:rgba(255,255,255,.02); font-size:13px; color:#c7cfe6; line-height:1.7; }
+  .pr-rules .pr-rbody b{ color:rgb(var(--fav-rgb,245,181,10)); }
+
+  /* Groupes + lignes de match */
+  .pr-group{ margin-top:22px; }
+  .pr-group-head{ font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 4px 10px; display:flex; align-items:center; gap:8px; }
+  .pr-group-head .n{ background:var(--card); border:1px solid var(--line); border-radius:999px; padding:2px 9px; font-size:10.5px; color:var(--txt); }
+  .pr-rows{ display:flex; flex-direction:column; gap:7px; }
+  .pr-row{ display:grid; grid-template-columns:52px 1fr auto 1fr auto minmax(72px,auto); align-items:center; gap:8px;
+    padding:9px 12px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+  .pr-row.locked{ opacity:.92; }
+  .pr-when{ font-size:10.5px; color:var(--muted); font-variant-numeric:tabular-nums; line-height:1.3; }
+  .pr-side{ display:flex; align-items:center; gap:7px; min-width:0; }
+  .pr-side.away{ justify-content:flex-end; }
+  .pr-side img{ width:22px; height:22px; object-fit:contain; flex:none; }
+  .pr-side .ab{ font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pr-score{ display:flex; align-items:center; gap:5px; }
+  .pr-score input{ width:38px; height:34px; text-align:center; background:var(--bg-soft); color:var(--txt); border:1px solid var(--line-2); border-radius:8px; font-family:inherit; font-weight:800; font-size:15px; }
+  .pr-score input:focus{ border-color:rgb(var(--fav-rgb,245,181,10)); outline:none; }
+  .pr-score input:disabled{ opacity:.55; }
+  .pr-score .sep{ color:var(--muted); font-weight:800; }
+  .pr-x2{ font-size:10px; font-weight:900; letter-spacing:.04em; padding:5px 8px; border-radius:7px; cursor:pointer; border:1px solid var(--line-2); background:none; color:var(--muted); font-family:inherit; }
+  .pr-x2:hover:not(:disabled){ color:var(--txt); border-color:rgba(var(--gold-rgb,245,181,10),.55); }
+  .pr-x2.on{ background:rgba(var(--gold-rgb,245,181,10),.18); border-color:rgb(var(--gold-rgb,245,181,10)); color:rgb(var(--fav-rgb,245,181,10)); }
+  .pr-x2:disabled{ opacity:.35; cursor:not-allowed; }
+  .pr-res{ text-align:right; font-size:12px; line-height:1.35; }
+  .pr-res .real{ font-weight:800; color:var(--txt); font-variant-numeric:tabular-nums; }
+  .pr-res .pts{ display:inline-block; font-weight:900; font-size:11px; padding:2px 7px; border-radius:7px; }
+  .pr-res .pts.win{ background:rgba(46,213,115,.15); color:#7ff0b0; border:1px solid rgba(46,213,115,.35); }
+  .pr-res .pts.zero{ background:rgba(255,255,255,.05); color:var(--muted); border:1px solid var(--line); }
+  .pr-res .lockico{ color:var(--muted); font-size:11px; }
+  .pr-empty{ text-align:center; padding:40px 16px; color:var(--muted); }
+  @media (max-width:640px){
+    .pr-row{ grid-template-columns:44px 1fr auto 1fr; grid-auto-rows:auto; row-gap:6px; }
+    .pr-x2{ grid-column:1 / 3; justify-self:start; }
+    .pr-res{ grid-column:3 / 5; }
+    .pr-side .ab{ font-size:12px; }
+    .pr-total b{ font-size:2.7em; }
+  }
+</style>
+</head>
+<body>
+<div id="cl-ball"></div>
+<canvas id="starfield"></canvas>
+<header class="site-header">
+  <a class="brand" href="dashboard.html">
+    <span class="star">★</span>
+    <span><span class="t1" data-i18n="app.title">Tracker Ligue des Champions</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="dashboard.html" data-i18n="nav.dashboard">Accueil</a>
+    <a href="tracker.html" data-i18n="nav.tracker">Classement</a>
+    <a href="palmares.html" data-i18n="nav.palmares">Palmarès</a>
+    <a href="calendrier.html" data-i18n="nav.calendar">Calendrier</a>
+    <a href="jeu.html" data-i18n="nav.game">Jeu</a>
+    <a href="prono.html" class="active" data-i18n="nav.prono">Pronos</a>
+    <a href="monclub.html" data-i18n="nav.myclub">Mon club</a>
+    <a href="overlay.html" data-i18n="nav.overlay">Overlay OBS</a>
+    <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+  </nav>
+  <div class="header-right">
+    <div class="lang-switch" id="langSwitch"></div>
+  </div>
+</header>
+
+<div class="container">
+  <h1 class="page-title"><span class="shiny" id="prTitle">Mes Pronos</span></h1>
+  <p class="page-sub" id="prSub">Pronostique le score exact de chaque match — les points suivent la difficulté.</p>
+
+  <div class="pr-wrap">
+    <div class="card pr-hero" id="prHero"></div>
+    <div class="pr-fav" id="prFav" style="display:none"></div>
+    <details class="pr-rules" id="prRules">
+      <summary id="prRulesTitle">Règles du jeu</summary>
+      <div class="pr-rbody" id="prRulesBody"></div>
+    </details>
+    <div id="prBody"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script src="i18n.js?v=20"></script>
+<script src="espn.js?v=10"></script>
+<script src="ui.js?v=1"></script>
+<script>
+(function(){
+  'use strict';
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function el(id){ return document.getElementById(id); }
+  function pad(n){ return n<10?'0'+n:''+n; }
+  function EN(){ return I18N.getLang()==='en'; }
+  function T(fr,en){ return EN()?en:fr; }
+
+  if(window.I18N) I18N.mountToggle('#langSwitch');
+  (function applyFavAccent(){ if(!window.ESPN||!ESPN.favAccent) return; var a=ESPN.favAccent(), r=document.documentElement; if(a) r.style.setProperty('--fav-rgb',a); else r.style.removeProperty('--fav-rgb'); })();
+  if(window.ESPN) ESPN.mountSeasonMenu('#seasonDD','tracker.html');
+  if(window.ESPN) ESPN.preserveSeasonLinks(document);
+
+  /* ================= ÉTAT ================= */
+  var YEAR=(function(){ try{ var s=parseInt(new URLSearchParams(location.search).get('season'),10); if(!isNaN(s)&&s>2000&&s<2100) return s; }catch(e){} return ESPN.CURRENT_SEASON; })();
+  var KEY='ldc_prono_'+YEAR;
+  var state=(function(){ try{ var o=JSON.parse(localStorage.getItem(KEY)||'null'); return (o&&typeof o==='object')?o:{picks:{},x2:null,champ:null}; }catch(e){ return {picks:{},x2:null,champ:null}; } })();
+  if(!state.picks) state.picks={};
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+  var allMatches=[], rawSeason=[], champion=null;
+
+  /* ================= BARÈME (original, transparent) =================
+     - Bon résultat (1/N/2 sur le score final, TAB non comptés) : 12 pts
+     - Score exact : bonus de rareté = 8 + 2×(buts) + 3×(écart-1 si écart>1), plafonné à 30
+     - X2 (unique, posé avant le coup d'envoi) : double le total du match
+     - Champion favori (validé avant le 1er match de phase de ligue) : +60 pts */
+  var PTS_RESULT=12, PTS_CHAMP=60, EXACT_CAP=30;
+  function exactBonus(h,a){ var tot=h+a, gap=Math.abs(h-a); return Math.min(EXACT_CAP, 8 + 2*tot + 3*Math.max(0,gap-1)); }
+  function sign(x){ return x>0?1:(x<0?-1:0); }
+  function matchPoints(m, pick){
+    if(!pick || pick.h==null || pick.a==null) return null;
+    if(m.state!=='post') return null;
+    var rh=m.home.score, ra=m.away.score;
+    var pts=0, exact=false, good=false;
+    if(sign(pick.h-pick.a)===sign(rh-ra)){ good=true; pts=PTS_RESULT; if(pick.h===rh&&pick.a===ra){ exact=true; pts+=exactBonus(rh,ra); } }
+    if(state.x2===m.id) pts*=2;
+    return { pts:pts, good:good, exact:exact };
+  }
+
+  /* ================= CHARGEMENT (qualifs juil.-août + saison sept.-août) ================= */
+  function load(){
+    var qual=ESPN.fetchScoreboard(YEAR+'0701-'+YEAR+'0831',{limit:300,ttl:60000}).catch(function(){ return []; });
+    var seas=ESPN.fetchSeasonEvents({ttl:60000}).catch(function(){ return []; });
+    Promise.all([qual,seas]).then(function(rs){
+      rawSeason=rs[1]||[];
+      var seen={}, ms=[];
+      [].concat(rs[0]||[],rs[1]||[]).forEach(function(ev){
+        if(!ev||seen[ev.id]) return; seen[ev.id]=1;
+        if(ev.season&&ev.season.year!=null&&ev.season.year!==YEAR) return;
+        var m=ESPN.normalizeEvent(ev); if(m&&m.dateObj) ms.push(m);
+      });
+      ms.sort(function(a,b){ return a.dateObj-b.dateObj; });
+      allMatches=ms;
+      try{ champion=ESPN.findChampion(ESPN.buildBracket(rawSeason)); }catch(e){ champion=null; }
+      render();
+    });
+  }
+
+  /* ================= REGROUPEMENT ================= */
+  function clusterMatchdays(matches){
+    var groups=[], cur=null, last=null;
+    matches.forEach(function(m){
+      if(!last || (m.dateObj-last)>5*86400000){ cur=[]; groups.push(cur); }
+      cur.push(m); last=m.dateObj;
+    });
+    return groups;
+  }
+  function buildGroups(){
+    var gs=[];
+    var qual=allMatches.filter(function(m){ return m.round==='qualifying'; });
+    if(qual.length) gs.push({ title:T('Qualifications','Qualifying'), matches:qual });
+    var league=allMatches.filter(function(m){ return m.round==='league'; });
+    clusterMatchdays(league).forEach(function(md,i){ gs.push({ title:(I18N.t('cal.matchday')||'Journée')+' '+(i+1), matches:md }); });
+    var RL={po:'trk.round.po',r16:'trk.round.r16',qf:'trk.round.qf',sf:'trk.round.sf',final:'trk.round.final'};
+    ['po','r16','qf','sf','final'].forEach(function(rk){
+      var ms=allMatches.filter(function(m){ return m.round===rk; });
+      if(ms.length) gs.push({ title:I18N.t(RL[rk])||rk, matches:ms });
+    });
+    return gs;
+  }
+
+  /* ================= TOTAUX ================= */
+  function totals(){
+    var t={ pts:0, played:0, good:0, exact:0 };
+    allMatches.forEach(function(m){
+      var r=matchPoints(m, state.picks[m.id]);
+      if(r!=null){ t.played++; t.pts+=r.pts; if(r.good)t.good++; if(r.exact)t.exact++; }
+    });
+    if(state.champ && champion){
+      var cid=champion.teamId||champion.id, cn=(champion.name||'').toLowerCase();
+      if(String(state.champ)===String(cid) || (state.champName&&cn&&cn.indexOf(state.champName.toLowerCase())>=0)){ t.pts+=PTS_CHAMP; t.champHit=true; }
+    }
+    return t;
+  }
+
+  /* ================= RENDU ================= */
+  function firstLeagueKickoff(){
+    var ms=allMatches.filter(function(m){ return m.round==='league'; });
+    return ms.length? ms[0].dateObj.getTime() : null;
+  }
+  function fmtWhen(d){ return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'<br>'+pad(d.getHours())+':'+pad(d.getMinutes()); }
+  function locked(m){ return m.state!=='pre' || (m.dateObj && m.dateObj.getTime()<=Date.now()); }
+
+  function renderHero(){
+    var t=totals();
+    var nPicks=Object.keys(state.picks).length;
+    el('prHero').innerHTML=
+      '<div class="pr-total"><b>'+t.pts+'</b><span>'+esc(T('Points','Points'))+'</span></div>'+
+      '<div class="pr-stats">'+
+        '<div class="pr-chip"><b>'+nPicks+'</b><span>'+esc(T('Pronos','Predictions'))+'</span></div>'+
+        '<div class="pr-chip"><b>'+t.good+'/'+t.played+'</b><span>'+esc(T('Bons résultats','Correct results'))+'</span></div>'+
+        '<div class="pr-chip"><b>'+t.exact+'</b><span>'+esc(T('Scores exacts','Exact scores'))+'</span></div>'+
+        '<div class="pr-chip"><b>'+(state.x2?'✓':'—')+'</b><span>'+esc(T('X2 posé','X2 used'))+'</span></div>'+
+      '</div>'+
+      '<div class="pr-actions">'+
+        '<button class="btn" id="prCopy">🔗 '+esc(T('Copier mon code','Copy my code'))+'</button>'+
+        '<button class="btn" id="prCompare">⚔️ '+esc(T('Comparer avec un ami','Compare with a friend'))+'</button>'+
+        '<span class="pr-copied" id="prCopied" style="display:none">'+esc(T('Code copié !','Code copied!'))+'</span>'+
+        '<span class="pr-copied" id="prCmpOut"></span>'+
+      '</div>';
+    el('prCopy').addEventListener('click', function(){
+      var t2=totals();
+      var code=btoa(unescape(encodeURIComponent(JSON.stringify({y:YEAR,p:t2.pts,ok:t2.good,ex:t2.exact,t:t2.played}))));
+      function done(){ var c=el('prCopied'); c.style.display='inline'; setTimeout(function(){ c.style.display='none'; },2200); }
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done,done);
+      else { try{ var ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }catch(e){} }
+    });
+    el('prCompare').addEventListener('click', function(){
+      var code=prompt(T('Colle le code de ton ami :','Paste your friend’s code:')); if(!code) return;
+      try{
+        var o=JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+        var me=totals();
+        var res = me.pts===o.p ? T('Égalité ! ','Tied! ') : (me.pts>o.p ? T('Tu mènes ! ','You lead! ') : T('Ton ami mène ! ','Your friend leads! '));
+        el('prCmpOut').textContent=res+' '+T('Toi','You')+' '+me.pts+' – '+o.p+' '+T('Ami','Friend')+' ('+T('exacts','exact')+' : '+me.exact+' vs '+(o.ex||0)+')';
+      }catch(e){ el('prCmpOut').textContent=T('Code invalide.','Invalid code.'); }
+    });
+  }
+
+  function renderFavPick(){
+    var host=el('prFav');
+    var lk=firstLeagueKickoff();
+    var lockTime = lk!=null ? lk : null;
+    var isLocked = lockTime!=null && Date.now()>=lockTime;
+    /* équipes candidates : clubs de la phase de ligue si connue, sinon liste ESPN */
+    var teams={};
+    allMatches.forEach(function(m){ if(m.round!=='qualifying'){ [m.home,m.away].forEach(function(c){ if(c.teamId) teams[c.teamId]=c.name; }); } });
+    var ids=Object.keys(teams);
+    function paint(list){
+      host.style.display='flex';
+      var opts='<option value="">'+esc(T('— Choisir un club —','— Pick a club —'))+'</option>'+list.map(function(c){
+        return '<option value="'+esc(c.id)+'"'+(String(state.champ)===String(c.id)?' selected':'')+'>'+esc(c.name)+'</option>';
+      }).join('');
+      var note;
+      if(champion){
+        var hit=totals().champHit;
+        note = hit ? '<span class="pf-hit">✓ '+esc(T('Champion trouvé ! +'+PTS_CHAMP+' pts','Champion found! +'+PTS_CHAMP+' pts'))+'</span>'
+                   : esc(T('Compétition terminée.','Competition over.'));
+      } else if(isLocked){ note=esc(T('Verrouillé depuis le 1er match de la phase de ligue.','Locked since the first league-phase match.')); }
+      else if(lockTime!=null){ var d=new Date(lockTime); note=esc(T('Modifiable jusqu’au ','Editable until ')+pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())); }
+      else { note=esc(T('Modifiable jusqu’au 1er match de la phase de ligue.','Editable until the first league-phase match.')); }
+      host.innerHTML='<span class="pf-lbl">👑 '+esc(T('Mon champion','My champion'))+' (+'+PTS_CHAMP+' pts)</span>'+
+        '<select id="pfSel"'+(isLocked?' disabled':'')+'>'+opts+'</select>'+
+        '<span class="pf-note">'+note+'</span>';
+      var sel=el('pfSel');
+      if(sel && !isLocked) sel.addEventListener('change', function(){
+        state.champ=this.value||null;
+        state.champName=this.value?this.options[this.selectedIndex].text:null;
+        save(); renderHero(); renderFavPick();
+      });
+    }
+    if(ids.length>=8){ paint(ids.map(function(k){ return {id:k,name:teams[k]}; }).sort(function(a,b){ return a.name.localeCompare(b.name); })); }
+    else if(!isLocked){ ESPN.fetchClubList().then(function(list){ paint((list||[]).map(function(c){ return {id:c.id,name:c.name}; })); }).catch(function(){ host.style.display='none'; }); }
+    else host.style.display='none';
+  }
+
+  function renderRules(){
+    el('prRulesTitle').textContent=T('Règles du jeu','How it works');
+    el('prRulesBody').innerHTML=T(
+      'Pronostique le <b>score exact</b> de chaque match — modifiable jusqu’au coup d’envoi, puis verrouillé.<br>'+
+      '• <b>Bon résultat</b> (victoire/nul/défaite) : <b>'+PTS_RESULT+' pts</b>.<br>'+
+      '• <b>Score exact</b> : bonus de rareté <b>+8 à +'+EXACT_CAP+' pts</b> (plus le score est improbable — buts nombreux, gros écart — plus il rapporte).<br>'+
+      '• <b>X2</b> : un seul pour toute la saison, à poser avant le coup d’envoi — il double tous les points du match.<br>'+
+      '• <b>Mon champion</b> : choisis le vainqueur final avant le 1er match de la phase de ligue : <b>+'+PTS_CHAMP+' pts</b> s’il soulève la coupe.<br>'+
+      '• À élimination directe, le prono vaut pour le score final (prolongations comprises) ; <b>les tirs au but ne comptent pas</b> — un match décidé aux TAB reste un nul.<br>'+
+      '• Un seul prono par match, valable partout — compare tes points avec tes amis via ton code.',
+      'Predict the <b>exact score</b> of every match — editable until kick-off, then locked.<br>'+
+      '• <b>Correct result</b> (win/draw/loss): <b>'+PTS_RESULT+' pts</b>.<br>'+
+      '• <b>Exact score</b>: rarity bonus <b>+8 to +'+EXACT_CAP+' pts</b> (the more unlikely the scoreline — many goals, big gap — the more it pays).<br>'+
+      '• <b>X2</b>: one for the whole season, placed before kick-off — doubles all points on that match.<br>'+
+      '• <b>My champion</b>: pick the winner before the first league-phase match: <b>+'+PTS_CHAMP+' pts</b> if they lift the cup.<br>'+
+      '• In knockouts your prediction counts for the final score (extra time included); <b>penalty shoot-outs don’t count</b> — a match decided on penalties stays a draw.<br>'+
+      '• One prediction per match, valid everywhere — compare points with friends using your code.');
+  }
+
+  function rowHTML(m){
+    var lk=locked(m), pick=state.picks[m.id]||{};
+    function side(c,away){ return '<span class="pr-side'+(away?' away':'')+'">'+
+      (away?'':'')+(c.logo&&!away?'<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
+      '<span class="ab">'+esc(c.abbr||c.shortName||c.name)+'</span>'+
+      (c.logo&&away?'<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
+      '</span>'; }
+    var res='';
+    if(m.state==='post'){
+      var r=matchPoints(m,state.picks[m.id]);
+      res='<span class="real">'+m.home.score+'–'+m.away.score+'</span> ';
+      if(r!=null) res+='<span class="pts '+(r.pts>0?'win':'zero')+'">'+(r.pts>0?'+':'')+r.pts+(r.exact?' ✦':'')+'</span>';
+      else res+='<span class="pts zero">—</span>';
+    } else if(lk){ res='<span class="lockico">🔒 '+esc(T('En cours','Live'))+'</span>'; }
+    else { res='<span class="lockico">🕐</span>'; }
+    var x2dis = lk || (state.x2 && state.x2!==m.id);
+    var x2on = state.x2===m.id;
+    return '<div class="pr-row'+(lk?' locked':'')+'" data-id="'+esc(m.id)+'">'+
+      '<span class="pr-when">'+fmtWhen(m.dateObj)+'</span>'+
+      side(m.home,false)+
+      '<span class="pr-score">'+
+        '<input type="number" min="0" max="20" inputmode="numeric" data-s="h" value="'+(pick.h!=null?pick.h:'')+'"'+(lk?' disabled':'')+'>'+
+        '<span class="sep">–</span>'+
+        '<input type="number" min="0" max="20" inputmode="numeric" data-s="a" value="'+(pick.a!=null?pick.a:'')+'"'+(lk?' disabled':'')+'>'+
+      '</span>'+
+      side(m.away,true)+
+      '<button class="pr-x2'+(x2on?' on':'')+'" data-x2="'+esc(m.id)+'"'+((x2dis&&!x2on)||lk?' disabled':'')+' title="'+esc(T('Double les points de ce match (1 seul par saison)','Doubles this match’s points (one per season)'))+'">X2</button>'+
+      '<span class="pr-res">'+res+'</span>'+
+    '</div>';
+  }
+
+  function render(){
+    renderHero(); renderFavPick(); renderRules();
+    el('prTitle').textContent=T('Mes Pronos','My Predictions');
+    el('prSub').textContent=T('Pronostique le score exact de chaque match — les points suivent la difficulté.','Predict the exact score of every match — points follow difficulty.');
+    var host=el('prBody');
+    if(!allMatches.length){
+      host.innerHTML='<div class="card pad"><div class="pr-empty">'+esc(T('Aucun match à pronostiquer pour le moment — reviens au tirage !','No match to predict yet — come back at the draw!'))+'</div></div>';
+      return;
+    }
+    host.innerHTML=buildGroups().map(function(g){
+      return '<div class="pr-group"><div class="pr-group-head">'+esc(g.title)+' <span class="n">'+g.matches.length+'</span></div>'+
+        '<div class="pr-rows">'+g.matches.map(rowHTML).join('')+'</div></div>';
+    }).join('');
+  }
+
+  /* ================= INTERACTIONS (délégation) ================= */
+  el('prBody').addEventListener('input', function(e){
+    var inp=e.target; if(!inp || inp.tagName!=='INPUT') return;
+    var row=inp.closest('.pr-row'); if(!row) return;
+    var id=row.getAttribute('data-id');
+    var h=row.querySelector('input[data-s="h"]').value, a=row.querySelector('input[data-s="a"]').value;
+    if(h!==''&&a!==''){ var hh=Math.max(0,Math.min(20,parseInt(h,10)||0)), aa=Math.max(0,Math.min(20,parseInt(a,10)||0)); state.picks[id]={h:hh,a:aa}; }
+    else delete state.picks[id];
+    save(); renderHero();
+  });
+  el('prBody').addEventListener('click', function(e){
+    var b=e.target.closest?e.target.closest('.pr-x2'):null; if(!b||b.disabled) return;
+    var id=b.getAttribute('data-x2');
+    state.x2 = (state.x2===id) ? null : id;   // pose / retire (tant que le match n'a pas commencé)
+    save(); render();
+  });
+
+  load();
+  setInterval(function(){ try{ load(); }catch(e){} }, 60000);
+  if(window.I18N) window.addEventListener('ldc:langchange', render);
+
+  /* Starfield (fond étoilé partagé) */
+  (function starfield(){
+    var c=el('starfield'); if(!c||!c.getContext) return; var ctx=c.getContext('2d'); var stars=[], W=0, H=0;
+    function resize(){ var dpr=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight; c.width=W*dpr; c.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); build(); }
+    function build(){ stars=[]; var n=Math.min(110,Math.floor(W*H/14000)); for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+0.3,vy:0.04+Math.random()*0.16,tw:Math.random()*6.28}); }
+    function loop(){ if(document.visibilityState==='hidden'){ setTimeout(function(){requestAnimationFrame(loop);},700); return; } ctx.clearRect(0,0,W,H); for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y+=s.vy; s.tw+=0.03; if(s.y>H+2){ s.y=-2; s.x=Math.random()*W; } var a=0.16+0.28*Math.sin(s.tw); if(a<0)a=0; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28); ctx.fillStyle='rgba(150,170,210,'+a.toFixed(2)+')'; ctx.fill(); } requestAnimationFrame(loop); }
+    window.addEventListener('resize',resize); resize(); if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)) requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>
