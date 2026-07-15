@@ -673,17 +673,9 @@
         '<div class="plg-note">'+esc(T('Compte facultatif et instantané (aucun e-mail envoyé) : il sert uniquement à retrouver tes pronos et ta ligue sur tous tes appareils. E-mail stocké chez Supabase.','Optional, instant account (no email sent): it only lets you keep your predictions and league across devices. Email stored with Supabase.'))+'</div>'+
       '</div>';
     function creds(){ return { email:(el('pacEmail').value||'').trim(), password:(el('pacPass').value||'') }; }
-    function doLogin(c, healed){
+    function doLogin(c){
       gotrue('token?grant_type=password', { email:c.email, password:c.password }).then(function(j){
         if(j.access_token){ setSession(j); renderAccount(); cloudPullThenReconcile(); return; }
-        /* compte créé avant le correctif (jamais confirmé) : confirmation auto — le mot de passe est vérifié côté serveur — puis nouvel essai */
-        if(!healed && j.error_code==='email_not_confirmed'){
-          rpc('ldc_confirm_email',{ p_email:c.email, p_password:c.password }).then(function(res){
-            if(res && res.ok) doLogin(c, true);
-            else renderAccount(authErrMsg({error_code:(res&&res.error)||'invalid_credentials'}), true);
-          }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
-          return;
-        }
         renderAccount(authErrMsg(j), true);
       }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
     }
@@ -692,14 +684,14 @@
       if(!c.email || c.password.length<6){ renderAccount(T('E-mail valide et mot de passe (6+) requis.','Valid email and password (6+) required.'), true); return; }
       /* inscription instantanée via fonction sécurisée : aucun e-mail envoyé, pas de limite d'envoi */
       rpc('ldc_signup',{ p_email:c.email, p_password:c.password }).then(function(res){
-        if(res && res.ok){ doLogin(c, false); }
+        if(res && res.ok){ doLogin(c); }
         else renderAccount(authErrMsg({error_code:(res&&res.error)||''}), true);
       }, function(){ renderAccount(T('Réseau indisponible — réessaie.','Network unavailable — try again.'), true); });
     });
     el('pacLogin').addEventListener('click', function(){
       var c=creds();
       if(!c.email || !c.password){ renderAccount(T('E-mail et mot de passe requis.','Email and password required.'), true); return; }
-      doLogin(c, false);
+      doLogin(c);
     });
     maybeInjectTwitchBtn();
   }
