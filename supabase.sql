@@ -31,9 +31,12 @@ create or replace function public.ldc_signup(p_email text, p_password text)
 returns json language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare v_email text := lower(trim(coalesce(p_email,'')));
         v_id uuid := gen_random_uuid();
+        v_recent int;
 begin
-  if v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then return json_build_object('ok',false,'error','email_address_invalid'); end if;
-  if length(coalesce(p_password,'')) < 6 then return json_build_object('ok',false,'error','weak_password'); end if;
+  if length(v_email) > 100 or v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then return json_build_object('ok',false,'error','email_address_invalid'); end if;
+  if length(coalesce(p_password,'')) < 6 or length(coalesce(p_password,'')) > 72 then return json_build_object('ok',false,'error','weak_password'); end if;
+  select count(*) into v_recent from auth.users where created_at > now() - interval '10 minutes';
+  if v_recent >= 20 then return json_build_object('ok',false,'error','over_request_rate_limit'); end if;   -- anti-bot
   if exists(select 1 from auth.users where lower(email) = v_email) then return json_build_object('ok',false,'error','user_already_exists'); end if;
   insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
       raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
@@ -50,24 +53,11 @@ begin
   return json_build_object('ok', true);
 end $$;
 
--- Auto-réparation : confirme un compte créé avant ce correctif, si le mot de passe est correct
-create or replace function public.ldc_confirm_email(p_email text, p_password text)
-returns json language plpgsql security definer set search_path = public, extensions, pg_temp as $$
-declare v_u auth.users;
-begin
-  select * into v_u from auth.users where lower(email) = lower(trim(coalesce(p_email,'')));
-  if v_u.id is null or v_u.encrypted_password is null
-     or crypt(coalesce(p_password,''), v_u.encrypted_password) <> v_u.encrypted_password then
-    return json_build_object('ok', false, 'error', 'invalid_credentials');
-  end if;
-  update auth.users set email_confirmed_at = coalesce(email_confirmed_at, now()) where id = v_u.id;
-  return json_build_object('ok', true);
-end $$;
+-- (ldc_confirm_email SUPPRIMÉE : c'était un oracle de force brute sur les mots de passe,
+--  et elle n'est plus nécessaire — ldc_signup crée les comptes déjà confirmés.)
 
 revoke all on function public.ldc_signup(text, text) from public;
-revoke all on function public.ldc_confirm_email(text, text) from public;
 grant execute on function public.ldc_signup(text, text) to anon, authenticated;
-grant execute on function public.ldc_confirm_email(text, text) to anon, authenticated;
 
 create table if not exists public.ldc_leagues (
   id uuid primary key default gen_random_uuid(),
@@ -81,6 +71,7 @@ create table if not exists public.ldc_members (
   league_id uuid not null references public.ldc_leagues(id) on delete cascade,
   pseudo text not null,
   secret text not null,
+  created_at timestamptz not null default now(),
   pts int not null default 0,
   good int not null default 0,
   exact int not null default 0,
@@ -114,11 +105,13 @@ returns json language plpgsql security definer set search_path = public, pg_temp
 declare v_name text := left(trim(coalesce(p_name,'')), 40);
         v_pseudo text := left(trim(coalesce(p_pseudo,'')), 20);
         v_secret text := left(trim(coalesce(p_secret,'')), 64);
-        v_code text; v_id uuid; v_try int := 0;
+        v_code text; v_id uuid; v_try int := 0; v_recent int;
 begin
   if length(v_name) < 2 or length(v_pseudo) < 2 or length(v_secret) < 8 then
     return json_build_object('ok', false, 'error', 'invalid_input');
   end if;
+  select count(*) into v_recent from public.ldc_leagues where created_at > now() - interval '1 hour';
+  if v_recent >= 30 then return json_build_object('ok', false, 'error', 'over_request_rate_limit'); end if;   -- anti-abus
   loop
     v_try := v_try + 1;
     v_code := (select string_agg(substr('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', (floor(random()*32))::int + 1, 1), '') from generate_series(1,6));
@@ -139,9 +132,11 @@ returns json language plpgsql security definer set search_path = public, pg_temp
 declare v_league public.ldc_leagues;
         v_pseudo text := left(trim(coalesce(p_pseudo,'')), 20);
         v_secret text := left(trim(coalesce(p_secret,'')), 64);
-        v_count int;
+        v_count int; v_recent int;
 begin
   if length(v_pseudo) < 2 or length(v_secret) < 8 then return json_build_object('ok', false, 'error', 'invalid_input'); end if;
+  select count(*) into v_recent from public.ldc_members where created_at > now() - interval '1 hour';
+  if v_recent >= 120 then return json_build_object('ok', false, 'error', 'over_request_rate_limit'); end if;   -- anti-abus
   select * into v_league from public.ldc_leagues where code = upper(trim(p_code));
   if v_league.id is null then return json_build_object('ok', false, 'error', 'not_found'); end if;
   select count(*) into v_count from public.ldc_members where league_id = v_league.id;
