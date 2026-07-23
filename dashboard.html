@@ -688,10 +688,16 @@ a{ text-decoration:none; color:inherit; }
   /* ---- CONFETTI ---- */
   var Confetti=(function(){
     var canvas=el('confetti-canvas'); if(!canvas) return {goal:function(){},champion:function(){}};
-    var ctx=canvas.getContext('2d'), parts=[], running=false, W=0, H=0;
+    var ctx=canvas.getContext('2d'), parts=[], running=false, W=0, H=0, lastFrame=0;
     function resize(){ var dpr=window.devicePixelRatio||1; W=innerWidth; H=innerHeight; canvas.width=W*dpr; canvas.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
-    function loop(){ ctx.clearRect(0,0,W,H); for(var k=0;k<parts.length;k++){ var p=parts[k]; p.vy+=0.16; p.vx*=0.995; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life--; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha=p.life<40?Math.max(0,p.life/40):1; ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); } parts=parts.filter(function(p){return p.life>0 && p.y<H+80;}); if(parts.length) requestAnimationFrame(loop); else { running=false; ctx.clearRect(0,0,W,H);} }
-    function run(){ if(!running){ running=true; requestAnimationFrame(loop);} }
+    function loop(){ lastFrame=Date.now(); ctx.clearRect(0,0,W,H); for(var k=0;k<parts.length;k++){ var p=parts[k]; p.vy+=0.16; p.vx*=0.995; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life--; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha=p.life<40?Math.max(0,p.life/40):1; ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); } parts=parts.filter(function(p){return p.life>0 && p.y<H+80;}); if(parts.length) requestAnimationFrame(loop); else { running=false; ctx.clearRect(0,0,W,H);} }
+    function run(){ if(!running){ running=true; lastFrame=Date.now(); requestAnimationFrame(loop);} }
+    function reset(){ parts=[]; running=false; try{ ctx.clearRect(0,0,W,H); }catch(e){} }
+    /* auto-réparation : si la chaîne rAF meurt (onglet masqué, retour d'historique…),
+       on efface tout au lieu de laisser des confettis figés à l'écran */
+    setInterval(function(){ if(parts.length && Date.now()-lastFrame>1200) reset(); }, 1500);
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') reset(); });
+    window.addEventListener('pagehide', reset);
     function emit(x,y,n,colors,o){ o=o||{}; var angle=o.angle==null?-Math.PI/2:o.angle, spread=o.spread==null?Math.PI/2:o.spread, power=o.power||14, life=o.life||130; if(!W) resize(); for(var i=0;i<n;i++){ var a=angle+(Math.random()-0.5)*spread, sp=power*(0.5+Math.random()); parts.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,w:6+Math.random()*7,h:9+Math.random()*9,rot:Math.random()*Math.PI,vr:(Math.random()-0.5)*0.35,color:colors[(Math.random()*colors.length)|0],life:life+Math.random()*50}); } run(); }
     function teamColors(hex){ var c=hex?(hex[0]==='#'?hex:'#'+hex):'#f5b50a'; return [c,c,'#f5b50a','#ffffff','#3b7bff']; }
     return {
