@@ -127,6 +127,49 @@
     { name: 'Feyenoord',              id: 142,  keys: ['feyenoord'],              n: 1,  years: [1970] },
     { name: 'Celtic FC',              id: 256,  keys: ['celtic'],                 n: 1,  years: [1967] }
   ];
+
+  /* 36 qualifiés officiels pour la phase de ligue 2026-27 (UEFA, 27/08/2026).
+     Les identifiants, abréviations, couleurs et logos ont été recoupés avec les
+     fiches équipes ESPN. La qualification reste une donnée UEFA : l'API ESPN
+     ne publie pas encore la saison 2026-27 au moment du tirage. */
+  var QUALIFIED_CLUBS_2026 = [
+    { pot: 1, id: 160,   name: 'Paris Saint-Germain', abbr: 'PSG',  color: '011F68' },
+    { pot: 1, id: 132,   name: 'Bayern München',      abbr: 'MUN',  color: 'dc052d' },
+    { pot: 1, id: 86,    name: 'Real Madrid',         abbr: 'RMA',  color: 'ffffff' },
+    { pot: 1, id: 364,   name: 'Liverpool',           abbr: 'LIV',  color: 'd11317' },
+    { pot: 1, id: 110,   name: 'Inter',               abbr: 'INT',  color: '00239c' },
+    { pot: 1, id: 382,   name: 'Manchester City',     abbr: 'MNC',  color: '99c5ea' },
+    { pot: 1, id: 359,   name: 'Arsenal',             abbr: 'ARS',  color: 'e20520' },
+    { pot: 1, id: 83,    name: 'Barcelona',           abbr: 'BAR',  color: '990000' },
+    { pot: 1, id: 1068,  name: 'Atlético de Madrid',  abbr: 'ATM',  color: 'ca3624' },
+    { pot: 2, id: 124,   name: 'Borussia Dortmund',   abbr: 'DOR',  color: 'ffee00' },
+    { pot: 2, id: 104,   name: 'AS Roma',             abbr: 'ROMA', color: '990a2c' },
+    { pot: 2, id: 2250,  name: 'Sporting CP',         abbr: 'SCP',  color: '008127' },
+    { pot: 2, id: 362,   name: 'Aston Villa',         abbr: 'AVL',  color: '660e36' },
+    { pot: 2, id: 437,   name: 'FC Porto',            abbr: 'FCP',  color: '0000dd' },
+    { pot: 2, id: 360,   name: 'Manchester United',   abbr: 'MAN',  color: 'da020e' },
+    { pot: 2, id: 570,   name: 'Club Brugge',         abbr: 'BRU',  color: '0081ff' },
+    { pot: 2, id: 244,   name: 'Real Betis',          abbr: 'BET',  color: '288A00' },
+    { pot: 2, id: 148,   name: 'PSV Eindhoven',       abbr: 'PSV',  color: 'ef2f24' },
+    { pot: 3, id: 142,   name: 'Feyenoord',           abbr: 'FEY',  color: 'ef2f24' },
+    { pot: 3, id: 166,   name: 'Lille',               abbr: 'LILL', color: 'c2051b' },
+    { pot: 3, id: 2980,  name: 'Bodø/Glimt',          abbr: 'BODO', color: 'FCEE33' },
+    { pot: 3, id: 114,   name: 'Napoli',              abbr: 'NAP',  color: '0086c4' },
+    { pot: 3, id: 11420, name: 'RB Leipzig',          abbr: 'RBL',  color: 'ffffff' },
+    { pot: 3, id: 102,   name: 'Villarreal',          abbr: 'VIL',  color: 'ffff00' },
+    { pot: 3, id: 436,   name: 'Fenerbahçe',          abbr: 'FEN',  color: 'ffff00' },
+    { pot: 3, id: 493,   name: 'Shakhtar Donetsk',    abbr: 'SHK',  color: 'ff5900' },
+    { pot: 3, id: 432,   name: 'Galatasaray',         abbr: 'GAL',  color: 'fdb912' },
+    { pot: 4, id: 494,   name: 'Slavia Prague',       abbr: 'SLP',  color: 'dc1f26' },
+    { pot: 4, id: 521,   name: 'Slovan Bratislava',   abbr: 'SLB',  color: '81c0ff' },
+    { pot: 4, id: 134,   name: 'VfB Stuttgart',       abbr: 'VFB',  color: 'ffffff' },
+    { pot: 4, id: 887,   name: 'AEK Athens',          abbr: 'AEK',  color: 'ffff00' },
+    { pot: 4, id: 4411,  name: 'LASK',                abbr: 'LAS',  color: 'ffffff' },
+    { pot: 4, id: 2572,  name: 'Como',                abbr: 'COMO', color: '4169E1' },
+    { pot: 4, id: 175,   name: 'Lens',                abbr: 'RCL',  color: 'E91514' },
+    { pot: 4, id: 510,   name: 'Viking',              abbr: 'VIK',  color: '000080' },
+    { pot: 4, id: 21922, name: 'Sabah',               abbr: 'SAB',  color: '000000' }
+  ];
   /* Logo officiel ESPN d'un club du palmarès (par id). */
   function palmaresLogo(id) { return id ? 'https://a.espncdn.com/i/teamlogos/soccer/500/' + id + '.png' : ''; }
 
@@ -702,8 +745,9 @@
     try { localStorage.setItem(FAV_SEEN_KEY, '1'); } catch (e) {}
   }
 
-  /* Liste dédupliquée des clubs (id, name, abbr, logo) pour le sélecteur de favori.
-     Saison courante ; repli sur la saison précédente si vide (intersaison). */
+  /* Liste du sélecteur de favori : les qualifiés officiels d'abord, puis les
+     anciens vainqueurs absents de cette édition. Les événements ESPN, lorsqu'ils
+     existent, ne servent qu'à rafraîchir les métadonnées des équipes. */
   var _clubListCache = null;
   function _clubsFromEvents(events) {
     var map = {};
@@ -719,23 +763,52 @@
     return Object.keys(map).map(function (k) { return map[k]; })
       .sort(function (a, b) { return a.name.localeCompare(b.name); });
   }
-  function _prevSeasonClubs() {
-    var py = CURRENT_SEASON - 1;
-    return fetchScoreboard(py + '0901-' + (py + 1) + '0831', { limit: 500, ttl: 300000 })
-      .then(_clubsFromEvents);
+  function _officialAndHistoricClubs() {
+    var qualifiedIds = {};
+    var official = QUALIFIED_CLUBS_2026.map(function (c) {
+      qualifiedIds[String(c.id)] = true;
+      var titles = clubTitles(c.name);
+      return {
+        id: String(c.id), name: c.name, abbr: c.abbr,
+        logo: palmaresLogo(c.id), color: c.color,
+        qualified: true, pot: c.pot, historical: !!titles,
+        titles: titles ? titles.n : 0
+      };
+    });
+    var historic = UCL_PALMARES.filter(function (c) {
+      return !qualifiedIds[String(c.id)];
+    }).map(function (c) {
+      return {
+        id: String(c.id), name: c.name, abbr: '',
+        logo: palmaresLogo(c.id), color: '',
+        qualified: false, pot: null, historical: true, titles: c.n
+      };
+    });
+    return official.concat(historic);
+  }
+  function _mergeLiveClubMetadata(base, events) {
+    var live = _clubsFromEvents(events), byId = {};
+    live.forEach(function (c) { byId[String(c.id)] = c; });
+    return base.map(function (c) {
+      var x = byId[String(c.id)];
+      if (!x) return c;
+      return {
+        id: c.id, name: c.name, abbr: x.abbr || c.abbr,
+        logo: x.logo || c.logo, color: x.color || c.color,
+        qualified: c.qualified, pot: c.pot,
+        historical: c.historical, titles: c.titles
+      };
+    });
   }
   function fetchClubList() {
     if (_clubListCache) return Promise.resolve(_clubListCache);
+    var base = _officialAndHistoricClubs();
     return fetchSeasonEvents({ ttl: 300000 }).then(function (ev) {
-      var list = _clubsFromEvents(ev);
-      if (list.length >= 8) { _clubListCache = list; return list; }
-      return _prevSeasonClubs().then(function (l2) {
-        _clubListCache = l2.length ? l2 : list;
-        return _clubListCache;
-      });
+      _clubListCache = _mergeLiveClubMetadata(base, ev);
+      return _clubListCache;
     }).catch(function () {
-      return _prevSeasonClubs().then(function (l2) { _clubListCache = l2; return l2; })
-        .catch(function () { return []; });
+      _clubListCache = base;
+      return _clubListCache;
     });
   }
 
@@ -810,6 +883,7 @@
     clubTitles: clubTitles,
     championOfSeason: championOfSeason,
     palmaresRanking: palmaresRanking,
+    qualifiedClubs: function () { return _officialAndHistoricClubs().filter(function (c) { return c.qualified; }); },
     preserveSeasonLinks: preserveSeasonLinks,
     // fetch
     fetchJSON: fetchJSON,

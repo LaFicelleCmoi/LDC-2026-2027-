@@ -1,4 +1,8 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
   "rewrites": [
     { "source": "/", "destination": "/dashboard.html" }
   ],

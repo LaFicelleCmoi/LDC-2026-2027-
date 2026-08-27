@@ -220,7 +220,7 @@
 </footer>
 
 <script src="i18n.js?v=20"></script>
-<script src="espn.js?v=10"></script>
+<script src="espn.js?v=12"></script>
 <script src="ui.js?v=1"></script>
 <script>
 (function(){
@@ -992,7 +992,14 @@
     el('prSub').textContent=T('Pronostique le score exact de chaque match — les points suivent la difficulté.','Predict the exact score of every match — points follow difficulty.');
     var host=el('prBody');
     if(!allMatches.length){
-      host.innerHTML='<div class="card pad"><div class="pr-empty">'+esc(T('Aucun match à pronostiquer pour le moment — reviens au tirage !','No match to predict yet — come back at the draw!'))+
+      var waitingForFixtures=YEAR===ESPN.CURRENT_SEASON && Date.now()<Date.parse('2026-08-30T00:00:00+02:00');
+      var emptyMsg=waitingForFixtures
+        ? T('Le tirage a lieu le 27 août à 18 h. Le calendrier détaillé sera publié au plus tard samedi 29 août.','The draw takes place on 27 August at 18:00. The detailed fixture list will be published by Saturday 29 August.')
+        : T('Aucun match à pronostiquer pour le moment.','No match to predict yet.');
+      var drawCTA=waitingForFixtures
+        ? '<br><a class="btn" href="https://www.uefa.com/uefachampionsleague/draws/" target="_blank" rel="noopener noreferrer">🔴 '+esc(T('Suivre le tirage UEFA','Watch the UEFA draw'))+'</a>'
+        : '';
+      host.innerHTML='<div class="card pad"><div class="pr-empty">'+esc(emptyMsg)+drawCTA+
         '<br><a class="btn" href="prono.html?demo=1">🧪 '+esc(T('Tester avec des matchs fictifs','Try with fictional matches'))+'</a></div></div>';
       return;
     }

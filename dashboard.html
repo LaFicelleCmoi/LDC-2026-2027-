@@ -383,12 +383,20 @@ a{ text-decoration:none; color:inherit; }
 .fav-modal-sub{ font-size:0.82em; color:var(--muted); margin-top:4px; }
 .fav-search{ width:100%; margin-top:14px; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:#0a1430; color:var(--white); font-family:inherit; font-size:0.92em; }
 .fav-search:focus{ outline:none; border-color:rgba(var(--gold-rgb,245,181,10),.5); }
-.fav-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:10px; padding:18px; overflow-y:auto; }
-.fav-grid-loader{ grid-column:1/-1; display:flex; justify-content:center; padding:30px; color:var(--muted); }
+.fav-grid{ display:block; padding:18px; overflow-y:auto; }
+.fav-grid-loader{ display:flex; justify-content:center; padding:30px; color:var(--muted); }
+.fav-group+.fav-group{ margin-top:22px; padding-top:20px; border-top:1px solid var(--border); }
+.fav-group-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 11px; }
+.fav-group-title{ color:#fff; font-family:var(--font-d); font-size:.92em; letter-spacing:.05em; text-transform:uppercase; }
+.fav-group-count{ color:var(--muted); font-size:.72em; font-weight:700; }
+.fav-group-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:10px; }
 .fav-club{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:13px 8px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,.03); cursor:pointer; font-family:inherit; color:var(--white); transition:.15s; }
 .fav-club:hover{ border-color:rgba(var(--gold-rgb,245,181,10),.55); background:rgba(var(--gold-rgb,245,181,10),.08); transform:translateY(-2px); }
+.fav-club.is-qualified{ border-color:rgba(var(--gold-rgb,245,181,10),.32); background:linear-gradient(145deg,rgba(var(--gold-rgb,245,181,10),.10),rgba(255,255,255,.025)); }
 .fav-club img{ width:42px; height:42px; object-fit:contain; }
-.fav-club span{ font-size:0.74em; font-weight:700; text-align:center; line-height:1.2; }
+.fav-club>span:not(.fav-club-meta){ font-size:0.74em; font-weight:700; text-align:center; line-height:1.2; }
+.fav-club .fav-club-meta{ display:flex; flex-wrap:wrap; justify-content:center; gap:4px; font-size:.62em; color:var(--muted); }
+.fav-club .fav-club-tag{ padding:3px 5px; border:1px solid rgba(var(--gold-rgb,245,181,10),.3); border-radius:999px; color:var(--gold); background:rgba(var(--gold-rgb,245,181,10),.08); }
 .fav-club.hide{ display:none; }
 .fav-skip{ margin:0 18px 18px; padding:11px; border-radius:10px; border:1px dashed var(--border); background:none; color:var(--muted); font-family:inherit; font-weight:700; font-size:0.82em; cursor:pointer; }
 .fav-skip:hover{ color:var(--white); border-color:var(--muted); }
@@ -403,7 +411,8 @@ a{ text-decoration:none; color:inherit; }
 
 @media (max-width:600px){
   .fav-modal-title{ font-size:1.4em; }
-  .fav-grid{ grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:8px; padding:14px; }
+  .fav-grid{ padding:14px; }
+  .fav-group-grid{ grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:8px; }
   .fav-club img{ width:36px; height:36px; }
   .fav-name{ font-size:1.45em; }
   .fav-actions{ width:100%; }
@@ -420,6 +429,12 @@ a{ text-decoration:none; color:inherit; }
 .os-title{ font-family:var(--font-d); font-size:1.9em; line-height:1; color:#fff; margin:7px 0 4px; letter-spacing:.02em; }
 .os-milestone{ font-size:0.82em; color:var(--muted); margin-bottom:14px; }
 .os-milestone b{ color:#fff; }
+.os-live{ display:inline-flex; align-items:center; gap:8px; margin:0 0 16px; padding:10px 15px; border-radius:11px;
+  color:#fff; background:linear-gradient(135deg,#e21f3d,#a50f2a); border:1px solid rgba(255,255,255,.2);
+  font-size:.72em; font-weight:900; letter-spacing:.05em; text-transform:uppercase; box-shadow:0 8px 24px rgba(226,31,61,.25); }
+.os-live:hover{ filter:brightness(1.1); }
+.os-live-dot{ width:8px; height:8px; border-radius:50%; background:#fff; box-shadow:0 0 0 0 rgba(255,255,255,.65); animation:pulse 1.2s infinite; }
+.os-draw-live{ margin:2px 0 16px; padding:13px 15px; border-radius:12px; color:#fff; background:rgba(226,31,61,.14); border:1px solid rgba(255,71,87,.45); font-weight:800; }
 /* Compte à rebours split-flap : chaque chiffre est une carte en deux moitiés,
    le volet haut retombe sur charnière et la moitié basse se déploie (rebond). */
 .cd-row{ display:flex; gap:10px; }
@@ -641,7 +656,7 @@ a{ text-decoration:none; color:inherit; }
 </footer>
 
 <script src="i18n.js?v=20"></script>
-<script src="espn.js?v=10"></script>
+<script src="espn.js?v=12"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
 <script>
@@ -1120,11 +1135,22 @@ a{ text-decoration:none; color:inherit; }
   function renderFavGrid(list){
     var g=el('favGrid'); if(!g) return;
     if(!list||!list.length){ g.innerHTML='<div class="fav-grid-loader">—</div>'; return; }
-    g.innerHTML=list.map(function(c){
-      return '<button class="fav-club" data-fid="'+esc(c.id)+'" data-fname="'+esc(c.name)+'" data-fabbr="'+esc(c.abbr||'')+'" data-flogo="'+esc(c.logo||'')+'" data-fcolor="'+esc(c.color||'')+'">'+
+    var isEn=lang()==='en';
+    function clubButton(c){
+      var meta='';
+      if(c.qualified) meta='<span class="fav-club-meta"><span class="fav-club-tag">'+(isEn?'Qualified':'Qualifié')+' 26/27</span><span>'+ (isEn?'Pot ':'Chapeau ') +esc(c.pot)+'</span>'+(c.titles?'<span>🏆 '+c.titles+'</span>':'')+'</span>';
+      else if(c.titles) meta='<span class="fav-club-meta"><span>🏆 '+c.titles+' '+(isEn?(c.titles>1?'titles':'title'):('titre'+(c.titles>1?'s':'')))+'</span></span>';
+      return '<button class="fav-club'+(c.qualified?' is-qualified':'')+'" data-fid="'+esc(c.id)+'" data-fname="'+esc(c.name)+'" data-fabbr="'+esc(c.abbr||'')+'" data-flogo="'+esc(c.logo||'')+'" data-fcolor="'+esc(c.color||'')+'">'+
         (c.logo?'<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span style="height:42px"></span>')+
-        '<span>'+esc(c.name)+'</span></button>';
-    }).join('');
+        '<span>'+esc(c.name)+'</span>'+meta+'</button>';
+    }
+    var qualified=list.filter(function(c){return c.qualified;});
+    var historic=list.filter(function(c){return !c.qualified&&c.historical;});
+    function group(cls,title,sub,items){
+      if(!items.length) return '';
+      return '<section class="fav-group '+cls+'"><div class="fav-group-head"><span class="fav-group-title">'+title+'</span><span class="fav-group-count">'+sub+'</span></div><div class="fav-group-grid">'+items.map(clubButton).join('')+'</div></section>';
+    }
+    g.innerHTML=group('qualified',isEn?'⭐ Qualified clubs':'⭐ Clubs qualifiés',isEn?'36 · league phase':'36 · phase de ligue',qualified)+group('historic',isEn?'🏆 Historic clubs':'🏆 Clubs historiques',isEn?'former winners':'anciens vainqueurs',historic);
     Array.prototype.forEach.call(g.querySelectorAll('.fav-club'),function(btn){
       btn.addEventListener('click',function(){
         ESPN.setFav({ id:this.getAttribute('data-fid'), name:this.getAttribute('data-fname'), abbr:this.getAttribute('data-fabbr'), logo:this.getAttribute('data-flogo'), color:this.getAttribute('data-fcolor') });
@@ -1138,6 +1164,9 @@ a{ text-decoration:none; color:inherit; }
     Array.prototype.forEach.call(g.querySelectorAll('.fav-club'),function(btn){
       var hay=(btn.getAttribute('data-fname')+' '+btn.getAttribute('data-fabbr')).toLowerCase();
       btn.classList.toggle('hide', !!q && hay.indexOf(q)===-1);
+    });
+    Array.prototype.forEach.call(g.querySelectorAll('.fav-group'),function(group){
+      group.style.display=group.querySelector('.fav-club:not(.hide)')?'':'none';
     });
   }
 
@@ -1191,15 +1220,20 @@ a{ text-decoration:none; color:inherit; }
   function notifHintHTML(){ return (notifSupported()&&Notification.permission==='granted'&&notifEnabled())?'<div class="fav-notif-hint">'+esc(I18N.t('fav.notif.tabHint'))+'</div>':''; }
 
   /* ================= INTERSAISON (compte à rebours + rétrospective) ================= */
+  /* Horaires absolus de Paris/Monaco (UTC+2 en août, septembre et juin) :
+     sans décalage explicite, chaque visiteur comptait jusqu'à 18 h dans son fuseau. */
+  var DRAW_START=Date.parse('2026-08-27T18:00:00+02:00');
+  var DRAW_END=DRAW_START+3*60*60*1000;
   var SEASON_DATES=[
-    {key:'draw',  ts:Date.parse('2026-08-27T18:00:00'), fr:'Tirage au sort', en:'League phase draw'},
-    {key:'md1',   ts:Date.parse('2026-09-08T18:45:00'), fr:'1re journée',    en:'Matchday 1'},
-    {key:'final', ts:Date.parse('2027-06-05T21:00:00'), fr:'Finale · Madrid', en:'Final · Madrid'}
+    {key:'draw',  ts:DRAW_START, fr:'Tirage au sort', en:'League phase draw'},
+    {key:'md1',   ts:Date.parse('2026-09-08T18:45:00+02:00'), fr:'1re journée',    en:'Matchday 1'},
+    {key:'final', ts:Date.parse('2027-06-05T21:00:00+02:00'), fr:'Finale · Madrid', en:'Final · Madrid'}
   ];
   var retroData=null, retroPromise=null;
   function osMonths(){ return lang()==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']; }
   function fmtDate(ts){ var d=new Date(ts); return d.getDate()+' '+osMonths()[d.getMonth()]+' '+d.getFullYear(); }
   function nextMilestone(){ var now=Date.now(); for(var i=0;i<SEASON_DATES.length;i++){ if(SEASON_DATES[i].ts>now) return SEASON_DATES[i]; } return null; }
+  function drawPhase(){ var now=Date.now(); return now<DRAW_START?'before':(now<DRAW_END?'live':'after'); }
   var cdReduce=(function(){ try{ return window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){ return false; } })();
   function fcDigitHTML(ch){
     return '<div class="fc-digit" data-v="'+ch+'">'+
@@ -1383,25 +1417,41 @@ a{ text-decoration:none; color:inherit; }
   }
   function renderOffseason(){
     var host=el('offseason'); if(!host) return;
-    var nm=nextMilestone();
+    var now=Date.now(), nm=nextMilestone(), phase=drawPhase();
     if(ESPN.isArchive() || !nm){ host.style.display='none'; host.innerHTML=''; return; }
     host.style.display='block';
+    host.setAttribute('data-draw-phase',phase);
+    var drawDay=now>=DRAW_START-24*60*60*1000 && now<DRAW_END;
+    var drawLive=phase==='live';
+    var title=drawDay
+      ? (drawLive?(lang()==='en'?'The draw is live':'Le tirage est en direct'):(lang()==='en'?'The draw is today':'Le tirage, c’est aujourd’hui'))
+      : (lang()==='en'?'The new season is coming':'La nouvelle saison arrive');
+    var milestone=drawDay
+      ? (drawLive?(lang()==='en'?'The 36 clubs are discovering their opponents.':'Les 36 clubs découvrent leurs adversaires.'):(lang()==='en'?'Live from Monaco at 18:00 (Paris time).':'En direct de Monaco à 18 h (heure de Paris).'))
+      : ((lang()==='en'?'Next:':'Prochain :')+' <b>'+esc(lang()==='en'?nm.en:nm.fr)+'</b>');
+    var drawLink=drawDay
+      ? '<a class="os-live" href="https://www.uefa.com/uefachampionsleague/draws/" target="_blank" rel="noopener noreferrer"><span class="os-live-dot"></span>'+esc(lang()==='en'?'Watch on UEFA.com':'Suivre sur UEFA.com')+'</a>'
+      : '';
+    var timer=drawLive
+      ? '<div class="os-draw-live">'+esc(lang()==='en'?'Draw in progress — fixtures will be published by Saturday 29 August.':'Tirage en cours — le calendrier détaillé sera publié au plus tard samedi 29 août.')+'</div>'
+      : '<div class="cd-row" id="cdRow"></div>';
     var datesHTML=SEASON_DATES.map(function(dt){
-      var cls=dt.ts<Date.now()?'done':(dt===nm?'next':'');
+      var cls=dt.ts<now?'done':(dt===nm?'next':'');
       return '<div class="os-date '+cls+'"><span>'+esc(lang()==='en'?dt.en:dt.fr)+'</span><span class="d">'+esc(fmtDate(dt.ts))+'</span></div>';
     }).join('');
     host.innerHTML=
       '<div class="os-grid">'+
         '<div class="os-card os-count">'+
           '<div class="os-eyebrow">'+esc(I18N.t('season.label')||'Saison')+' '+esc(ESPN.seasonLabel())+'</div>'+
-          '<div class="os-title">'+esc(lang()==='en'?'The new season is coming':'La nouvelle saison arrive')+'</div>'+
-          '<div class="os-milestone">'+esc(lang()==='en'?'Next:':'Prochain :')+' <b>'+esc(lang()==='en'?nm.en:nm.fr)+'</b></div>'+
-          '<div class="cd-row" id="cdRow"></div>'+
+          '<div class="os-title">'+esc(title)+'</div>'+
+          '<div class="os-milestone">'+milestone+'</div>'+
+          drawLink+
+          timer+
           '<div class="os-dates">'+datesHTML+'</div>'+
         '</div>'+
         '<div class="os-card os-retro" id="osRetro"></div>'+
       '</div>';
-    renderCountdown(nm.ts);
+    if(el('cdRow')) renderCountdown(drawDay&&!drawLive?DRAW_START:nm.ts);
     renderRetro();
   }
 
@@ -1415,7 +1465,7 @@ a{ text-decoration:none; color:inherit; }
   (function(){ var rm=el('replay-modal'); if(rm) rm.addEventListener('click', function(e){ if(e.target===rm) closeReplay(); }); document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeReplay(); }); })();
   setInterval(function(){ try{ loadToday(); }catch(e){} }, 20000);
   setInterval(function(){ try{ loadSeason(); }catch(e){} }, 60000);
-  setInterval(function(){ try{ document.querySelectorAll('.live-countdown[data-kickoff], .fav-cd[data-kickoff]').forEach(function(c){ var ts=parseInt(c.getAttribute('data-kickoff'),10); if(ts) c.textContent=countdown(new Date(ts)); }); var _nm=nextMilestone(); if(_nm && el('cdRow')) renderCountdown(_nm.ts); }catch(e){} }, 1000);
+  setInterval(function(){ try{ document.querySelectorAll('.live-countdown[data-kickoff], .fav-cd[data-kickoff]').forEach(function(c){ var ts=parseInt(c.getAttribute('data-kickoff'),10); if(ts) c.textContent=countdown(new Date(ts)); }); var _phase=drawPhase(), _host=el('offseason'); if(_host&&_host.getAttribute('data-draw-phase')!==_phase) renderOffseason(); var _nm=nextMilestone(); if(_nm && el('cdRow')) renderCountdown((_phase==='before'&&Date.now()>=DRAW_START-24*60*60*1000)?DRAW_START:_nm.ts); }catch(e){} }, 1000);
   document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'){ loadToday(); loadSeason(); scheduleFavNotif(); } });
   window.addEventListener('ldc:langchange',function(){ buildHero(); applySeasonUI(); lastStatsKey=''; renderLive(); renderZones(); renderMarquee(); renderFav(); renderOffseason(); if(window.LDCLanyard) LDCLanyard.refresh(); });
 

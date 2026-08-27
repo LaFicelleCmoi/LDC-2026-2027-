@@ -55,9 +55,13 @@ La saison est détectée automatiquement (août → juillet). Pour forcer une sa
 
 ## Déploiement Vercel
 
-1. `git push` sur `main`.
-2. Projet Vercel : Framework **Other**, build command **vide**, output **vide**.
-3. `vercel.json` réécrit `/` → `/dashboard.html`.
+Le dépôt est déjà relié au projet Vercel `ldc-2026-2027` et au domaine
+`https://ldc-2026-2027.vercel.app`.
+
+1. Valider les changements dans Git, puis envoyer la branche `main` sur GitHub.
+2. Vercel crée automatiquement un déploiement de production depuis `main`.
+3. `vercel.json` impose le preset **Other**, sans installation ni build, et réécrit `/` vers `/dashboard.html`.
+4. Contrôler le statut **Ready** dans Vercel, puis tester le domaine de production.
 
 ## Robustesse
 
