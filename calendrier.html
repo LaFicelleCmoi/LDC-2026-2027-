@@ -72,6 +72,23 @@
   .sch-ev{ font-weight:700; font-size:13.5px; color:var(--txt); }
   .sch-star{ color:var(--upcoming); margin-right:3px; }
   .sch-d{ color:var(--upcoming); font-weight:800; font-size:13px; white-space:nowrap; text-align:right; }
+  .draw-intro{ display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin-bottom:18px; padding:15px 17px; border:1px solid rgba(245,181,10,.42); border-radius:13px; background:linear-gradient(135deg,rgba(245,181,10,.13),rgba(255,255,255,.025)); }
+  .draw-intro strong{ display:block; color:var(--txt); font-size:16px; margin-bottom:4px; }
+  .draw-intro span{ color:var(--muted); font-size:12.5px; line-height:1.45; }
+  .draw-source{ color:var(--upcoming); font-size:12px; font-weight:800; white-space:nowrap; }
+  .draw-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; margin-bottom:28px; }
+  .draw-card{ padding:13px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+  .draw-card.is-fav{ border-color:rgba(var(--fav-rgb,245,181,10),.65); background:rgba(var(--fav-rgb,245,181,10),.08); }
+  .draw-team{ display:flex; align-items:center; gap:9px; margin-bottom:11px; font-weight:900; font-size:14px; }
+  .draw-team img,.draw-opp img{ width:25px; height:25px; object-fit:contain; }
+  .draw-team .pot{ margin-left:auto; color:var(--muted); font-size:10px; font-weight:800; text-transform:uppercase; }
+  .draw-venues{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .draw-venue{ min-width:0; }
+  .draw-venue-title{ margin-bottom:6px; color:var(--upcoming); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
+  .draw-opp{ display:flex; align-items:center; gap:6px; min-width:0; padding:5px 0; font-size:11.5px; font-weight:700; }
+  .draw-opp img{ width:18px; height:18px; flex:0 0 auto; }
+  .draw-opp span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  @media (max-width:680px){ .draw-grid{ grid-template-columns:1fr; } .draw-intro{ flex-direction:column; gap:8px; } }
   @media (max-width:560px){ .sch-row{ flex-direction:column; align-items:flex-start; gap:3px; padding:9px 11px; } .sch-d{ font-size:12px; } }
 </style>
 </head>
@@ -129,6 +146,7 @@
 
 <script src="i18n.js?v=20"></script>
 <script src="espn.js?v=12"></script>
+<script src="draw2026.js?v=1"></script>
 <script src="ui.js?v=1"></script>
 <script>
 (function(){
@@ -267,6 +285,30 @@
       grp(en?'Knockout phase':'Phase finale', SCHEDULE.ko);
   }
 
+  function drawClubMap(){
+    var map={};
+    (ESPN.qualifiedClubs?ESPN.qualifiedClubs():[]).forEach(function(c){ map[String(c.id)]=c; });
+    return map;
+  }
+  function renderDrawResults(){
+    var data=window.UCL_DRAW_2026, clubs=drawClubMap(), en=I18N.getLang()==='en';
+    if(!data||!data.opponents) return '';
+    var fav=ESPN.getFav(), ids=Object.keys(data.opponents).sort(function(a,b){
+      return (clubs[a]?clubs[a].name:'').localeCompare(clubs[b]?clubs[b].name:'');
+    });
+    if(filterTeam) ids=ids.filter(function(id){ return id===String(filterTeam); });
+    function crest(c){ return c&&c.logo?'<img src="'+esc(c.logo)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':''; }
+    function opp(id){ var c=clubs[String(id)]; return '<div class="draw-opp">'+crest(c)+'<span>'+esc(c?c.name:id)+'</span></div>'; }
+    var cards=ids.map(function(id){
+      var c=clubs[id], d=data.opponents[id]; if(!c) return '';
+      return '<article class="draw-card'+(fav&&String(fav.id)===id?' is-fav':'')+'">'+
+        '<div class="draw-team">'+crest(c)+'<span>'+esc(c.name)+'</span><span class="pot">'+esc(en?'Pot '+c.pot:'Chapeau '+c.pot)+'</span></div>'+
+        '<div class="draw-venues"><div class="draw-venue"><div class="draw-venue-title">⌂ '+esc(en?'Home':'Domicile')+'</div>'+d.home.map(opp).join('')+'</div>'+
+        '<div class="draw-venue"><div class="draw-venue-title">✈ '+esc(en?'Away':'Extérieur')+'</div>'+d.away.map(opp).join('')+'</div></div></article>';
+    }).join('');
+    return '<section id="draw-results"><div class="draw-intro"><div><strong>'+esc(en?'Official draw results':'Résultats officiels du tirage')+'</strong><span>'+esc(en?'Eight opponents per club. Match dates and kick-off times will be published separately.':'Huit adversaires par club. Les dates et horaires des rencontres seront publiés séparément.')+'</span></div><a class="draw-source" href="'+esc(data.sourceUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(en?'Verified by UEFA ↗':'Vérifié par l’UEFA ↗')+'</a></div><div class="draw-grid">'+cards+'</div></section>';
+  }
+
   /* ---- Export .ics (agenda) : matchs (filtre/favori) ou dates clés officielles ---- */
   var KEY_DATES=[
     {d:'20260707',fr:'1er tour de qualification',en:'1st qualifying round'},
@@ -337,7 +379,7 @@
     var aggMap=computeAggregates();
     if(!allMatches.length){
       host.innerHTML = (!ESPN.isArchive())
-        ? renderSchedule()
+        ? renderDrawResults()+renderSchedule()
         : '<div class="empty-state">'+esc(I18N.t('cal.empty'))+'</div>';
       return;
     }
@@ -369,6 +411,7 @@
     var sel=el('cal-team'); if(!sel) return;
     var map={};
     allMatches.forEach(function(m){ [m.home,m.away].forEach(function(c){ if(c.teamId && !map[c.teamId]) map[c.teamId]={id:c.teamId,name:c.name}; }); });
+    if(!allMatches.length&&!ESPN.isArchive()) (ESPN.qualifiedClubs?ESPN.qualifiedClubs():[]).forEach(function(c){ map[String(c.id)]={id:String(c.id),name:c.name}; });
     var teams=Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.name.localeCompare(b.name);});
     sel.innerHTML='<option value="">'+esc(I18N.t('cal.allClubs'))+'</option>'+
       teams.map(function(t){return '<option value="'+esc(t.id)+'"'+(t.id===filterTeam?' selected':'')+'>'+esc(t.name)+'</option>';}).join('');
