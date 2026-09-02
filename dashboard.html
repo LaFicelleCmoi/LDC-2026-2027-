@@ -696,7 +696,14 @@ a{ text-decoration:none; color:inherit; }
       var s=document.createElement('div'); s.className='spark'; s.style.left=e.clientX+'px'; s.style.top=e.clientY+'px';
       document.body.appendChild(s);
       var a=(Math.PI*2*i)/10, d=40+Math.random()*30;
-      s.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+(Math.cos(a)*d)+'px,'+(Math.sin(a)*d)+'px) scale(0)',opacity:0}],{duration:600,easing:'cubic-bezier(0.2,0.6,0.3,1)'}).onfinish=function(){ s.remove(); };
+      (function(spark){
+        var animation=spark.animate(
+          [{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+(Math.cos(a)*d)+'px,'+(Math.sin(a)*d)+'px) scale(0)',opacity:0}],
+          {duration:600,easing:'cubic-bezier(0.2,0.6,0.3,1)'}
+        );
+        animation.onfinish=animation.oncancel=function(){ spark.remove(); };
+        setTimeout(function(){ spark.remove(); },700);
+      })(s);
     }
   });
 
