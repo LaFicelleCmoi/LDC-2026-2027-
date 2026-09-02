@@ -1544,9 +1544,32 @@ window.LDCLanyard = (function(){
     var diff=(len-d)/d*0.5*st[3], ox=dx*diff, oy=dy*diff;
     if(!a.pin){ a.x-=ox; a.y-=oy; } if(!b.pin){ b.x+=ox; b.y+=oy; }
   }
+  function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
+  function containClip(){
+    var Lp=pts[iL], Rp=pts[iR], midx=(Lp.x+Rp.x)/2, midy=(Lp.y+Rp.y)/2;
+    var minX=CARDW/2+10, maxX=W-CARDW/2-10;
+    if(maxX<minX){ minX=maxX=W/2; }
+    var cardH=card.offsetHeight||280, minY=54, maxY=Math.max(minY,H-cardH-14);
+    var dx=clamp(midx,minX,maxX)-midx, dy=clamp(midy,minY,maxY)-midy;
+    Lp.x+=dx; Lp.y+=dy; Rp.x+=dx; Rp.y+=dy;
+    Lp.ox+=dx; Lp.oy+=dy; Rp.ox+=dx; Rp.oy+=dy;
+  }
+  function stabilizeClip(){
+    var Lp=pts[iL], Rp=pts[iR], cx=(Lp.x+Rp.x)/2, cy=(Lp.y+Rp.y)/2;
+    var ang=clamp(Math.atan2(Rp.y-Lp.y,Rp.x-Lp.x),-1.05,1.05);
+    var hx=Math.cos(ang)*CLIPW/2, hy=Math.sin(ang)*CLIPW/2;
+    var lx=cx-hx, ly=cy-hy, rx=cx+hx, ry=cy+hy;
+    Lp.ox+=lx-Lp.x; Lp.oy+=ly-Lp.y; Rp.ox+=rx-Rp.x; Rp.oy+=ry-Rp.y;
+    Lp.x=lx; Lp.y=ly; Rp.x=rx; Rp.y=ry;
+  }
+  function capVelocity(p,max){
+    var vx=p.x-p.ox, vy=p.y-p.oy, speed=Math.sqrt(vx*vx+vy*vy);
+    if(speed>max){ var k=max/speed; p.ox=p.x-vx*k; p.oy=p.y-vy*k; }
+  }
   function setDrag(){
     pts[iL].x=gx+offL.x; pts[iL].y=gy+offL.y;
     pts[iR].x=gx+offR.x; pts[iR].y=gy+offR.y;
+    containClip(); stabilizeClip();
   }
   function step(){
     var g=0.6, damp=0.985;
@@ -1563,6 +1586,7 @@ window.LDCLanyard = (function(){
     }
     pts[0].x=W/2; pts[0].y=4;
     if(dragging) setDrag();
+    stabilizeClip(); containClip();
   }
 
   function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
@@ -1683,9 +1707,15 @@ window.LDCLanyard = (function(){
     pts[iR].ox=pts[iR].x; pts[iR].oy=pts[iR].y;
     var p=local(e); gx=p.x; gy=p.y; setDrag();
   });
-  function endDrag(){ if(!dragging) return; dragging=false; card.classList.remove('grabbing'); pts[iL].pin=false; pts[iR].pin=false; }
+  function endDrag(){
+    if(!dragging) return;
+    dragging=false; card.classList.remove('grabbing');
+    capVelocity(pts[iL],16); capVelocity(pts[iR],16);
+    pts[iL].pin=false; pts[iR].pin=false;
+  }
   window.addEventListener('pointerup', endDrag);
   window.addEventListener('pointercancel', endDrag);
+  window.addEventListener('blur', endDrag);
 
   var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt=setTimeout(build, 200); });
 
