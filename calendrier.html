@@ -13,6 +13,12 @@
 <link rel="stylesheet" href="styles.css?v=19" />
 <style>
   .cal-wrap{ max-width:920px; }
+  .cal-view-switch{ display:inline-grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin:0 0 18px; padding:4px; border:1px solid var(--line-2); border-radius:13px; background:rgba(7,14,35,.7); box-shadow:0 10px 28px rgba(0,0,0,.18); }
+  .cal-view-btn{ min-width:190px; padding:10px 16px; border:0; border-radius:9px; background:transparent; color:var(--muted); font-family:inherit; font-size:12.5px; font-weight:900; cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease; }
+  .cal-view-btn:hover{ color:var(--txt); }
+  .cal-view-btn:focus-visible{ outline:2px solid var(--upcoming); outline-offset:2px; }
+  .cal-view-btn.active{ color:#1a1300; background:linear-gradient(180deg,#ffe9a8,#f7bd39 55%,#d68d06); box-shadow:0 5px 14px rgba(0,0,0,.28); }
+  .cal-view-btn:active{ transform:scale(.98); }
   /* Filtres */
   .cal-filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:20px; }
   /* Bouton flottant « prochain match » */
@@ -89,7 +95,7 @@
   .draw-opp img{ width:18px; height:18px; flex:0 0 auto; }
   .draw-opp span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   @media (max-width:680px){ .draw-grid{ grid-template-columns:1fr; } .draw-intro{ flex-direction:column; gap:8px; } }
-  @media (max-width:560px){ .sch-row{ flex-direction:column; align-items:flex-start; gap:3px; padding:9px 11px; } .sch-d{ font-size:12px; } }
+  @media (max-width:560px){ .cal-view-switch{ display:grid; width:100%; } .cal-view-btn{ min-width:0; padding:10px 8px; font-size:11.5px; } .sch-row{ flex-direction:column; align-items:flex-start; gap:3px; padding:9px 11px; } .sch-d{ font-size:12px; } }
 </style>
 </head>
 <body>
@@ -124,6 +130,11 @@
   <div class="souvenir-banner" id="souvenir-banner">
     <span class="sb-label" id="souvenir-banner-label">Souvenir</span>
     <a href="calendrier.html" data-noseason data-i18n="souvenir.back">← Saison actuelle</a>
+  </div>
+
+  <div class="cal-view-switch" id="cal-view-switch" role="group" aria-label="Choisir la vue">
+    <button class="cal-view-btn" id="cal-view-draw" type="button" aria-pressed="false">◆ Tirage LDC</button>
+    <button class="cal-view-btn" id="cal-view-matches" type="button" aria-pressed="true">📅 Calendrier des rencontres</button>
   </div>
 
   <div class="cal-filters cal-wrap">
@@ -161,6 +172,8 @@
   applyFavAccent();
 
   var allMatches=[], filterTeam='';
+  var viewMode=location.hash==='#draw-results'?'draw':'matches';
+  if(viewMode!=='draw'){ try{ if(localStorage.getItem('ldcCalendarView')==='draw') viewMode='draw'; }catch(e){} }
 
   function applyFavAccent(){ if(!window.ESPN) return; var a=ESPN.favAccent(), root=document.documentElement; if(a) root.style.setProperty('--fav-rgb',a); else root.style.removeProperty('--fav-rgb'); }
 
@@ -176,6 +189,27 @@
     var en=I18N.getLang()==='en';
     var il=el('calIcsLbl'); if(il) il.textContent=en?'Export (.ics)':'Exporter (.ics)';
     var nl=el('calNextLbl'); if(nl) nl.textContent=en?'Next match':'Prochain match';
+    var drawBtn=el('cal-view-draw'), matchesBtn=el('cal-view-matches');
+    if(drawBtn) drawBtn.textContent=en?'◆ Champions League draw':'◆ Tirage LDC';
+    if(matchesBtn) matchesBtn.textContent=en?'📅 Match calendar':'📅 Calendrier des rencontres';
+  }
+
+  function syncViewUI(){
+    var available=!ESPN.isArchive()&&window.UCL_DRAW_2026&&window.UCL_DRAW_2026.opponents;
+    var switcher=el('cal-view-switch'), drawBtn=el('cal-view-draw'), matchesBtn=el('cal-view-matches');
+    if(!available) viewMode='matches';
+    if(switcher) switcher.style.display=available?'inline-grid':'none';
+    if(drawBtn){ drawBtn.classList.toggle('active',viewMode==='draw'); drawBtn.setAttribute('aria-pressed',viewMode==='draw'?'true':'false'); }
+    if(matchesBtn){ matchesBtn.classList.toggle('active',viewMode==='matches'); matchesBtn.setAttribute('aria-pressed',viewMode==='matches'?'true':'false'); }
+    var exportBtn=el('cal-ics'); if(exportBtn) exportBtn.style.display=viewMode==='draw'?'none':'inline-flex';
+  }
+
+  function setView(mode){
+    viewMode=mode==='draw'?'draw':'matches';
+    try{ localStorage.setItem('ldcCalendarView',viewMode); }catch(e){}
+    if(viewMode==='draw') history.replaceState(null,'',location.pathname+location.search+'#draw-results');
+    else history.replaceState(null,'',location.pathname+location.search);
+    syncViewUI(); render();
   }
 
   /* Découpe les matchs de phase de ligue en journées (saut > 5 jours = nouvelle journée). */
@@ -376,10 +410,15 @@
     var host=el('cal-body'); if(!host) return;
     var nextBtn=el('cal-next'); if(nextBtn) nextBtn.style.display='none';
     var fav=ESPN.getFav(), fid=fav?fav.id:null;
+    syncViewUI();
+    if(viewMode==='draw'&&!ESPN.isArchive()){
+      host.innerHTML=renderDrawResults()||'<div class="empty-state">'+esc(I18N.t('cal.empty'))+'</div>';
+      return;
+    }
     var aggMap=computeAggregates();
     if(!allMatches.length){
       host.innerHTML = (!ESPN.isArchive())
-        ? renderDrawResults()+renderSchedule()
+        ? renderSchedule()
         : '<div class="empty-state">'+esc(I18N.t('cal.empty'))+'</div>';
       return;
     }
@@ -411,7 +450,7 @@
     var sel=el('cal-team'); if(!sel) return;
     var map={};
     allMatches.forEach(function(m){ [m.home,m.away].forEach(function(c){ if(c.teamId && !map[c.teamId]) map[c.teamId]={id:c.teamId,name:c.name}; }); });
-    if(!allMatches.length&&!ESPN.isArchive()) (ESPN.qualifiedClubs?ESPN.qualifiedClubs():[]).forEach(function(c){ map[String(c.id)]={id:String(c.id),name:c.name}; });
+    if(!ESPN.isArchive()) (ESPN.qualifiedClubs?ESPN.qualifiedClubs():[]).forEach(function(c){ map[String(c.id)]={id:String(c.id),name:c.name}; });
     var teams=Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.name.localeCompare(b.name);});
     sel.innerHTML='<option value="">'+esc(I18N.t('cal.allClubs'))+'</option>'+
       teams.map(function(t){return '<option value="'+esc(t.id)+'"'+(t.id===filterTeam?' selected':'')+'>'+esc(t.name)+'</option>';}).join('');
@@ -432,6 +471,8 @@
     render();
   });
   el('cal-ics').addEventListener('click', exportICS);
+  el('cal-view-draw').addEventListener('click',function(){ setView('draw'); });
+  el('cal-view-matches').addEventListener('click',function(){ setView('matches'); });
   el('cal-next').addEventListener('click', function(){
     var a=el('nextMatchAnchor'); if(a) a.scrollIntoView({behavior:'smooth', block:'center'});
   });
@@ -444,6 +485,7 @@
   }
 
   applySeasonUI();
+  syncViewUI();
   load();
 
   if(window.I18N) window.addEventListener('ldc:langchange',function(){ applySeasonUI(); buildFilter(); render(); });
