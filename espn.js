@@ -154,12 +154,12 @@
     { pot: 3, id: 142,   name: 'Feyenoord',           abbr: 'FEY',  color: 'ef2f24' },
     { pot: 3, id: 166,   name: 'Lille',               abbr: 'LILL', color: 'c2051b' },
     { pot: 3, id: 2980,  name: 'Bodø/Glimt',          abbr: 'BODO', color: 'FCEE33' },
-    { pot: 3, id: 114,   name: 'Napoli',              abbr: 'NAP',  color: '0086c4' },
+    { pot: 3, id: 114,   name: 'Napoli',              abbr: 'NAP',  color: '0677d2' },
     { pot: 3, id: 11420, name: 'RB Leipzig',          abbr: 'RBL',  color: 'ffffff' },
     { pot: 3, id: 102,   name: 'Villarreal',          abbr: 'VIL',  color: 'ffff00' },
     { pot: 3, id: 436,   name: 'Fenerbahçe',          abbr: 'FEN',  color: 'ffff00' },
     { pot: 3, id: 493,   name: 'Shakhtar Donetsk',    abbr: 'SHK',  color: 'ff5900' },
-    { pot: 3, id: 432,   name: 'Galatasaray',         abbr: 'GAL',  color: 'fdb912' },
+    { pot: 3, id: 432,   name: 'Galatasaray',         abbr: 'GAL',  color: 'aa0031' },
     { pot: 4, id: 494,   name: 'Slavia Prague',       abbr: 'SLP',  color: 'dc1f26' },
     { pot: 4, id: 521,   name: 'Slovan Bratislava',   abbr: 'SLB',  color: '81c0ff' },
     { pot: 4, id: 134,   name: 'VfB Stuttgart',       abbr: 'VFB',  color: 'ffffff' },
@@ -490,8 +490,13 @@
      CLASSEMENT — phase de ligue (36)
      Compte les matchs de phase de ligue. Les matchs 'in' (en cours) comptent
      de façon PROVISOIRE avec le score courant => classement vivant.
+
+     `seedClubs` (optionnel) : liste { id, name, abbr, logo } amorcée à 0 pt, pour
+     que les 36 qualifiés soient TOUS présents dès avant leur premier match
+     (sinon le tableau n'a que 24 lignes après la 1re journée, ce qui rend la
+     légende « 25–36 : éliminés » incohérente).
      ======================================================================= */
-  function computeStandings(events) {
+  function computeStandings(events, seedClubs) {
     var teams = {}; // teamId -> ligne
 
     function row(c) {
@@ -506,6 +511,11 @@
       }
       return teams[k];
     }
+
+    (seedClubs || []).forEach(function (c) {
+      if (!c || !c.id) return;
+      row({ teamId: String(c.id), name: c.name, shortName: c.name, abbr: c.abbr, logo: c.logo });
+    });
 
     (events || []).forEach(function (ev) {
       var m = normalizeEvent(ev);
