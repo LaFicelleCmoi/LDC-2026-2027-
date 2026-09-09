@@ -5,3 +5,11 @@
 .DS_Store
 Thumbs.db
 *.local.json
+
+# Local build artifacts
+.next/
+.vinext/
+dist/
+node_modules/
+next-env.d.ts
+npm-debug.log*
