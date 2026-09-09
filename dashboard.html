@@ -268,19 +268,39 @@ a{ text-decoration:none; color:inherit; }
 .cc-leg{ font-size:0.66em; font-weight:800; padding:1px 5px; border-radius:6px; background:rgba(59,123,255,.28); color:#bcd9ff; letter-spacing:.02em; }
 .cc-leg.cc-leg-r{ background:rgba(var(--gold-rgb,245,181,10),.28); color:#ffe2a0; }
 .cc-leg-legend{ display:flex; gap:6px; align-items:center; justify-content:center; font-size:0.66em; color:var(--muted); margin-top:9px; }
-.cc-table{ width:100%; border-collapse:collapse; font-size:0.82em; }
-.cc-table td{ padding:6px 7px; }
-.cc-table tr:not(.ct-head):not(:last-child) td{ border-bottom:1px solid rgba(255,255,255,.06); }
-.cc-table tr.is-live td{ animation:pulse 1.4s infinite; }
-.cc-table .ct-head td{ font-size:0.82em; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); padding-top:13px; padding-bottom:4px; }
-.ct-opp{ font-weight:700; color:#fff; text-align:left; white-space:nowrap; }
-.ct-opp img{ width:20px; height:20px; object-fit:contain; vertical-align:middle; margin-right:7px; }
-.ct-legcell{ text-align:center; white-space:nowrap; width:62px; }
-.ct-leg{ font-size:0.86em; font-weight:800; }
-.ct-leg.a{ color:#9fd0ff; } .ct-leg.r{ color:#ffe2a0; } .ct-leg.n{ color:rgba(255,255,255,.3); }
-.ct-score{ text-align:right; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.ct-score.res-w{ color:var(--green); } .ct-score.res-l{ color:var(--red); } .ct-score.res-d{ color:var(--muted); }
-.ct-pen{ font-size:0.74em; color:var(--blue); font-weight:700; }
+/* Parcours du club : une ligne = adversaire (+ lieu) | SCORE centré | pastille V/N/D.
+   Grille 1fr auto 1fr — la colonne centrale se dimensionne sur le score, donc tous
+   les scores de la liste s'alignent verticalement quelle que soit la longueur du
+   nom d'adversaire. */
+.cc-journey{ width:100%; font-size:0.82em; }
+.ct-head{ font-size:0.82em; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); padding:13px 7px 4px; text-align:left; }
+.ct-row{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:6px 7px; border-bottom:1px solid rgba(255,255,255,.06); }
+.ct-row:last-child{ border-bottom:0; }
+.ct-row.is-live{ animation:pulse 1.4s infinite; }
+
+.ct-opp{ display:flex; align-items:center; gap:6px; min-width:0; font-weight:700; color:#fff; text-align:left; }
+.ct-opp img{ width:20px; height:20px; object-fit:contain; flex:0 0 auto; }
+.ct-abbr{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.ct-venue{ flex:0 0 auto; font-size:1.05em; line-height:1; opacity:.95; }
+.ct-row.at-home .ct-venue{ color:var(--gold,#f5b50a); }
+.ct-row.at-away .ct-venue{ color:#8fb6ff; }
+.ct-leg{ flex:0 0 auto; font-size:0.8em; font-weight:800; padding:1px 5px; border-radius:5px; }
+.ct-leg.a{ color:#bcd9ff; background:rgba(59,123,255,.24); }
+.ct-leg.r{ color:#ffe2a0; background:rgba(var(--gold-rgb,245,181,10),.24); }
+
+.ct-score{ text-align:center; font-size:1.1em; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ct-score.res-w{ color:var(--green); } .ct-score.res-l{ color:var(--red); } .ct-score.res-d{ color:#fff; }
+.ct-sep{ margin:0 4px; font-weight:600; opacity:.45; }
+.ct-pen{ display:block; font-size:0.7em; color:var(--blue); font-weight:700; margin-top:1px; }
+
+.ct-outcome{ display:flex; justify-content:flex-end; }
+.ct-pill{ display:inline-flex; align-items:center; justify-content:center; min-width:21px; height:19px; padding:0 5px;
+  border-radius:6px; border:1px solid; font-size:0.86em; font-weight:900; letter-spacing:.02em; }
+.ct-pill.res-w{ color:var(--green); background:rgba(46,213,115,.14); border-color:rgba(46,213,115,.45); }
+.ct-pill.res-d{ color:var(--muted); background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.22); }
+.ct-pill.res-l{ color:var(--red); background:rgba(255,71,87,.13); border-color:rgba(255,71,87,.45); }
+.ct-pill.is-live{ background:rgba(255,71,87,.13); border-color:rgba(255,71,87,.45); }
+@media (max-width:360px){ .ct-row{ gap:6px; } .ct-score{ font-size:1em; } }
 .cc-chip.res-w{ color:var(--green); border-color:rgba(46,213,115,0.45); background:rgba(46,213,115,0.12); }
 .cc-chip.res-d{ color:var(--muted); border-color:rgba(255,255,255,0.22); background:rgba(255,255,255,0.06); }
 .cc-chip.res-l{ color:var(--red); border-color:rgba(255,71,87,0.45); background:rgba(255,71,87,0.12); }
@@ -932,7 +952,12 @@ a{ text-decoration:none; color:inherit; }
       if(m.leg===2) return '<span class="cc-leg cc-leg-r" title="'+esc(I18N.t('leg.second'))+'">'+esc(I18N.t('leg.secondShort'))+'</span>';
       return '';
     }
-    // Parcours sous forme de TABLEAU, groupé par tour, avec colonne Manche (Aller/Retour)
+    /* Parcours groupé par tour. Chaque ligne est une grille 1fr auto 1fr :
+       adversaire (+ lieu) à gauche, SCORE au centre, pastille V/N/D à droite.
+       L'ancienne colonne « Manche » affichait un « — » au centre sur tous les
+       matchs de phase de ligue, où il n'y a pas d'aller-retour : le tiret est
+       désormais réservé aux confrontations à deux manches, sous forme de badge
+       accolé à l'adversaire. */
     var ROUND_ORDER=['qualifying','league','po','r16','qf','sf','final'];
     var ROUND_KEY={qualifying:'trk.round.qualif',league:(ESPN.isLeaguePhaseFormat()?'trk.leaguePhase':'trk.round.league'),po:'trk.round.po',r16:'trk.round.r16',qf:'trk.round.qf',sf:'trk.round.sf',final:'trk.round.final'};
     var byRound={}; played.forEach(function(m){ (byRound[m.round]=byRound[m.round]||[]).push(m); });
@@ -940,21 +965,36 @@ a{ text-decoration:none; color:inherit; }
     ROUND_ORDER.forEach(function(rk){
       var ms=byRound[rk]; if(!ms||!ms.length) return;
       ms.sort(function(a,b){ return ((a.leg||0)-(b.leg||0)) || ((a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0)); });
-      rows+='<tr class="ct-head"><td colspan="3">'+esc(I18N.t(ROUND_KEY[rk])||rk)+'</td></tr>';
+      rows+='<div class="ct-head">'+esc(I18N.t(ROUND_KEY[rk])||rk)+'</div>';
       ms.forEach(function(m){
-        var s=sideOf(m), meS=m[s], opp=m[s==='home'?'away':'home'];
+        var s=sideOf(m), meS=m[s], opp=m[s==='home'?'away':'home'], home=(s==='home');
+        var live=(m.state==='in');
         var cls=meS.score>opp.score?'res-w':(meS.score<opp.score?'res-l':'res-d');
-        var leg = m.leg===1 ? '<span class="ct-leg a">'+esc(I18N.t('leg.first'))+'</span>'
-                : m.leg===2 ? '<span class="ct-leg r">'+esc(I18N.t('leg.second'))+'</span>'
-                : '<span class="ct-leg n">—</span>';
-        var pen=(meS.shootout!=null&&opp.shootout!=null)?' <span class="ct-pen">'+esc(I18N.t('common.pen'))+' '+meS.shootout+'–'+opp.shootout+'</span>':'';
-        rows+='<tr'+(m.state==='in'?' class="is-live"':'')+'>'+
-          '<td class="ct-opp">'+(opp.logo?'<img src="'+esc(opp.logo)+'">':'')+esc(opp.abbr||opp.name)+'</td>'+
-          '<td class="ct-legcell">'+leg+'</td>'+
-          '<td class="ct-score '+cls+'">'+meS.score+'–'+opp.score+pen+'</td></tr>';
+        /* Manche : uniquement en phase finale, accolée à l'adversaire. */
+        var leg = m.leg===1 ? '<span class="ct-leg a" title="'+esc(I18N.t('leg.first'))+'">'+esc(I18N.t('leg.firstShort'))+'</span>'
+                : m.leg===2 ? '<span class="ct-leg r" title="'+esc(I18N.t('leg.second'))+'">'+esc(I18N.t('leg.secondShort'))+'</span>'
+                : '';
+        var venueLbl=home?I18N.t('cc.home'):I18N.t('cc.away');
+        var pen=(meS.shootout!=null&&opp.shootout!=null)
+          ? '<span class="ct-pen">'+esc(I18N.t('common.pen'))+' '+meS.shootout+'–'+opp.shootout+'</span>' : '';
+        /* Score de l'équipe consultée TOUJOURS en premier, quel que soit le lieu. */
+        var score=meS.score+'<span class="ct-sep">-</span>'+opp.score;
+        var pill=live
+          ? '<span class="ct-pill is-live" title="'+esc(I18N.t('common.live'))+'"><span class="live-dot"></span></span>'
+          : '<span class="ct-pill '+cls+'" title="'+esc(I18N.t('res.'+cls.slice(4)))+'">'+esc(I18N.t('res.'+cls.slice(4)+'Short'))+'</span>';
+        rows+='<div class="ct-row '+(home?'at-home':'at-away')+(live?' is-live':'')+'">'+
+          '<div class="ct-opp">'+
+            '<span class="ct-venue" title="'+esc(venueLbl)+'" aria-hidden="true">'+(home?'⌂':'✈')+'</span>'+
+            (opp.logo?'<img src="'+esc(opp.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'')+
+            '<span class="ct-abbr">'+esc(opp.abbr||opp.name)+'</span>'+leg+
+            '<span class="cc-sr">'+esc(venueLbl)+'</span>'+
+          '</div>'+
+          '<div class="ct-score '+cls+'">'+score+pen+'</div>'+
+          '<div class="ct-outcome">'+pill+'</div>'+
+        '</div>';
       });
     });
-    var journeyTable = rows ? '<table class="cc-table"><tbody>'+rows+'</tbody></table>' : '<span class="cc-sub">—</span>';
+    var journeyTable = rows ? '<div class="cc-journey">'+rows+'</div>' : '<span class="cc-sub">—</span>';
     /* Phase de ligue : 8 adversaires distincts par club (4 ⌂ / 4 ✈). On affiche TOUS
        les matchs restants — le .slice(0,4) tronquait la moitié du tirage. */
     var nextChips=upcoming.map(function(m){
