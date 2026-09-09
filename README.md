@@ -14,8 +14,10 @@ Tracker + simulateur **live** de la Ligue des Champions, avec **overlay OBS** po
 | `tracker.html`   | Classement de la phase de ligue (36 clubs) + phase finale (cartes & arbre) + widget live. |
 | `overlay.html`   | **Overlay OBS** autonome, fond transparent. |
 | `legal.html`     | Mentions légales. |
+| `calendrier.html`| Calendrier des rencontres + vue « Tirage LDC » (bascule en haut de page). |
 | `i18n.js`        | Traduction FR/EN partagée (clé localStorage `ldc_lang`, attributs `data-i18n`). |
-| `espn.js`        | Couche d'accès ESPN (fetch robuste, classement, bracket). |
+| `espn.js`        | Couche d'accès ESPN (fetch robuste, classement, bracket) + les 36 qualifiés 2026-27. |
+| `draw2026.js`    | Résultat officiel du tirage UEFA du 27/08/2026 : les 8 adversaires (4 ⌂ / 4 ✈) de chacun des 36 clubs, indexés par identifiant ESPN. Repli quand ESPN n'a pas encore publié le calendrier. |
 | `styles.css`     | Thème sombre partagé. |
 
 ## Source de données
@@ -62,6 +64,11 @@ Le dépôt est déjà relié au projet Vercel `ldc-2026-2027` et au domaine
 2. Vercel crée automatiquement un déploiement de production depuis `main`.
 3. `vercel.json` impose le preset **Other**, sans installation ni build, et réécrit `/` vers `/dashboard.html`.
 4. Contrôler le statut **Ready** dans Vercel, puis tester le domaine de production.
+
+> ⚠️ **Ne pas déployer depuis le poste local** (`vercel --prod`). Le CLI envoie l'arbre de
+> travail tel quel — fichiers non suivis et modifications non validées comprises — et la
+> production devient introuvable dans l'historique Git. Le seul chemin supporté est
+> GitHub → Vercel.
 
 ## Robustesse
 
