@@ -784,7 +784,7 @@
     ESPN.fetchSeasonEvents().then(function(events){
       showOffline(false);
       lastEvents = events;
-      lastStandings = ESPN.computeStandings(events);
+      lastStandings = ESPN.computeStandings(events, (!ESPN.isArchive() && ESPN.isLeaguePhaseFormat()) ? ESPN.qualifiedClubs() : null);
       if(lastStandings && lastStandings.length) savePosSnapshot(lastStandings);   // base de la prochaine visite
       lastBracket = ESPN.buildBracket(events);
       (function(){ var lg=(events||[]).map(ESPN.normalizeEvent).filter(function(m){return m&&m.round==='league';}); replayAll=(lg.length>0 && lg.filter(function(m){return m.state==='pre';}).length===0); })();
