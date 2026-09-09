@@ -1,0 +1,14 @@
+# Normalise les fins de ligne : LF dans le dépôt, natif dans l'arbre de travail.
+# Sans ça, dashboard.html (CRLF+LF mélangés) et calendrier.html (tout CRLF)
+# produisaient des diffs entiers et l'avertissement « LF will be replaced by CRLF ».
+* text=auto eol=lf
+
+*.svg   text eol=lf
+*.json  text eol=lf
+*.sql   text eol=lf
+*.md    text eol=lf
+
+*.png   binary
+*.jpg   binary
+*.woff  binary
+*.woff2 binary
