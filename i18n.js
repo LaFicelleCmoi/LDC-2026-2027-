@@ -59,6 +59,8 @@
     'dash.clubPath':       { fr: 'Parcours du club',     en: 'Club journey' },
     'dash.clubScorers':    { fr: 'Buteurs du club',      en: 'Club scorers' },
     'dash.nextOpponents':  { fr: 'Prochains adversaires', en: 'Next opponents' },
+    'cc.home':             { fr: 'Domicile', en: 'Home' },
+    'cc.away':             { fr: 'Extérieur', en: 'Away' },
     'dash.seeStandings':   { fr: 'Voir le classement →', en: 'See standings →' },
     'dash.noClub':         { fr: 'Club introuvable dans la saison en cours.', en: 'Club not found in the current season.' },
     'dash.searchHint':     { fr: 'Recherche un club pour afficher son parcours, ses buteurs et ses prochains matchs.', en: 'Search a club to show its journey, scorers and upcoming matches.' },
