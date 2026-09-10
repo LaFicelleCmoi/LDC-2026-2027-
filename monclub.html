@@ -96,8 +96,8 @@
   <a href="dashboard.html" data-i18n="common.back">← Retour</a>
 </footer>
 
-<script src="i18n.js?v=21"></script>
-<script src="espn.js?v=14"></script>
+<script src="i18n.js?v=22"></script>
+<script src="espn.js?v=15"></script>
 <script src="ui.js?v=1"></script>
 <script>
 (function(){
@@ -155,7 +155,7 @@
   var YEARS=[]; (function(){ var c=ESPN.CURRENT_SEASON||2026; for(var y=c-1;y>=c-7;y--) YEARS.push(y); })();
 
   function renderShell(fav){
-    var titles=(window.ESPN&&ESPN.clubTitles)?ESPN.clubTitles(fav.name):null;
+    var titles=(window.ESPN&&ESPN.clubTitlesById)?ESPN.clubTitlesById(fav.id):null;
     var rank=null; try{ var pr=ESPN.palmaresRanking?ESPN.palmaresRanking():[]; for(var i=0;i<pr.length;i++){ if(String(pr[i].id)===String(fav.id) || (pr[i].name||'').toLowerCase().indexOf((fav.name||'').toLowerCase())>=0){ rank=pr[i].rank; break; } } }catch(e){}
     var chips='';
     if(titles){ chips+='<span class="mc-chip gold">🏆 '+titles.n+' '+esc(titles.n>1?T('titres','titles'):T('titre','title'))+'</span>'; }
