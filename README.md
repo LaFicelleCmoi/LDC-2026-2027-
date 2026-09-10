@@ -18,6 +18,10 @@ Tracker + simulateur **live** de la Ligue des Champions, avec **overlay OBS** po
 | `i18n.js`        | Traduction FR/EN partagée (clé localStorage `ldc_lang`, attributs `data-i18n`). |
 | `espn.js`        | Couche d'accès ESPN (fetch robuste, classement, bracket) + les 36 qualifiés 2026-27. |
 | `draw2026.js`    | Résultat officiel du tirage UEFA du 27/08/2026 : les 8 adversaires (4 ⌂ / 4 ✈) de chacun des 36 clubs, indexés par identifiant ESPN. Repli quand ESPN n'a pas encore publié le calendrier. |
+| `standings-engine.js` | **Moteur de classement pur** (sans DOM ni réseau) : article 18.01 du règlement UEFA, testé. |
+| `coefficients2026.js` | Coefficients clubs UEFA 2026/27 (dernier critère de départage), source et règle documentées. |
+| `simulate.js`    | Simulateur « What-If » : injecte des scores fictifs et reclasse via le moteur. |
+| `tests/`         | Tests unitaires (`node --test tests/*.test.js`), dont le classement officiel 2024-25 reproduit. |
 | `styles.css`     | Thème sombre partagé. |
 
 ## Source de données
@@ -69,6 +73,38 @@ Le dépôt est déjà relié au projet Vercel `ldc-2026-2027` et au domaine
 > travail tel quel — fichiers non suivis et modifications non validées comprises — et la
 > production devient introuvable dans l'historique Git. Le seul chemin supporté est
 > GitHub → Vercel.
+
+## Classement de la phase de ligue
+
+Le tri applique l'**article 18.01** du règlement de l'UEFA Champions League 2026/27, sans simplification.
+Trois couches séparées :
+
+1. **Données** — `espn.js` : matchs (API ESPN), cartons (keyEvents des résumés), date de synchronisation.
+2. **Tri** — `standings-engine.js` : fonction pure `rankLeaguePhase(matches, options)`.
+3. **Affichage** — `dashboard.html` / `tracker.html` : découpage en zones 1-8 / 9-24 / 25-36.
+
+| Phase | Critères, dans l'ordre |
+|---|---|
+| **En cours** | points → différence de buts → buts marqués → buts à l'extérieur → victoires → victoires à l'extérieur ; puis **rang partagé, ordre alphabétique** |
+| **Terminée** | les mêmes, puis points des adversaires → différence de buts des adversaires → buts des adversaires → fair-play le plus bas (rouge ou 2 jaunes = 3, jaune = 1) → coefficient club (annexes D.4 et D.8) |
+
+- **Pas de confrontation directe** : l'article 18.01 ne la prévoit pas pour la phase de ligue.
+  Elle n'existe qu'en option explicitement hors règlement (`{ headToHead: true }`), désactivée.
+- **On ne saute jamais un critère** : si une donnée manque (cartons non chargés, coefficient inconnu),
+  les équipes concernées sont marquées `unresolved` au lieu d'être classées par le critère suivant.
+- **Trophées** : l'API ESPN n'en fournit pas. Ils viennent de `UCL_PALMARES` (`espn.js`), vérifié contre
+  les 71 finales 1956-2026, et sont recherchés **par identifiant ESPN**.
+
+Vérification de référence : sur les 144 matchs de 2024-25, le moteur reproduit les 36 positions du
+classement final officiel, dont Real Madrid 11e devant le Bayern aux victoires à l'extérieur.
+
+## Tests
+
+Aucune dépendance, Node 18 ou plus :
+
+```bash
+node --test tests/*.test.js
+```
 
 ## Robustesse
 
