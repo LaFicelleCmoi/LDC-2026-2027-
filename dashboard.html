@@ -163,6 +163,14 @@ a{ text-decoration:none; color:inherit; }
 .pen-sub{ font-family:var(--font-b); font-size:0.4em; color:var(--blue); font-weight:800; vertical-align:0.45em; margin-left:3px; }
 .live-card.size-featured .pen-sub{ font-size:0.32em; }
 .live-empty,.live-error{ grid-column:1 / -1; text-align:center; padding:30px 20px; color:var(--muted); font-size:0.85em; border:1px dashed var(--border); border-radius:16px; background:rgba(0,0,0,0.2); }
+/* État vide : message + bouton vers la prochaine date. Flat, or fixe (#f5b50a) :
+   même traitement que les bascules, contraste AAA avec le texte sombre. */
+.live-empty-msg{ margin:0; font-size:1.05em; color:var(--white,#fff); }
+.live-empty-cta{ margin-top:16px; padding:10px 18px; border:0; border-radius:10px; background:#f5b50a; color:#1a1300;
+  font-family:inherit; font-size:0.95em; font-weight:800; letter-spacing:.02em; cursor:pointer; transition:filter .15s ease; }
+.live-empty-cta:hover{ filter:brightness(1.08); }
+.live-empty-cta:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+.live-empty-hint{ margin:10px 0 0; font-size:0.9em; color:var(--muted); }
 .live-error{ color:rgba(255,71,87,0.8); border-color:rgba(255,71,87,0.3); }
 @media (max-width:900px){ .live-cards-grid{ grid-template-columns:repeat(2,1fr); } .live-card.size-featured{ grid-column:span 2; grid-row:span 1; } }
 @media (max-width:600px){ .live-cards-grid{ grid-template-columns:1fr; } .live-card.size-featured,.live-card.size-wide,.live-card.size-small{ grid-column:span 1; grid-row:span 1; } }
@@ -774,7 +782,7 @@ a{ text-decoration:none; color:inherit; }
     <div class="tnav-days" role="group" aria-label="Navigation par jour">
       <button class="tnav-btn" type="button" data-day="-1" id="tnavPrev">‹ <span data-i18n="tnav.yesterday">Hier</span></button>
       <button class="tnav-btn active" type="button" data-day="0" id="tnavToday" aria-pressed="true"><span data-i18n="tnav.today">Aujourd'hui</span></button>
-      <button class="tnav-btn" type="button" data-day="1" id="tnavNext"><span data-i18n="tnav.tomorrow">Demain</span> ›</button>
+      <button class="tnav-btn" type="button" data-view="upcoming" id="tnavUpcoming"><span data-i18n="tnav.upcoming">À venir</span> ›</button>
     </div>
     <select class="tnav-md" id="tnavMd" aria-label="Choisir une journée"></select>
     <span class="tnav-count" id="tnavCount"></span>
@@ -831,9 +839,10 @@ a{ text-decoration:none; color:inherit; }
   </p>
 </footer>
 
-<script src="i18n.js?v=22"></script>
+<script src="i18n.js?v=23"></script>
 <script src="standings-engine.js?v=1"></script>
 <script src="coefficients2026.js?v=1"></script>
+<script src="schedule.js?v=1"></script>
 <script src="espn.js?v=15"></script>
 <script src="simulate.js?v=2"></script>
 <script src="share.js?v=1"></script>
@@ -996,13 +1005,14 @@ a{ text-decoration:none; color:inherit; }
 
     if(liveCount>0){ badge.style.display=''; var lbl=I18N.t('common.live'); glitch.dataset.text=lbl; glitch.textContent=lbl; } else { badge.style.display='none'; }
     if(archive) titleText.textContent=I18N.t('dash.lastMatch');
-    else if(liveCount>1) titleText.textContent='· '+liveCount; else if(liveCount===1) titleText.textContent=I18N.t('common.live'); else titleText.textContent=I18N.t('dash.liveToday');
+    else if(liveCount>1) titleText.textContent='· '+liveCount; else if(liveCount===1) titleText.textContent=I18N.t('common.live'); else titleText.textContent=viewTitle();
 
-    var sig=list.map(function(m){return m.id+m.state+m.home.score+'-'+m.away.score+'/'+m.home.shootout+'-'+m.away.shootout;}).join('|')+'|'+lang()+'|'+archive;
+    var sig=list.map(function(m){return m.id+m.state+m.home.score+'-'+m.away.score+'/'+m.home.shootout+'-'+m.away.shootout;}).join('|')+'|'+lang()+'|'+archive+
+      '|'+timeView.mode+':'+timeView.day+':'+timeView.md+(list.length?'':':'+((nextMatchBlock()||{}).key||''));
     if(sig===lastRenderSig){ stamp(); return; }
     lastRenderSig=sig;
 
-    if(!list.length){ grid.innerHTML='<div class="live-empty">'+esc(I18N.t(archive?'common.noMatch':'dash.empersToday'))+'</div>'; stamp(); return; }
+    if(!list.length){ grid.innerHTML=emptyStateHTML(archive); stamp(); return; }
     grid.innerHTML='';
     list.forEach(function(m,idx){ var c=buildLiveCard(m,idx,sizeForIndex(idx,list.length)); grid.appendChild(c); bindTilt(c,5); });
     bindGlow(); stamp();
@@ -1011,7 +1021,9 @@ a{ text-decoration:none; color:inherit; }
   /* ═══════════════════════════════════════════════════════════════════
      BLOC 1 — NAVIGATION TEMPORELLE
      État unique `timeView`, source de vérité de ce qu'affiche la grille :
-       { mode:'day', day:-1|0|1 }  -> une date (scoreboard ESPN)
+       { mode:'day', day:-1|0 }    -> hier ou aujourd'hui (scoreboard ESPN)
+       { mode:'upcoming' }         -> la prochaine DATE qui a des matchs, cherchée
+                                      dans tout le calendrier (LDCSchedule)
        { mode:'md',  md:1..8 }     -> une journée (filtre local sur seasonMatches)
      Tout passe par setTimeView() : aucun autre code ne touche à la grille
      directement, ce qui évite les états incohérents entre le poll et l'UI.
@@ -1031,6 +1043,71 @@ a{ text-decoration:none; color:inherit; }
   }
 
   function dateForOffset(off){ var d=new Date(); d.setDate(d.getDate()+off); return d; }
+
+  /* ── Prochaine date de matchs ─────────────────────────────────────────
+     La Ligue des Champions laisse des trous de plusieurs semaines entre deux
+     journées (33 jours entre la J1 et la J2 2026-27). Plutôt que « demain »,
+     on cherche dans TOUT le calendrier de la saison déjà en mémoire la
+     prochaine date qui a réellement des matchs. */
+  function upcomingPool(){
+    return (seasonMatches||[]).filter(function(m){ return m && m.round!=='qualifying'; });
+  }
+  function nextMatchBlock(){
+    if(ESPN.isArchive() || !window.LDCSchedule) return null;
+    return LDCSchedule.getNextMatchDate(upcomingPool(), new Date());
+  }
+
+  /* « mar. 13 oct. » (court) ou « mardi 13 octobre » (long) ; année ajoutée si
+     la date n'est pas dans l'année en cours. */
+  function dayLabel(date, long){
+    var o = long ? { weekday:'long', day:'numeric', month:'long' } : { weekday:'short', day:'numeric', month:'short' };
+    if(date.getFullYear()!==new Date().getFullYear()) o.year='numeric';
+    return date.toLocaleDateString(lang()==='en'?'en-GB':'fr-FR', o);
+  }
+
+  function viewTitle(){
+    if(timeView.mode==='md') return I18N.t('dash.liveMatchday')+' '+timeView.md;
+    if(timeView.mode==='upcoming') return I18N.t('dash.liveUpcoming');
+    if(timeView.day<0) return I18N.t('dash.liveYesterday');
+    return I18N.t('dash.liveToday');
+  }
+
+  /* État vide. Le bouton n'apparaît que s'il mène quelque part : pas depuis
+     « À venir » lui-même, et pas quand la saison n'a plus aucun match à jouer —
+     sinon on remplacerait un cul-de-sac par un autre. */
+  function emptyStateHTML(archive){
+    if(archive) return '<div class="live-empty">'+esc(I18N.t('common.noMatch'))+'</div>';
+    var key = timeView.mode==='upcoming' ? 'dash.emptyUpcoming'
+            : timeView.mode==='md' ? 'common.noMatch'
+            : (timeView.day<0 ? 'dash.emptyYesterday' : 'dash.emptyToday');
+    var html='<div class="live-empty" role="status"><p class="live-empty-msg">'+esc(I18N.t(key))+'</p>';
+    var next = timeView.mode==='upcoming' ? null : nextMatchBlock();
+    if(next){
+      var n=next.matches.length, en=lang()==='en';
+      html+='<button type="button" class="live-empty-cta" data-action="show-upcoming">'+esc(I18N.t('tnav.seeUpcoming'))+' ›</button>'+
+            '<p class="live-empty-hint">'+esc(I18N.t('tnav.nextDate'))+' '+esc(dayLabel(next.date,true))+' · '+n+' '+
+            esc(en?(n>1?'matches':'match'):(n>1?'matchs':'match'))+'</p>';
+    }
+    return html+'</div>';
+  }
+
+  /* Bascule sur « À venir ». Depuis le bouton de l'état vide, le focus part sur
+     l'onglet : le bouton cliqué disparaît avec le re-rendu de la grille, et le
+     focus clavier ne doit pas retomber en haut de la page. */
+  function showUpcoming(fromEmpty){
+    setTimeView({ mode:'upcoming', day:0, md:null });
+    if(fromEmpty){ var b=el('tnavUpcoming'); if(b){ try{ b.focus({preventScroll:true}); }catch(e){ b.focus(); } } }
+  }
+
+  /* Rechargement de saison (60 s) pendant la vue « À venir » : recalcul sans
+     fondu. La signature de renderLive évite tout re-rendu si rien n'a changé ;
+     passé minuit, la « prochaine date » avance d'elle-même. */
+  function refreshUpcoming(){
+    var next=nextMatchBlock();
+    timeView.nextDate = next ? next.date : null;
+    todayMatches = next ? next.matches.slice() : [];
+    renderLive(); syncTnavUI();
+  }
 
   /* Journées de phase de ligue, recalculées quand la saison change. */
   function matchdayGroups(){
@@ -1063,13 +1140,21 @@ a{ text-decoration:none; color:inherit; }
   function syncTnavUI(){
     var days=document.querySelectorAll('.tnav-btn');
     for(var i=0;i<days.length;i++){
-      var on=timeView.mode==='day' && parseInt(days[i].getAttribute('data-day'),10)===timeView.day;
-      days[i].classList.toggle('active',on);
-      days[i].setAttribute('aria-pressed',on?'true':'false');
+      var b=days[i];
+      var on = b.getAttribute('data-view')==='upcoming'
+        ? timeView.mode==='upcoming'
+        : (timeView.mode==='day' && parseInt(b.getAttribute('data-day'),10)===timeView.day);
+      b.classList.toggle('active',on);
+      b.setAttribute('aria-pressed',on?'true':'false');
     }
     var sel=el('tnavMd'); if(sel) sel.value=timeView.mode==='md'?String(timeView.md):'';
     var c=el('tnavCount');
-    if(c) c.textContent=todayMatches.length?(todayMatches.length+' '+(lang()==='en'?'matches':'matchs')):'';
+    if(!c) return;
+    var count=todayMatches.length?(todayMatches.length+' '+(lang()==='en'?'matches':'matchs')):'';
+    /* En « À venir », la date chargée peut être à plusieurs semaines : on
+       l'affiche, sinon l'utilisateur ne sait pas quel jour il regarde. */
+    c.textContent = (timeView.mode==='upcoming' && timeView.nextDate && todayMatches.length)
+      ? dayLabel(timeView.nextDate,false)+' · '+count : count;
   }
 
   /* Charge les matchs correspondant à l'état courant, puis rend avec fondu. */
@@ -1081,10 +1166,31 @@ a{ text-decoration:none; color:inherit; }
       swapGrid(function(){ todayMatches=g.slice(); renderLive(); syncTnavUI(); });
       return Promise.resolve();
     }
+    /* Jeton de vue : une réponse réseau qui arrive APRÈS un changement d'onglet
+       ne doit pas écraser la nouvelle vue (clic « À venir » puis « Hier »). */
+    var token=timeView;
+    if(timeView.mode==='upcoming'){
+      var show=function(){
+        if(timeView!==token) return;
+        var next=nextMatchBlock();
+        timeView.nextDate = next ? next.date : null;
+        lastRenderSig='';
+        swapGrid(function(){ if(timeView!==token) return; todayMatches = next ? next.matches.slice() : []; renderLive(); syncTnavUI(); });
+      };
+      /* Toute la saison est déjà en mémoire : aucune requête par date. Clic
+         avant le premier chargement : on attend la saison plutôt que d'afficher
+         un faux « aucun match ». */
+      if(seasonLoaded){ show(); return Promise.resolve(); }
+      return ESPN.fetchSeasonEvents().then(function(events){
+        if(!seasonLoaded) seasonMatches=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
+        show();
+      }).catch(show);
+    }
     var d=dateForOffset(timeView.day), key=ESPN.ymd(d);
     var done=function(list){
+      if(timeView!==token) return;
       lastRenderSig='';
-      swapGrid(function(){ todayMatches=list.slice(); renderLive(); syncTnavUI(); });
+      swapGrid(function(){ if(timeView!==token) return; todayMatches=list.slice(); renderLive(); syncTnavUI(); });
     };
     if(dayCache[key] && timeView.day!==0){ done(dayCache[key]); return Promise.resolve(); }
     return ESPN.fetchScoreboard(key).then(function(events){
@@ -1102,9 +1208,15 @@ a{ text-decoration:none; color:inherit; }
     var days=document.querySelectorAll('.tnav-btn');
     for(var i=0;i<days.length;i++){
       days[i].addEventListener('click',function(){
-        setTimeView({ mode:'day', day:parseInt(this.getAttribute('data-day'),10), md:null });
+        if(this.getAttribute('data-view')==='upcoming') showUpcoming(false);
+        else setTimeView({ mode:'day', day:parseInt(this.getAttribute('data-day'),10), md:null });
       });
     }
+    /* Bouton de l'état vide : délégation, la grille est régénérée à chaque rendu. */
+    var grid=el('live-cards-grid');
+    if(grid) grid.addEventListener('click',function(e){
+      if(e.target.closest && e.target.closest('[data-action="show-upcoming"]')) showUpcoming(true);
+    });
     var sel=el('tnavMd');
     if(sel) sel.addEventListener('change',function(){
       var v=parseInt(this.value,10);
@@ -1720,10 +1832,13 @@ a{ text-decoration:none; color:inherit; }
       /* Aucun match aujourd'hui : on ne bascule sur la vedette que HORS SAISON.
          En pleine saison, afficher le prochain match sous un onglet
          « Aujourd'hui » serait le même mensonge que le bug ci-dessus. */
-      else if(!seasonHasFixtures()){ renderFeatured(); syncTnavUI(); }
+      /* `seasonLoaded` : avant le chargement de la saison, seasonHasFixtures()
+         répond « non » faute de données, et la vedette s'affichait à tort sous
+         « Aujourd'hui » au démarrage. loadSeason tranche une fois la saison connue. */
+      else if(seasonLoaded && !seasonHasFixtures()){ renderFeatured(); syncTnavUI(); }
       else { todayMatches=[]; renderLive(); syncTnavUI(); }
       renderFav(); scheduleFavNotif();
-    }).catch(function(){ if(!todayMatches.length) renderFeatured(); });
+    }).catch(function(){ if(isLiveToday() && !todayMatches.length) renderFeatured(); });
   }
   function loadSeason(){
     if(document.visibilityState==='hidden') return;
@@ -1734,7 +1849,17 @@ a{ text-decoration:none; color:inherit; }
       standings=ESPN.computeStandings(events, (!ESPN.isArchive() && ESPN.isLeaguePhaseFormat()) ? ESPN.qualifiedClubs() : null);
       indexClubs(); renderZones(); renderMarquee(); renderFav(); scheduleFavNotif(); renderOffseason();
       buildMdSelect(); buildCountrySelect(); loadWidgets();
-      if(ESPN.isArchive() || !todayMatches.length) renderFeatured();  // dernier match de la saison sélectionnée
+      /* La vedette ne remplace la grille QUE sur la vue par défaut. Avant, une
+         liste vide suffisait : une vue « Hier » ou « Demain » vide était écrasée
+         par d'autres matchs à chaque rechargement de la saison (60 s). */
+      if(isLiveToday()){
+        var todayList=dayCache[ESPN.ymd(new Date())];
+        if(ESPN.isArchive()) renderFeatured();                     // archive : dernier match de la saison
+        else if(todayList && !todayList.length){
+          if(!seasonHasFixtures()) renderFeatured();               // hors saison
+          else { todayMatches=[]; renderLive(); syncTnavUI(); }    // en saison : état vide + prochaine date
+        }
+      } else if(timeView.mode==='upcoming') refreshUpcoming();
       if(!championDone && !ESPN.isArchive()){ var champ=ESPN.findChampion(ESPN.buildBracket(events)); if(champ){ championDone=true; Confetti.champion(); } }
     }).catch(function(){ seasonLoaded=true; renderZones(); });
   }
