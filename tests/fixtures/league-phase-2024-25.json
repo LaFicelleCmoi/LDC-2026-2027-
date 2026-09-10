@@ -1,0 +1,2387 @@
+{
+ "description": "Phase de ligue UEFA Champions League 2024-25 : les 144 matchs (ESPN) et le classement final officiel.",
+ "matchesSource": "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard?dates=20240901-20250831&limit=500",
+ "officialSource": "https://en.wikipedia.org/wiki/2024%E2%80%9325_UEFA_Champions_League_league_phase",
+ "officialNote": "Tied on points (15), goal difference (+8), goals scored (20), away goals (6) and wins (5). Ranked on away wins: Real Madrid 2, Bayern Munich 1.",
+ "retrieved": "2026-09-10",
+ "matches": [
+  {
+   "id": "720418",
+   "state": "post",
+   "time": 1726591500000,
+   "home": {
+    "teamId": "111",
+    "name": "Juventus",
+    "score": 3
+   },
+   "away": {
+    "teamId": "148",
+    "name": "PSV Eindhoven",
+    "score": 1
+   }
+  },
+  {
+   "id": "720419",
+   "state": "post",
+   "time": 1726591500000,
+   "home": {
+    "teamId": "2722",
+    "name": "Young Boys",
+    "score": 0
+   },
+   "away": {
+    "teamId": "362",
+    "name": "Aston Villa",
+    "score": 3
+   }
+  },
+  {
+   "id": "720365",
+   "state": "post",
+   "time": 1726599600000,
+   "home": {
+    "teamId": "103",
+    "name": "AC Milan",
+    "score": 1
+   },
+   "away": {
+    "teamId": "364",
+    "name": "Liverpool",
+    "score": 3
+   }
+  },
+  {
+   "id": "720420",
+   "state": "post",
+   "time": 1726599600000,
+   "home": {
+    "teamId": "86",
+    "name": "Real Madrid",
+    "score": 3
+   },
+   "away": {
+    "teamId": "134",
+    "name": "VfB Stuttgart",
+    "score": 1
+   }
+  },
+  {
+   "id": "720421",
+   "state": "post",
+   "time": 1726599600000,
+   "home": {
+    "teamId": "2250",
+    "name": "Sporting CP",
+    "score": 2
+   },
+   "away": {
+    "teamId": "166",
+    "name": "Lille",
+    "score": 0
+   }
+  },
+  {
+   "id": "720422",
+   "state": "post",
+   "time": 1726599600000,
+   "home": {
+    "teamId": "132",
+    "name": "Bayern Munich",
+    "score": 9
+   },
+   "away": {
+    "teamId": "597",
+    "name": "Dinamo Zagreb",
+    "score": 2
+   }
+  },
+  {
+   "id": "720423",
+   "state": "post",
+   "time": 1726677900000,
+   "home": {
+    "teamId": "433",
+    "name": "Sparta Prague",
+    "score": 3
+   },
+   "away": {
+    "teamId": "2790",
+    "name": "RB Salzburg",
+    "score": 0
+   }
+  },
+  {
+   "id": "720424",
+   "state": "post",
+   "time": 1726677900000,
+   "home": {
+    "teamId": "107",
+    "name": "Bologna",
+    "score": 0
+   },
+   "away": {
+    "teamId": "493",
+    "name": "Shakhtar Donetsk",
+    "score": 0
+   }
+  },
+  {
+   "id": "720425",
+   "state": "post",
+   "time": 1726686000000,
+   "home": {
+    "teamId": "160",
+    "name": "Paris Saint-Germain",
+    "score": 1
+   },
+   "away": {
+    "teamId": "9812",
+    "name": "Girona",
+    "score": 0
+   }
+  },
+  {
+   "id": "720426",
+   "state": "post",
+   "time": 1726686000000,
+   "home": {
+    "teamId": "382",
+    "name": "Manchester City",
+    "score": 0
+   },
+   "away": {
+    "teamId": "110",
+    "name": "Internazionale",
+    "score": 0
+   }
+  },
+  {
+   "id": "720427",
+   "state": "post",
+   "time": 1726686000000,
+   "home": {
+    "teamId": "256",
+    "name": "Celtic",
+    "score": 5
+   },
+   "away": {
+    "teamId": "521",
+    "name": "Slovan Bratislava",
+    "score": 1
+   }
+  },
+  {
+   "id": "720428",
+   "state": "post",
+   "time": 1726686000000,
+   "home": {
+    "teamId": "570",
+    "name": "Club Brugge",
+    "score": 0
+   },
+   "away": {
+    "teamId": "124",
+    "name": "Borussia Dortmund",
+    "score": 3
+   }
+  },
+  {
+   "id": "720429",
+   "state": "post",
+   "time": 1726764300000,
+   "home": {
+    "teamId": "2290",
+    "name": "Red Star Belgrade",
+    "score": 1
+   },
+   "away": {
+    "teamId": "1929",
+    "name": "Benfica",
+    "score": 2
+   }
+  },
+  {
+   "id": "720430",
+   "state": "post",
+   "time": 1726764300000,
+   "home": {
+    "teamId": "142",
+    "name": "Feyenoord Rotterdam",
+    "score": 0
+   },
+   "away": {
+    "teamId": "131",
+    "name": "Bayer Leverkusen",
+    "score": 4
+   }
+  },
+  {
+   "id": "720431",
+   "state": "post",
+   "time": 1726772400000,
+   "home": {
+    "teamId": "105",
+    "name": "Atalanta",
+    "score": 0
+   },
+   "away": {
+    "teamId": "359",
+    "name": "Arsenal",
+    "score": 0
+   }
+  },
+  {
+   "id": "720432",
+   "state": "post",
+   "time": 1726772400000,
+   "home": {
+    "teamId": "1068",
+    "name": "Atlético Madrid",
+    "score": 2
+   },
+   "away": {
+    "teamId": "11420",
+    "name": "RB Leipzig",
+    "score": 1
+   }
+  },
+  {
+   "id": "720433",
+   "state": "post",
+   "time": 1726772400000,
+   "home": {
+    "teamId": "6997",
+    "name": "Brest",
+    "score": 2
+   },
+   "away": {
+    "teamId": "3746",
+    "name": "SK Sturm Graz",
+    "score": 1
+   }
+  },
+  {
+   "id": "720434",
+   "state": "post",
+   "time": 1726772400000,
+   "home": {
+    "teamId": "174",
+    "name": "AS Monaco",
+    "score": 2
+   },
+   "away": {
+    "teamId": "83",
+    "name": "Barcelona",
+    "score": 1
+   }
+  },
+  {
+   "id": "720435",
+   "state": "post",
+   "time": 1727801100000,
+   "home": {
+    "teamId": "2790",
+    "name": "RB Salzburg",
+    "score": 0
+   },
+   "away": {
+    "teamId": "6997",
+    "name": "Brest",
+    "score": 4
+   }
+  },
+  {
+   "id": "720436",
+   "state": "post",
+   "time": 1727801100000,
+   "home": {
+    "teamId": "134",
+    "name": "VfB Stuttgart",
+    "score": 1
+   },
+   "away": {
+    "teamId": "433",
+    "name": "Sparta Prague",
+    "score": 1
+   }
+  },
+  {
+   "id": "720437",
+   "state": "post",
+   "time": 1727809200000,
+   "home": {
+    "teamId": "131",
+    "name": "Bayer Leverkusen",
+    "score": 1
+   },
+   "away": {
+    "teamId": "103",
+    "name": "AC Milan",
+    "score": 0
+   }
+  },
+  {
+   "id": "720438",
+   "state": "post",
+   "time": 1727809200000,
+   "home": {
+    "teamId": "124",
+    "name": "Borussia Dortmund",
+    "score": 7
+   },
+   "away": {
+    "teamId": "256",
+    "name": "Celtic",
+    "score": 1
+   }
+  },
+  {
+   "id": "720439",
+   "state": "post",
+   "time": 1727809200000,
+   "home": {
+    "teamId": "521",
+    "name": "Slovan Bratislava",
+    "score": 0
+   },
+   "away": {
+    "teamId": "382",
+    "name": "Manchester City",
+    "score": 4
+   }
+  },
+  {
+   "id": "720440",
+   "state": "post",
+   "time": 1727809200000,
+   "home": {
+    "teamId": "110",
+    "name": "Internazionale",
+    "score": 4
+   },
+   "away": {
+    "teamId": "2290",
+    "name": "Red Star Belgrade",
+    "score": 0
+   }
+  },
+  {
+   "id": "720441",
+   "state": "post",
+   "time": 1727809200000,
+   "home": {
+    "teamId": "148",
+    "name": "PSV Eindhoven",
+    "score": 1
+   },
+   "away": {
+    "teamId": "2250",
+    "name": "Sporting CP",
+    "score": 1
+   }
+  },
+  {
+   "id": "720442",
+   "state": "post",
+   "time": 1727809200000,
+   "home": {
+    "teamId": "83",
+    "name": "Barcelona",
+    "score": 5
+   },
+   "away": {
+    "teamId": "2722",
+    "name": "Young Boys",
+    "score": 0
+   }
+  },
+  {
+   "id": "720443",
+   "state": "post",
+   "time": 1727809200000,
+   "home": {
+    "teamId": "359",
+    "name": "Arsenal",
+    "score": 2
+   },
+   "away": {
+    "teamId": "160",
+    "name": "Paris Saint-Germain",
+    "score": 0
+   }
+  },
+  {
+   "id": "720444",
+   "state": "post",
+   "time": 1727887500000,
+   "home": {
+    "teamId": "493",
+    "name": "Shakhtar Donetsk",
+    "score": 0
+   },
+   "away": {
+    "teamId": "105",
+    "name": "Atalanta",
+    "score": 3
+   }
+  },
+  {
+   "id": "720445",
+   "state": "post",
+   "time": 1727887500000,
+   "home": {
+    "teamId": "9812",
+    "name": "Girona",
+    "score": 2
+   },
+   "away": {
+    "teamId": "142",
+    "name": "Feyenoord Rotterdam",
+    "score": 3
+   }
+  },
+  {
+   "id": "720366",
+   "state": "post",
+   "time": 1727895600000,
+   "home": {
+    "teamId": "364",
+    "name": "Liverpool",
+    "score": 2
+   },
+   "away": {
+    "teamId": "107",
+    "name": "Bologna",
+    "score": 0
+   }
+  },
+  {
+   "id": "720446",
+   "state": "post",
+   "time": 1727895600000,
+   "home": {
+    "teamId": "597",
+    "name": "Dinamo Zagreb",
+    "score": 2
+   },
+   "away": {
+    "teamId": "174",
+    "name": "AS Monaco",
+    "score": 2
+   }
+  },
+  {
+   "id": "720447",
+   "state": "post",
+   "time": 1727895600000,
+   "home": {
+    "teamId": "1929",
+    "name": "Benfica",
+    "score": 4
+   },
+   "away": {
+    "teamId": "1068",
+    "name": "Atlético Madrid",
+    "score": 0
+   }
+  },
+  {
+   "id": "720448",
+   "state": "post",
+   "time": 1727895600000,
+   "home": {
+    "teamId": "166",
+    "name": "Lille",
+    "score": 1
+   },
+   "away": {
+    "teamId": "86",
+    "name": "Real Madrid",
+    "score": 0
+   }
+  },
+  {
+   "id": "720449",
+   "state": "post",
+   "time": 1727895600000,
+   "home": {
+    "teamId": "11420",
+    "name": "RB Leipzig",
+    "score": 2
+   },
+   "away": {
+    "teamId": "111",
+    "name": "Juventus",
+    "score": 3
+   }
+  },
+  {
+   "id": "720450",
+   "state": "post",
+   "time": 1727895600000,
+   "home": {
+    "teamId": "3746",
+    "name": "SK Sturm Graz",
+    "score": 0
+   },
+   "away": {
+    "teamId": "570",
+    "name": "Club Brugge",
+    "score": 1
+   }
+  },
+  {
+   "id": "720451",
+   "state": "post",
+   "time": 1727895600000,
+   "home": {
+    "teamId": "362",
+    "name": "Aston Villa",
+    "score": 1
+   },
+   "away": {
+    "teamId": "132",
+    "name": "Bayern Munich",
+    "score": 0
+   }
+  },
+  {
+   "id": "720452",
+   "state": "post",
+   "time": 1729615500000,
+   "home": {
+    "teamId": "174",
+    "name": "AS Monaco",
+    "score": 5
+   },
+   "away": {
+    "teamId": "2290",
+    "name": "Red Star Belgrade",
+    "score": 1
+   }
+  },
+  {
+   "id": "720453",
+   "state": "post",
+   "time": 1729615500000,
+   "home": {
+    "teamId": "103",
+    "name": "AC Milan",
+    "score": 3
+   },
+   "away": {
+    "teamId": "570",
+    "name": "Club Brugge",
+    "score": 1
+   }
+  },
+  {
+   "id": "720454",
+   "state": "post",
+   "time": 1729623600000,
+   "home": {
+    "teamId": "9812",
+    "name": "Girona",
+    "score": 2
+   },
+   "away": {
+    "teamId": "521",
+    "name": "Slovan Bratislava",
+    "score": 0
+   }
+  },
+  {
+   "id": "720455",
+   "state": "post",
+   "time": 1729623600000,
+   "home": {
+    "teamId": "359",
+    "name": "Arsenal",
+    "score": 1
+   },
+   "away": {
+    "teamId": "493",
+    "name": "Shakhtar Donetsk",
+    "score": 0
+   }
+  },
+  {
+   "id": "720456",
+   "state": "post",
+   "time": 1729623600000,
+   "home": {
+    "teamId": "111",
+    "name": "Juventus",
+    "score": 0
+   },
+   "away": {
+    "teamId": "134",
+    "name": "VfB Stuttgart",
+    "score": 1
+   }
+  },
+  {
+   "id": "720457",
+   "state": "post",
+   "time": 1729623600000,
+   "home": {
+    "teamId": "362",
+    "name": "Aston Villa",
+    "score": 2
+   },
+   "away": {
+    "teamId": "107",
+    "name": "Bologna",
+    "score": 0
+   }
+  },
+  {
+   "id": "720458",
+   "state": "post",
+   "time": 1729623600000,
+   "home": {
+    "teamId": "3746",
+    "name": "SK Sturm Graz",
+    "score": 0
+   },
+   "away": {
+    "teamId": "2250",
+    "name": "Sporting CP",
+    "score": 2
+   }
+  },
+  {
+   "id": "720459",
+   "state": "post",
+   "time": 1729623600000,
+   "home": {
+    "teamId": "86",
+    "name": "Real Madrid",
+    "score": 5
+   },
+   "away": {
+    "teamId": "124",
+    "name": "Borussia Dortmund",
+    "score": 2
+   }
+  },
+  {
+   "id": "720460",
+   "state": "post",
+   "time": 1729623600000,
+   "home": {
+    "teamId": "160",
+    "name": "Paris Saint-Germain",
+    "score": 1
+   },
+   "away": {
+    "teamId": "148",
+    "name": "PSV Eindhoven",
+    "score": 1
+   }
+  },
+  {
+   "id": "720461",
+   "state": "post",
+   "time": 1729701900000,
+   "home": {
+    "teamId": "105",
+    "name": "Atalanta",
+    "score": 0
+   },
+   "away": {
+    "teamId": "256",
+    "name": "Celtic",
+    "score": 0
+   }
+  },
+  {
+   "id": "720462",
+   "state": "post",
+   "time": 1729701900000,
+   "home": {
+    "teamId": "6997",
+    "name": "Brest",
+    "score": 1
+   },
+   "away": {
+    "teamId": "131",
+    "name": "Bayer Leverkusen",
+    "score": 1
+   }
+  },
+  {
+   "id": "720367",
+   "state": "post",
+   "time": 1729710000000,
+   "home": {
+    "teamId": "11420",
+    "name": "RB Leipzig",
+    "score": 0
+   },
+   "away": {
+    "teamId": "364",
+    "name": "Liverpool",
+    "score": 1
+   }
+  },
+  {
+   "id": "720371",
+   "state": "post",
+   "time": 1729710000000,
+   "home": {
+    "teamId": "2722",
+    "name": "Young Boys",
+    "score": 0
+   },
+   "away": {
+    "teamId": "110",
+    "name": "Internazionale",
+    "score": 1
+   }
+  },
+  {
+   "id": "720372",
+   "state": "post",
+   "time": 1729710000000,
+   "home": {
+    "teamId": "83",
+    "name": "Barcelona",
+    "score": 4
+   },
+   "away": {
+    "teamId": "132",
+    "name": "Bayern Munich",
+    "score": 1
+   }
+  },
+  {
+   "id": "720373",
+   "state": "post",
+   "time": 1729710000000,
+   "home": {
+    "teamId": "1068",
+    "name": "Atlético Madrid",
+    "score": 1
+   },
+   "away": {
+    "teamId": "166",
+    "name": "Lille",
+    "score": 3
+   }
+  },
+  {
+   "id": "720374",
+   "state": "post",
+   "time": 1729710000000,
+   "home": {
+    "teamId": "382",
+    "name": "Manchester City",
+    "score": 5
+   },
+   "away": {
+    "teamId": "433",
+    "name": "Sparta Prague",
+    "score": 0
+   }
+  },
+  {
+   "id": "720463",
+   "state": "post",
+   "time": 1729710000000,
+   "home": {
+    "teamId": "1929",
+    "name": "Benfica",
+    "score": 1
+   },
+   "away": {
+    "teamId": "142",
+    "name": "Feyenoord Rotterdam",
+    "score": 3
+   }
+  },
+  {
+   "id": "720464",
+   "state": "post",
+   "time": 1729710000000,
+   "home": {
+    "teamId": "2790",
+    "name": "RB Salzburg",
+    "score": 0
+   },
+   "away": {
+    "teamId": "597",
+    "name": "Dinamo Zagreb",
+    "score": 2
+   }
+  },
+  {
+   "id": "720375",
+   "state": "post",
+   "time": 1730828700000,
+   "home": {
+    "teamId": "521",
+    "name": "Slovan Bratislava",
+    "score": 1
+   },
+   "away": {
+    "teamId": "597",
+    "name": "Dinamo Zagreb",
+    "score": 4
+   }
+  },
+  {
+   "id": "720376",
+   "state": "post",
+   "time": 1730828700000,
+   "home": {
+    "teamId": "148",
+    "name": "PSV Eindhoven",
+    "score": 4
+   },
+   "away": {
+    "teamId": "9812",
+    "name": "Girona",
+    "score": 0
+   }
+  },
+  {
+   "id": "720368",
+   "state": "post",
+   "time": 1730836800000,
+   "home": {
+    "teamId": "364",
+    "name": "Liverpool",
+    "score": 4
+   },
+   "away": {
+    "teamId": "131",
+    "name": "Bayer Leverkusen",
+    "score": 0
+   }
+  },
+  {
+   "id": "720377",
+   "state": "post",
+   "time": 1730836800000,
+   "home": {
+    "teamId": "256",
+    "name": "Celtic",
+    "score": 3
+   },
+   "away": {
+    "teamId": "11420",
+    "name": "RB Leipzig",
+    "score": 1
+   }
+  },
+  {
+   "id": "720378",
+   "state": "post",
+   "time": 1730836800000,
+   "home": {
+    "teamId": "166",
+    "name": "Lille",
+    "score": 1
+   },
+   "away": {
+    "teamId": "111",
+    "name": "Juventus",
+    "score": 1
+   }
+  },
+  {
+   "id": "720379",
+   "state": "post",
+   "time": 1730836800000,
+   "home": {
+    "teamId": "2250",
+    "name": "Sporting CP",
+    "score": 4
+   },
+   "away": {
+    "teamId": "382",
+    "name": "Manchester City",
+    "score": 1
+   }
+  },
+  {
+   "id": "720380",
+   "state": "post",
+   "time": 1730836800000,
+   "home": {
+    "teamId": "86",
+    "name": "Real Madrid",
+    "score": 1
+   },
+   "away": {
+    "teamId": "103",
+    "name": "AC Milan",
+    "score": 3
+   }
+  },
+  {
+   "id": "720381",
+   "state": "post",
+   "time": 1730836800000,
+   "home": {
+    "teamId": "124",
+    "name": "Borussia Dortmund",
+    "score": 1
+   },
+   "away": {
+    "teamId": "3746",
+    "name": "SK Sturm Graz",
+    "score": 0
+   }
+  },
+  {
+   "id": "720382",
+   "state": "post",
+   "time": 1730836800000,
+   "home": {
+    "teamId": "107",
+    "name": "Bologna",
+    "score": 0
+   },
+   "away": {
+    "teamId": "174",
+    "name": "AS Monaco",
+    "score": 1
+   }
+  },
+  {
+   "id": "720383",
+   "state": "post",
+   "time": 1730915100000,
+   "home": {
+    "teamId": "570",
+    "name": "Club Brugge",
+    "score": 1
+   },
+   "away": {
+    "teamId": "362",
+    "name": "Aston Villa",
+    "score": 0
+   }
+  },
+  {
+   "id": "720384",
+   "state": "post",
+   "time": 1730915100000,
+   "home": {
+    "teamId": "493",
+    "name": "Shakhtar Donetsk",
+    "score": 2
+   },
+   "away": {
+    "teamId": "2722",
+    "name": "Young Boys",
+    "score": 1
+   }
+  },
+  {
+   "id": "720385",
+   "state": "post",
+   "time": 1730923200000,
+   "home": {
+    "teamId": "2290",
+    "name": "Red Star Belgrade",
+    "score": 2
+   },
+   "away": {
+    "teamId": "83",
+    "name": "Barcelona",
+    "score": 5
+   }
+  },
+  {
+   "id": "720386",
+   "state": "post",
+   "time": 1730923200000,
+   "home": {
+    "teamId": "142",
+    "name": "Feyenoord Rotterdam",
+    "score": 1
+   },
+   "away": {
+    "teamId": "2790",
+    "name": "RB Salzburg",
+    "score": 3
+   }
+  },
+  {
+   "id": "720387",
+   "state": "post",
+   "time": 1730923200000,
+   "home": {
+    "teamId": "110",
+    "name": "Internazionale",
+    "score": 1
+   },
+   "away": {
+    "teamId": "359",
+    "name": "Arsenal",
+    "score": 0
+   }
+  },
+  {
+   "id": "720388",
+   "state": "post",
+   "time": 1730923200000,
+   "home": {
+    "teamId": "160",
+    "name": "Paris Saint-Germain",
+    "score": 1
+   },
+   "away": {
+    "teamId": "1068",
+    "name": "Atlético Madrid",
+    "score": 2
+   }
+  },
+  {
+   "id": "720390",
+   "state": "post",
+   "time": 1730923200000,
+   "home": {
+    "teamId": "433",
+    "name": "Sparta Prague",
+    "score": 1
+   },
+   "away": {
+    "teamId": "6997",
+    "name": "Brest",
+    "score": 2
+   }
+  },
+  {
+   "id": "720391",
+   "state": "post",
+   "time": 1730923200000,
+   "home": {
+    "teamId": "134",
+    "name": "VfB Stuttgart",
+    "score": 0
+   },
+   "away": {
+    "teamId": "105",
+    "name": "Atalanta",
+    "score": 2
+   }
+  },
+  {
+   "id": "720389",
+   "state": "post",
+   "time": 1730924100000,
+   "home": {
+    "teamId": "132",
+    "name": "Bayern Munich",
+    "score": 1
+   },
+   "away": {
+    "teamId": "1929",
+    "name": "Benfica",
+    "score": 0
+   }
+  },
+  {
+   "id": "720392",
+   "state": "post",
+   "time": 1732643100000,
+   "home": {
+    "teamId": "433",
+    "name": "Sparta Prague",
+    "score": 0
+   },
+   "away": {
+    "teamId": "1068",
+    "name": "Atlético Madrid",
+    "score": 6
+   }
+  },
+  {
+   "id": "720393",
+   "state": "post",
+   "time": 1732643100000,
+   "home": {
+    "teamId": "521",
+    "name": "Slovan Bratislava",
+    "score": 2
+   },
+   "away": {
+    "teamId": "103",
+    "name": "AC Milan",
+    "score": 3
+   }
+  },
+  {
+   "id": "720394",
+   "state": "post",
+   "time": 1732651200000,
+   "home": {
+    "teamId": "83",
+    "name": "Barcelona",
+    "score": 3
+   },
+   "away": {
+    "teamId": "6997",
+    "name": "Brest",
+    "score": 0
+   }
+  },
+  {
+   "id": "720395",
+   "state": "post",
+   "time": 1732651200000,
+   "home": {
+    "teamId": "131",
+    "name": "Bayer Leverkusen",
+    "score": 5
+   },
+   "away": {
+    "teamId": "2790",
+    "name": "RB Salzburg",
+    "score": 0
+   }
+  },
+  {
+   "id": "720396",
+   "state": "post",
+   "time": 1732651200000,
+   "home": {
+    "teamId": "132",
+    "name": "Bayern Munich",
+    "score": 1
+   },
+   "away": {
+    "teamId": "160",
+    "name": "Paris Saint-Germain",
+    "score": 0
+   }
+  },
+  {
+   "id": "720397",
+   "state": "post",
+   "time": 1732651200000,
+   "home": {
+    "teamId": "110",
+    "name": "Internazionale",
+    "score": 1
+   },
+   "away": {
+    "teamId": "11420",
+    "name": "RB Leipzig",
+    "score": 0
+   }
+  },
+  {
+   "id": "720398",
+   "state": "post",
+   "time": 1732651200000,
+   "home": {
+    "teamId": "382",
+    "name": "Manchester City",
+    "score": 3
+   },
+   "away": {
+    "teamId": "142",
+    "name": "Feyenoord Rotterdam",
+    "score": 3
+   }
+  },
+  {
+   "id": "720399",
+   "state": "post",
+   "time": 1732651200000,
+   "home": {
+    "teamId": "2250",
+    "name": "Sporting CP",
+    "score": 1
+   },
+   "away": {
+    "teamId": "359",
+    "name": "Arsenal",
+    "score": 5
+   }
+  },
+  {
+   "id": "720400",
+   "state": "post",
+   "time": 1732651200000,
+   "home": {
+    "teamId": "2722",
+    "name": "Young Boys",
+    "score": 1
+   },
+   "away": {
+    "teamId": "105",
+    "name": "Atalanta",
+    "score": 6
+   }
+  },
+  {
+   "id": "720401",
+   "state": "post",
+   "time": 1732729500000,
+   "home": {
+    "teamId": "3746",
+    "name": "SK Sturm Graz",
+    "score": 1
+   },
+   "away": {
+    "teamId": "9812",
+    "name": "Girona",
+    "score": 0
+   }
+  },
+  {
+   "id": "720402",
+   "state": "post",
+   "time": 1732729500000,
+   "home": {
+    "teamId": "2290",
+    "name": "Red Star Belgrade",
+    "score": 5
+   },
+   "away": {
+    "teamId": "134",
+    "name": "VfB Stuttgart",
+    "score": 1
+   }
+  },
+  {
+   "id": "720369",
+   "state": "post",
+   "time": 1732737600000,
+   "home": {
+    "teamId": "364",
+    "name": "Liverpool",
+    "score": 2
+   },
+   "away": {
+    "teamId": "86",
+    "name": "Real Madrid",
+    "score": 0
+   }
+  },
+  {
+   "id": "720403",
+   "state": "post",
+   "time": 1732737600000,
+   "home": {
+    "teamId": "107",
+    "name": "Bologna",
+    "score": 1
+   },
+   "away": {
+    "teamId": "166",
+    "name": "Lille",
+    "score": 2
+   }
+  },
+  {
+   "id": "720404",
+   "state": "post",
+   "time": 1732737600000,
+   "home": {
+    "teamId": "256",
+    "name": "Celtic",
+    "score": 1
+   },
+   "away": {
+    "teamId": "570",
+    "name": "Club Brugge",
+    "score": 1
+   }
+  },
+  {
+   "id": "720405",
+   "state": "post",
+   "time": 1732737600000,
+   "home": {
+    "teamId": "362",
+    "name": "Aston Villa",
+    "score": 0
+   },
+   "away": {
+    "teamId": "111",
+    "name": "Juventus",
+    "score": 0
+   }
+  },
+  {
+   "id": "720406",
+   "state": "post",
+   "time": 1732737600000,
+   "home": {
+    "teamId": "597",
+    "name": "Dinamo Zagreb",
+    "score": 0
+   },
+   "away": {
+    "teamId": "124",
+    "name": "Borussia Dortmund",
+    "score": 3
+   }
+  },
+  {
+   "id": "720407",
+   "state": "post",
+   "time": 1732737600000,
+   "home": {
+    "teamId": "174",
+    "name": "AS Monaco",
+    "score": 2
+   },
+   "away": {
+    "teamId": "1929",
+    "name": "Benfica",
+    "score": 3
+   }
+  },
+  {
+   "id": "720408",
+   "state": "post",
+   "time": 1732737600000,
+   "home": {
+    "teamId": "148",
+    "name": "PSV Eindhoven",
+    "score": 3
+   },
+   "away": {
+    "teamId": "493",
+    "name": "Shakhtar Donetsk",
+    "score": 2
+   }
+  },
+  {
+   "id": "720370",
+   "state": "post",
+   "time": 1733852700000,
+   "home": {
+    "teamId": "9812",
+    "name": "Girona",
+    "score": 0
+   },
+   "away": {
+    "teamId": "364",
+    "name": "Liverpool",
+    "score": 1
+   }
+  },
+  {
+   "id": "720409",
+   "state": "post",
+   "time": 1733852700000,
+   "home": {
+    "teamId": "597",
+    "name": "Dinamo Zagreb",
+    "score": 0
+   },
+   "away": {
+    "teamId": "256",
+    "name": "Celtic",
+    "score": 0
+   }
+  },
+  {
+   "id": "720410",
+   "state": "post",
+   "time": 1733860800000,
+   "home": {
+    "teamId": "570",
+    "name": "Club Brugge",
+    "score": 2
+   },
+   "away": {
+    "teamId": "2250",
+    "name": "Sporting CP",
+    "score": 1
+   }
+  },
+  {
+   "id": "720411",
+   "state": "post",
+   "time": 1733860800000,
+   "home": {
+    "teamId": "6997",
+    "name": "Brest",
+    "score": 1
+   },
+   "away": {
+    "teamId": "148",
+    "name": "PSV Eindhoven",
+    "score": 0
+   }
+  },
+  {
+   "id": "720412",
+   "state": "post",
+   "time": 1733860800000,
+   "home": {
+    "teamId": "131",
+    "name": "Bayer Leverkusen",
+    "score": 1
+   },
+   "away": {
+    "teamId": "110",
+    "name": "Internazionale",
+    "score": 0
+   }
+  },
+  {
+   "id": "720413",
+   "state": "post",
+   "time": 1733860800000,
+   "home": {
+    "teamId": "105",
+    "name": "Atalanta",
+    "score": 2
+   },
+   "away": {
+    "teamId": "86",
+    "name": "Real Madrid",
+    "score": 3
+   }
+  },
+  {
+   "id": "720414",
+   "state": "post",
+   "time": 1733860800000,
+   "home": {
+    "teamId": "2790",
+    "name": "RB Salzburg",
+    "score": 0
+   },
+   "away": {
+    "teamId": "160",
+    "name": "Paris Saint-Germain",
+    "score": 3
+   }
+  },
+  {
+   "id": "720415",
+   "state": "post",
+   "time": 1733860800000,
+   "home": {
+    "teamId": "493",
+    "name": "Shakhtar Donetsk",
+    "score": 1
+   },
+   "away": {
+    "teamId": "132",
+    "name": "Bayern Munich",
+    "score": 5
+   }
+  },
+  {
+   "id": "720416",
+   "state": "post",
+   "time": 1733860800000,
+   "home": {
+    "teamId": "11420",
+    "name": "RB Leipzig",
+    "score": 2
+   },
+   "away": {
+    "teamId": "362",
+    "name": "Aston Villa",
+    "score": 3
+   }
+  },
+  {
+   "id": "720321",
+   "state": "post",
+   "time": 1733939100000,
+   "home": {
+    "teamId": "1068",
+    "name": "Atlético Madrid",
+    "score": 3
+   },
+   "away": {
+    "teamId": "521",
+    "name": "Slovan Bratislava",
+    "score": 1
+   }
+  },
+  {
+   "id": "720417",
+   "state": "post",
+   "time": 1733939100000,
+   "home": {
+    "teamId": "166",
+    "name": "Lille",
+    "score": 3
+   },
+   "away": {
+    "teamId": "3746",
+    "name": "SK Sturm Graz",
+    "score": 2
+   }
+  },
+  {
+   "id": "720322",
+   "state": "post",
+   "time": 1733947200000,
+   "home": {
+    "teamId": "124",
+    "name": "Borussia Dortmund",
+    "score": 2
+   },
+   "away": {
+    "teamId": "83",
+    "name": "Barcelona",
+    "score": 3
+   }
+  },
+  {
+   "id": "720323",
+   "state": "post",
+   "time": 1733947200000,
+   "home": {
+    "teamId": "142",
+    "name": "Feyenoord Rotterdam",
+    "score": 4
+   },
+   "away": {
+    "teamId": "433",
+    "name": "Sparta Prague",
+    "score": 2
+   }
+  },
+  {
+   "id": "720324",
+   "state": "post",
+   "time": 1733947200000,
+   "home": {
+    "teamId": "1929",
+    "name": "Benfica",
+    "score": 0
+   },
+   "away": {
+    "teamId": "107",
+    "name": "Bologna",
+    "score": 0
+   }
+  },
+  {
+   "id": "720325",
+   "state": "post",
+   "time": 1733947200000,
+   "home": {
+    "teamId": "359",
+    "name": "Arsenal",
+    "score": 3
+   },
+   "away": {
+    "teamId": "174",
+    "name": "AS Monaco",
+    "score": 0
+   }
+  },
+  {
+   "id": "720326",
+   "state": "post",
+   "time": 1733947200000,
+   "home": {
+    "teamId": "111",
+    "name": "Juventus",
+    "score": 2
+   },
+   "away": {
+    "teamId": "382",
+    "name": "Manchester City",
+    "score": 0
+   }
+  },
+  {
+   "id": "720327",
+   "state": "post",
+   "time": 1733947200000,
+   "home": {
+    "teamId": "134",
+    "name": "VfB Stuttgart",
+    "score": 5
+   },
+   "away": {
+    "teamId": "2722",
+    "name": "Young Boys",
+    "score": 1
+   }
+  },
+  {
+   "id": "720328",
+   "state": "post",
+   "time": 1733947200000,
+   "home": {
+    "teamId": "103",
+    "name": "AC Milan",
+    "score": 2
+   },
+   "away": {
+    "teamId": "2290",
+    "name": "Red Star Belgrade",
+    "score": 1
+   }
+  },
+  {
+   "id": "720329",
+   "state": "post",
+   "time": 1737481500000,
+   "home": {
+    "teamId": "105",
+    "name": "Atalanta",
+    "score": 5
+   },
+   "away": {
+    "teamId": "3746",
+    "name": "SK Sturm Graz",
+    "score": 0
+   }
+  },
+  {
+   "id": "720330",
+   "state": "post",
+   "time": 1737481500000,
+   "home": {
+    "teamId": "174",
+    "name": "AS Monaco",
+    "score": 1
+   },
+   "away": {
+    "teamId": "362",
+    "name": "Aston Villa",
+    "score": 0
+   }
+  },
+  {
+   "id": "720331",
+   "state": "post",
+   "time": 1737489600000,
+   "home": {
+    "teamId": "364",
+    "name": "Liverpool",
+    "score": 2
+   },
+   "away": {
+    "teamId": "166",
+    "name": "Lille",
+    "score": 1
+   }
+  },
+  {
+   "id": "720332",
+   "state": "post",
+   "time": 1737489600000,
+   "home": {
+    "teamId": "2290",
+    "name": "Red Star Belgrade",
+    "score": 2
+   },
+   "away": {
+    "teamId": "148",
+    "name": "PSV Eindhoven",
+    "score": 3
+   }
+  },
+  {
+   "id": "720333",
+   "state": "post",
+   "time": 1737489600000,
+   "home": {
+    "teamId": "107",
+    "name": "Bologna",
+    "score": 2
+   },
+   "away": {
+    "teamId": "124",
+    "name": "Borussia Dortmund",
+    "score": 1
+   }
+  },
+  {
+   "id": "720334",
+   "state": "post",
+   "time": 1737489600000,
+   "home": {
+    "teamId": "1929",
+    "name": "Benfica",
+    "score": 4
+   },
+   "away": {
+    "teamId": "83",
+    "name": "Barcelona",
+    "score": 5
+   }
+  },
+  {
+   "id": "720335",
+   "state": "post",
+   "time": 1737489600000,
+   "home": {
+    "teamId": "1068",
+    "name": "Atlético Madrid",
+    "score": 2
+   },
+   "away": {
+    "teamId": "131",
+    "name": "Bayer Leverkusen",
+    "score": 1
+   }
+  },
+  {
+   "id": "720336",
+   "state": "post",
+   "time": 1737489600000,
+   "home": {
+    "teamId": "570",
+    "name": "Club Brugge",
+    "score": 0
+   },
+   "away": {
+    "teamId": "111",
+    "name": "Juventus",
+    "score": 0
+   }
+  },
+  {
+   "id": "720337",
+   "state": "post",
+   "time": 1737489600000,
+   "home": {
+    "teamId": "521",
+    "name": "Slovan Bratislava",
+    "score": 1
+   },
+   "away": {
+    "teamId": "134",
+    "name": "VfB Stuttgart",
+    "score": 3
+   }
+  },
+  {
+   "id": "720338",
+   "state": "post",
+   "time": 1737567900000,
+   "home": {
+    "teamId": "493",
+    "name": "Shakhtar Donetsk",
+    "score": 2
+   },
+   "away": {
+    "teamId": "6997",
+    "name": "Brest",
+    "score": 0
+   }
+  },
+  {
+   "id": "720339",
+   "state": "post",
+   "time": 1737567900000,
+   "home": {
+    "teamId": "11420",
+    "name": "RB Leipzig",
+    "score": 2
+   },
+   "away": {
+    "teamId": "2250",
+    "name": "Sporting CP",
+    "score": 1
+   }
+  },
+  {
+   "id": "720340",
+   "state": "post",
+   "time": 1737576000000,
+   "home": {
+    "teamId": "433",
+    "name": "Sparta Prague",
+    "score": 0
+   },
+   "away": {
+    "teamId": "110",
+    "name": "Internazionale",
+    "score": 1
+   }
+  },
+  {
+   "id": "720341",
+   "state": "post",
+   "time": 1737576000000,
+   "home": {
+    "teamId": "142",
+    "name": "Feyenoord Rotterdam",
+    "score": 3
+   },
+   "away": {
+    "teamId": "132",
+    "name": "Bayern Munich",
+    "score": 0
+   }
+  },
+  {
+   "id": "720342",
+   "state": "post",
+   "time": 1737576000000,
+   "home": {
+    "teamId": "256",
+    "name": "Celtic",
+    "score": 1
+   },
+   "away": {
+    "teamId": "2722",
+    "name": "Young Boys",
+    "score": 0
+   }
+  },
+  {
+   "id": "720343",
+   "state": "post",
+   "time": 1737576000000,
+   "home": {
+    "teamId": "359",
+    "name": "Arsenal",
+    "score": 3
+   },
+   "away": {
+    "teamId": "597",
+    "name": "Dinamo Zagreb",
+    "score": 0
+   }
+  },
+  {
+   "id": "720344",
+   "state": "post",
+   "time": 1737576000000,
+   "home": {
+    "teamId": "160",
+    "name": "Paris Saint-Germain",
+    "score": 4
+   },
+   "away": {
+    "teamId": "382",
+    "name": "Manchester City",
+    "score": 2
+   }
+  },
+  {
+   "id": "720345",
+   "state": "post",
+   "time": 1737576000000,
+   "home": {
+    "teamId": "86",
+    "name": "Real Madrid",
+    "score": 5
+   },
+   "away": {
+    "teamId": "2790",
+    "name": "RB Salzburg",
+    "score": 1
+   }
+  },
+  {
+   "id": "720346",
+   "state": "post",
+   "time": 1737576000000,
+   "home": {
+    "teamId": "103",
+    "name": "AC Milan",
+    "score": 1
+   },
+   "away": {
+    "teamId": "9812",
+    "name": "Girona",
+    "score": 0
+   }
+  },
+  {
+   "id": "720347",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "110",
+    "name": "Internazionale",
+    "score": 3
+   },
+   "away": {
+    "teamId": "174",
+    "name": "AS Monaco",
+    "score": 0
+   }
+  },
+  {
+   "id": "720348",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "111",
+    "name": "Juventus",
+    "score": 0
+   },
+   "away": {
+    "teamId": "1929",
+    "name": "Benfica",
+    "score": 2
+   }
+  },
+  {
+   "id": "720349",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "166",
+    "name": "Lille",
+    "score": 6
+   },
+   "away": {
+    "teamId": "142",
+    "name": "Feyenoord Rotterdam",
+    "score": 1
+   }
+  },
+  {
+   "id": "720350",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "382",
+    "name": "Manchester City",
+    "score": 3
+   },
+   "away": {
+    "teamId": "570",
+    "name": "Club Brugge",
+    "score": 1
+   }
+  },
+  {
+   "id": "720351",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "148",
+    "name": "PSV Eindhoven",
+    "score": 3
+   },
+   "away": {
+    "teamId": "364",
+    "name": "Liverpool",
+    "score": 2
+   }
+  },
+  {
+   "id": "720352",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "3746",
+    "name": "SK Sturm Graz",
+    "score": 1
+   },
+   "away": {
+    "teamId": "11420",
+    "name": "RB Leipzig",
+    "score": 0
+   }
+  },
+  {
+   "id": "720353",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "2250",
+    "name": "Sporting CP",
+    "score": 1
+   },
+   "away": {
+    "teamId": "107",
+    "name": "Bologna",
+    "score": 1
+   }
+  },
+  {
+   "id": "720354",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "134",
+    "name": "VfB Stuttgart",
+    "score": 1
+   },
+   "away": {
+    "teamId": "160",
+    "name": "Paris Saint-Germain",
+    "score": 4
+   }
+  },
+  {
+   "id": "720355",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "9812",
+    "name": "Girona",
+    "score": 1
+   },
+   "away": {
+    "teamId": "359",
+    "name": "Arsenal",
+    "score": 2
+   }
+  },
+  {
+   "id": "720356",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "2790",
+    "name": "RB Salzburg",
+    "score": 1
+   },
+   "away": {
+    "teamId": "1068",
+    "name": "Atlético Madrid",
+    "score": 4
+   }
+  },
+  {
+   "id": "720357",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "132",
+    "name": "Bayern Munich",
+    "score": 3
+   },
+   "away": {
+    "teamId": "521",
+    "name": "Slovan Bratislava",
+    "score": 1
+   }
+  },
+  {
+   "id": "720358",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "597",
+    "name": "Dinamo Zagreb",
+    "score": 2
+   },
+   "away": {
+    "teamId": "103",
+    "name": "AC Milan",
+    "score": 1
+   }
+  },
+  {
+   "id": "720359",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "2722",
+    "name": "Young Boys",
+    "score": 0
+   },
+   "away": {
+    "teamId": "2290",
+    "name": "Red Star Belgrade",
+    "score": 1
+   }
+  },
+  {
+   "id": "720360",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "124",
+    "name": "Borussia Dortmund",
+    "score": 3
+   },
+   "away": {
+    "teamId": "493",
+    "name": "Shakhtar Donetsk",
+    "score": 1
+   }
+  },
+  {
+   "id": "720361",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "131",
+    "name": "Bayer Leverkusen",
+    "score": 2
+   },
+   "away": {
+    "teamId": "433",
+    "name": "Sparta Prague",
+    "score": 0
+   }
+  },
+  {
+   "id": "720362",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "83",
+    "name": "Barcelona",
+    "score": 2
+   },
+   "away": {
+    "teamId": "105",
+    "name": "Atalanta",
+    "score": 2
+   }
+  },
+  {
+   "id": "720363",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "362",
+    "name": "Aston Villa",
+    "score": 4
+   },
+   "away": {
+    "teamId": "256",
+    "name": "Celtic",
+    "score": 2
+   }
+  },
+  {
+   "id": "720364",
+   "state": "post",
+   "time": 1738180800000,
+   "home": {
+    "teamId": "6997",
+    "name": "Brest",
+    "score": 0
+   },
+   "away": {
+    "teamId": "86",
+    "name": "Real Madrid",
+    "score": 3
+   }
+  }
+ ],
+ "officialOrder": [
+  {
+   "teamId": "364",
+   "espnName": "Liverpool",
+   "officialName": "Liverpool",
+   "pts": 21
+  },
+  {
+   "teamId": "83",
+   "espnName": "Barcelona",
+   "officialName": "Barcelona",
+   "pts": 19
+  },
+  {
+   "teamId": "359",
+   "espnName": "Arsenal",
+   "officialName": "Arsenal",
+   "pts": 19
+  },
+  {
+   "teamId": "110",
+   "espnName": "Internazionale",
+   "officialName": "Inter Milan",
+   "pts": 19
+  },
+  {
+   "teamId": "1068",
+   "espnName": "Atlético Madrid",
+   "officialName": "Atlético Madrid",
+   "pts": 18
+  },
+  {
+   "teamId": "131",
+   "espnName": "Bayer Leverkusen",
+   "officialName": "Bayer Leverkusen",
+   "pts": 16
+  },
+  {
+   "teamId": "166",
+   "espnName": "Lille",
+   "officialName": "Lille",
+   "pts": 16
+  },
+  {
+   "teamId": "362",
+   "espnName": "Aston Villa",
+   "officialName": "Aston Villa",
+   "pts": 16
+  },
+  {
+   "teamId": "105",
+   "espnName": "Atalanta",
+   "officialName": "Atalanta",
+   "pts": 15
+  },
+  {
+   "teamId": "124",
+   "espnName": "Borussia Dortmund",
+   "officialName": "Borussia Dortmund",
+   "pts": 15
+  },
+  {
+   "teamId": "86",
+   "espnName": "Real Madrid",
+   "officialName": "Real Madrid",
+   "pts": 15
+  },
+  {
+   "teamId": "132",
+   "espnName": "Bayern Munich",
+   "officialName": "Bayern Munich",
+   "pts": 15
+  },
+  {
+   "teamId": "103",
+   "espnName": "AC Milan",
+   "officialName": "Milan",
+   "pts": 15
+  },
+  {
+   "teamId": "148",
+   "espnName": "PSV Eindhoven",
+   "officialName": "PSV Eindhoven",
+   "pts": 14
+  },
+  {
+   "teamId": "160",
+   "espnName": "Paris Saint-Germain",
+   "officialName": "Paris Saint-Germain",
+   "pts": 13
+  },
+  {
+   "teamId": "1929",
+   "espnName": "Benfica",
+   "officialName": "Benfica",
+   "pts": 13
+  },
+  {
+   "teamId": "174",
+   "espnName": "AS Monaco",
+   "officialName": "Monaco",
+   "pts": 13
+  },
+  {
+   "teamId": "6997",
+   "espnName": "Brest",
+   "officialName": "Brest",
+   "pts": 13
+  },
+  {
+   "teamId": "142",
+   "espnName": "Feyenoord Rotterdam",
+   "officialName": "Feyenoord",
+   "pts": 13
+  },
+  {
+   "teamId": "111",
+   "espnName": "Juventus",
+   "officialName": "Juventus",
+   "pts": 12
+  },
+  {
+   "teamId": "256",
+   "espnName": "Celtic",
+   "officialName": "Celtic",
+   "pts": 12
+  },
+  {
+   "teamId": "382",
+   "espnName": "Manchester City",
+   "officialName": "Manchester City",
+   "pts": 11
+  },
+  {
+   "teamId": "2250",
+   "espnName": "Sporting CP",
+   "officialName": "Sporting CP",
+   "pts": 11
+  },
+  {
+   "teamId": "570",
+   "espnName": "Club Brugge",
+   "officialName": "Club Brugge",
+   "pts": 11
+  },
+  {
+   "teamId": "597",
+   "espnName": "Dinamo Zagreb",
+   "officialName": "Dinamo Zagreb",
+   "pts": 11
+  },
+  {
+   "teamId": "134",
+   "espnName": "VfB Stuttgart",
+   "officialName": "VfB Stuttgart",
+   "pts": 10
+  },
+  {
+   "teamId": "493",
+   "espnName": "Shakhtar Donetsk",
+   "officialName": "Shakhtar Donetsk",
+   "pts": 7
+  },
+  {
+   "teamId": "107",
+   "espnName": "Bologna",
+   "officialName": "Bologna",
+   "pts": 6
+  },
+  {
+   "teamId": "2290",
+   "espnName": "Red Star Belgrade",
+   "officialName": "Red Star Belgrade",
+   "pts": 6
+  },
+  {
+   "teamId": "3746",
+   "espnName": "SK Sturm Graz",
+   "officialName": "Sturm Graz",
+   "pts": 6
+  },
+  {
+   "teamId": "433",
+   "espnName": "Sparta Prague",
+   "officialName": "Sparta Prague",
+   "pts": 4
+  },
+  {
+   "teamId": "11420",
+   "espnName": "RB Leipzig",
+   "officialName": "RB Leipzig",
+   "pts": 3
+  },
+  {
+   "teamId": "9812",
+   "espnName": "Girona",
+   "officialName": "Girona",
+   "pts": 3
+  },
+  {
+   "teamId": "2790",
+   "espnName": "RB Salzburg",
+   "officialName": "Red Bull Salzburg",
+   "pts": 3
+  },
+  {
+   "teamId": "521",
+   "espnName": "Slovan Bratislava",
+   "officialName": "Slovan Bratislava",
+   "pts": 0
+  },
+  {
+   "teamId": "2722",
+   "espnName": "Young Boys",
+   "officialName": "Young Boys",
+   "pts": 0
+  }
+ ]
+}
