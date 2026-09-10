@@ -375,12 +375,17 @@ a{ text-decoration:none; color:inherit; }
    nom d'adversaire. */
 .cc-journey{ width:100%; font-size:0.82em; }
 .ct-head{ font-size:0.82em; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); padding:13px 7px 4px; text-align:left; }
-.ct-row{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:6px 7px; border-bottom:1px solid rgba(255,255,255,.06); }
+/* lieu | feuille de match (écusson score - score écusson) | adversaire | issue
+   La colonne du milieu est en `auto` et son contenu de largeur fixe (deux
+   écussons + deux chiffres tabulaires) : les scores restent donc alignés
+   verticalement d'une ligne à l'autre. */
+.ct-row{ display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; align-items:center; gap:9px; padding:6px 7px; border-bottom:1px solid rgba(255,255,255,.06); }
 .ct-row:last-child{ border-bottom:0; }
 .ct-row.is-live{ animation:pulse 1.4s infinite; }
 
 .ct-opp{ display:flex; align-items:center; gap:6px; min-width:0; font-weight:700; color:#fff; text-align:left; }
-.ct-opp img{ width:20px; height:20px; object-fit:contain; flex:0 0 auto; }
+.ct-crest{ width:20px; height:20px; flex:0 0 auto; object-fit:contain; display:inline-block; }
+.ct-crest.opp{ opacity:.9; }
 .ct-abbr{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
 .ct-venue{ flex:0 0 auto; font-size:1.05em; line-height:1; opacity:.95; }
 .ct-row.at-home .ct-venue{ color:var(--gold,#f5b50a); }
@@ -389,10 +394,12 @@ a{ text-decoration:none; color:inherit; }
 .ct-leg.a{ color:#bcd9ff; background:rgba(59,123,255,.24); }
 .ct-leg.r{ color:#ffe2a0; background:rgba(var(--gold-rgb,245,181,10),.24); }
 
-.ct-score{ text-align:center; font-size:1.1em; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ct-score{ display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;
+  font-size:1.1em; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ct-sc{ min-width:11px; text-align:center; }
 .ct-score.res-w{ color:var(--green); } .ct-score.res-l{ color:var(--red); } .ct-score.res-d{ color:#fff; }
-.ct-sep{ margin:0 4px; font-weight:600; opacity:.45; }
-.ct-pen{ display:block; font-size:0.7em; color:var(--blue); font-weight:700; margin-top:1px; }
+.ct-sep{ font-weight:600; opacity:.45; }
+.ct-pen{ flex:1 0 100%; text-align:center; font-size:0.7em; color:var(--blue); font-weight:700; margin-top:1px; }
 
 .ct-outcome{ display:flex; justify-content:flex-end; }
 .ct-pill{ display:inline-flex; align-items:center; justify-content:center; min-width:21px; height:19px; padding:0 5px;
@@ -1523,19 +1530,31 @@ a{ text-decoration:none; color:inherit; }
         var venueLbl=home?I18N.t('cc.home'):I18N.t('cc.away');
         var pen=(meS.shootout!=null&&opp.shootout!=null)
           ? '<span class="ct-pen">'+esc(I18N.t('common.pen'))+' '+meS.shootout+'–'+opp.shootout+'</span>' : '';
-        /* Score de l'équipe consultée TOUJOURS en premier, quel que soit le lieu. */
-        var score=meS.score+'<span class="ct-sep">-</span>'+opp.score;
         var pill=live
           ? '<span class="ct-pill is-live" title="'+esc(I18N.t('common.live'))+'"><span class="live-dot"></span></span>'
           : '<span class="ct-pill '+cls+'" title="'+esc(I18N.t('res.'+cls.slice(4)))+'">'+esc(I18N.t('res.'+cls.slice(4)+'Short'))+'</span>';
+        function crest(c,cl){
+          return c.logo
+            ? '<img class="'+cl+'" src="'+esc(c.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">'
+            : '<span class="'+cl+'"></span>';
+        }
+        /* Les DEUX écussons, chacun collé à son propre score. Avec le seul
+           écusson de l'adversaire à gauche d'un score dont le premier chiffre
+           est celui du club consulté, on lisait « ATM 2-1 » et on croyait
+           l'Atlético vainqueur alors qu'il avait perdu.
+           L'ordre reste « club consulté d'abord » quel que soit le lieu ;
+           c'est l'icône ⌂/✈ qui dit où le match s'est joué. */
+        var line=crest(me,'ct-crest me')+
+          '<span class="ct-sc">'+meS.score+'</span>'+
+          '<span class="ct-sep">-</span>'+
+          '<span class="ct-sc">'+opp.score+'</span>'+
+          crest(opp,'ct-crest opp');
+        var srText=(me.abbr||me.name)+' '+meS.score+' - '+opp.score+' '+(opp.abbr||opp.name)+', '+venueLbl;
         rows+='<div class="ct-row '+(home?'at-home':'at-away')+(live?' is-live':'')+'">'+
-          '<div class="ct-opp">'+
-            '<span class="ct-venue" title="'+esc(venueLbl)+'" aria-hidden="true">'+(home?'⌂':'✈')+'</span>'+
-            (opp.logo?'<img src="'+esc(opp.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'')+
-            '<span class="ct-abbr">'+esc(opp.abbr||opp.name)+'</span>'+leg+
-            '<span class="cc-sr">'+esc(venueLbl)+'</span>'+
-          '</div>'+
-          '<div class="ct-score '+cls+'">'+score+pen+'</div>'+
+          '<span class="ct-venue" title="'+esc(venueLbl)+'" aria-hidden="true">'+(home?'⌂':'✈')+'</span>'+
+          '<div class="ct-score '+cls+'">'+line+pen+'</div>'+
+          '<div class="ct-opp"><span class="ct-abbr">'+esc(opp.abbr||opp.name)+'</span>'+leg+
+            '<span class="cc-sr">'+esc(srText)+'</span></div>'+
           '<div class="ct-outcome">'+pill+'</div>'+
         '</div>';
       });
