@@ -5,28 +5,26 @@
    Tout entre par les arguments, tout sort par la valeur de retour — ce qui
    rend le module testable en Node sans navigateur.
 
-   Différence avec le mode prédiction du tracker : celui-ci raisonne en
-   1 / N / 2 et invente un score (1-0 ou 1-1), ce qui fausse la différence de
-   buts. Ici on saisit le score exact, donc la DB et les buts marqués sont
-   justes — or ce sont précisément les deux premiers départages UEFA.
+   On saisit le score exact d'un match à venir. Le classement simulé est
+   recalculé par le MÊME moteur réglementaire que le classement réel
+   (standings-engine.js, article 18.01), à partir de la liste complète des
+   matchs dans laquelle les scores saisis ont été injectés.
+
+   Pourquoi ne pas simplement ajouter des points ligne par ligne : les
+   critères 6 à 8 (force du calendrier) dépendent des résultats de TOUTES les
+   équipes. Un score saisi pour Real Madrid - Roma modifie aussi la force du
+   calendrier de chaque adversaire passé ou futur de ces deux clubs.
 
    API : window.LDCSim
    ========================================================================= */
 (function (global) {
   'use strict';
 
-  /* -----------------------------------------------------------------------
-     TRI UEFA (article 17.01 du règlement, départages applicables au classement
-     unique de la phase de ligue, dans cet ordre) :
-       1. points
-       2. différence de buts
-       3. buts marqués
-     Les départages suivants (confrontations, buts à l'extérieur, discipline,
-     coefficient) demandent des données que l'API ne fournit pas : on retombe
-     sur l'ordre alphabétique, exactement comme computeStandings() d'espn.js,
-     pour que classement réel et classement simulé restent comparables.
-     ----------------------------------------------------------------------- */
-  function compareUEFA(a, b) {
+  /* Tri de REPLI, utilisé seulement si l'appelant ne fournit pas la liste des
+     matchs : points, différence de buts, buts marqués, puis nom. Ce n'est PAS
+     le règlement UEFA complet ; le tableau de bord passe toujours par le
+     moteur réglementaire. */
+  function compareFallback(a, b) {
     if (b.pts !== a.pts) return b.pts - a.pts;
     if (b.gd !== a.gd) return b.gd - a.gd;
     if (b.gf !== a.gf) return b.gf - a.gf;
@@ -49,81 +47,96 @@
              pld: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0, form: [], live: false, simulated: false };
   }
 
-  /* -----------------------------------------------------------------------
-     Applique UN score à la table. Mute `map` (déjà cloné par l'appelant).
-     hg/ag = buts marqués par le domicile / l'extérieur.
-     ----------------------------------------------------------------------- */
-  function applyScore(map, match, hg, ag) {
-    hg = Math.max(0, parseInt(hg, 10) || 0);
-    ag = Math.max(0, parseInt(ag, 10) || 0);
+  function validScore(s) {
+    return s && s.match && s.hg != null && s.ag != null && s.hg !== '' && s.ag !== '';
+  }
+  function goals(v) { return Math.max(0, parseInt(v, 10) || 0); }
 
+  /* Applique UN score à une table de lignes (chemin de repli uniquement). */
+  function applyScore(map, match, hg, ag) {
+    hg = goals(hg); ag = goals(ag);
     var hk = match.home.teamId || match.home.name;
     var ak = match.away.teamId || match.away.name;
     var H = map[hk] || (map[hk] = emptyRow(match.home));
     var A = map[ak] || (map[ak] = emptyRow(match.away));
-
     H.pld++; A.pld++;
     H.gf += hg; H.ga += ag;
     A.gf += ag; A.ga += hg;
-
     if (hg > ag)      { H.w++; A.l++; H.pts += 3; H.form.push('w'); A.form.push('l'); }
     else if (hg < ag) { A.w++; H.l++; A.pts += 3; A.form.push('w'); H.form.push('l'); }
     else              { H.d++; A.d++; H.pts += 1; A.pts += 1; H.form.push('d'); A.form.push('d'); }
-
     H.simulated = true; A.simulated = true;
     return map;
   }
 
+  /* Injecte les scores saisis dans une COPIE de la liste des matchs : le match
+     simulé devient « terminé » avec le score saisi. */
+  function injectScores(matches, sims) {
+    var byId = {};
+    sims.forEach(function (s) { byId[String(s.match.id)] = s; });
+    return (matches || []).map(function (m) {
+      var s = byId[String(m.id)];
+      if (!s) return m;
+      return {
+        id: m.id, dateObj: m.dateObj, state: 'post',
+        home: Object.assign({}, m.home, { score: goals(s.hg) }),
+        away: Object.assign({}, m.away, { score: goals(s.ag) })
+      };
+    });
+  }
+
   /* -----------------------------------------------------------------------
-     simulateStandings(currentStandings, sims)
+     simulateStandings(currentStandings, sims, opts)
 
-     currentStandings : le classement réel (tableau de lignes computeStandings)
+     currentStandings : le classement réel (sert de référence pour les deltas)
      sims             : un objet { match, hg, ag } ou un TABLEAU de ces objets
-                        (plusieurs matchs peuvent être simulés en même temps)
+     opts.matches     : tous les matchs de la phase (format du moteur)
+     opts.rank        : function(matches) -> lignes classées selon le règlement
 
-     Retourne un NOUVEAU tableau trié, chaque ligne portant :
+     Avec opts.matches et opts.rank : recalcul réglementaire complet.
+     Sans : tri de repli (voir compareFallback).
+
+     Chaque ligne retournée porte :
        pos       — rang simulé
        basePos   — rang réel avant simulation
        delta     — basePos - pos  (>0 = monte, <0 = descend, 0 = inchangé)
-       simulated — la ligne a été touchée par au moins un score saisi
-
-     Le delta est calculé AVANT le tri, à partir d'un index des rangs réels :
-     recalculer après coup obligerait à retrouver chaque équipe dans les deux
-     tableaux, en O(n²).
+       simulated — l'équipe joue au moins un des matchs simulés
      ----------------------------------------------------------------------- */
-  function simulateStandings(currentStandings, sims) {
+  function simulateStandings(currentStandings, sims, opts) {
     if (!sims) sims = [];
     if (!Array.isArray(sims)) sims = [sims];
+    sims = sims.filter(validScore);                // saisie incomplète : ignorée
+    opts = opts || {};
 
     var base = currentStandings || [];
-    var basePos = {};                       // teamId -> rang réel, pour le delta
-    var map = {};
-    base.forEach(function (t) {
-      var k = t.teamId || t.name;
-      basePos[k] = t.pos;
-      map[k] = cloneRow(t);
-    });
+    var basePos = {};
+    base.forEach(function (t) { basePos[String(t.teamId || t.name)] = t.pos; });
 
+    var touched = {};
     sims.forEach(function (s) {
-      if (!s || !s.match) return;
-      if (s.hg == null || s.ag == null || s.hg === '' || s.ag === '') return;  // saisie incomplète : ignorée
-      applyScore(map, s.match, s.hg, s.ag);
+      touched[String(s.match.home.teamId || s.match.home.name)] = true;
+      touched[String(s.match.away.teamId || s.match.away.name)] = true;
     });
 
-    var arr = Object.keys(map).map(function (k) {
-      var t = map[k];
-      t.gd = t.gf - t.ga;
-      t.form = t.form.slice(-5);
-      return t;
-    });
-
-    arr.sort(compareUEFA);
+    var arr;
+    if (opts.matches && typeof opts.rank === 'function') {
+      arr = opts.rank(injectScores(opts.matches, sims)).slice();
+    } else {
+      var map = {};
+      base.forEach(function (t) { map[String(t.teamId || t.name)] = cloneRow(t); });
+      sims.forEach(function (s) { applyScore(map, s.match, s.hg, s.ag); });
+      arr = Object.keys(map).map(function (k) {
+        var t = map[k]; t.gd = t.gf - t.ga; t.form = t.form.slice(-5); return t;
+      });
+      arr.sort(compareFallback);
+      arr.forEach(function (t, i) { t.pos = i + 1; t.rank = i + 1; });
+    }
 
     arr.forEach(function (t, i) {
-      var k = t.teamId || t.name;
-      t.pos = i + 1;
-      t.basePos = (basePos[k] != null) ? basePos[k] : (i + 1);
+      var k = String(t.teamId || t.name);
+      t.basePos = (basePos[k] != null) ? basePos[k] : t.pos;
       t.delta = t.basePos - t.pos;          // +2 = a gagné deux places
+      t.simulated = !!touched[k];
     });
     return arr;
   }
@@ -138,8 +151,9 @@
   }
 
   global.LDCSim = {
-    compareUEFA: compareUEFA,
+    compareFallback: compareFallback,
     applyScore: applyScore,
+    injectScores: injectScores,
     simulateStandings: simulateStandings,
     zoneOf: zoneOf,
     changedZone: changedZone,
