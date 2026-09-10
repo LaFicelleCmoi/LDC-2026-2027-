@@ -300,8 +300,10 @@
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=21"></script>
-<script src="espn.js?v=14"></script>
+<script src="i18n.js?v=22"></script>
+<script src="standings-engine.js?v=1"></script>
+<script src="coefficients2026.js?v=1"></script>
+<script src="espn.js?v=15"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.js"
@@ -388,13 +390,13 @@
         }
       }
       return '<tr class="'+zone+(isFav?' is-fav':'')+'">'+
-        '<td class="pos">'+t.pos+pd+'</td>'+
+        '<td class="pos">'+(t.rank||t.pos)+pd+'</td>'+
         '<td class="live-dot">'+(t.live?'<span class="dot live"></span>':'')+'</td>'+
         '<td class="club"><span class="club-cell">'+
           (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
           (isFav?'<span class="tbl-fav">★</span>':'')+
           '<span class="nm">'+esc(t.name)+'</span>'+
-          (function(){ var c=ESPN.clubTitles(t.name); return c?'<span class="tbl-cup" title="'+c.n+' '+esc(I18N.t('pal.titlesN'))+' — LDC">🏆'+c.n+'</span>':''; })()+
+          (function(){ var c=ESPN.clubTitlesById(t.teamId); return c?'<span class="tbl-cup" title="'+c.n+' '+esc(I18N.t('pal.titlesN'))+' — LDC">🏆'+c.n+'</span>':''; })()+
           '</span></td>'+
         '<td>'+t.pld+'</td><td>'+t.w+'</td><td>'+t.d+'</td><td>'+t.l+'</td>'+
         '<td>'+t.gf+'</td><td>'+t.ga+'</td>'+
@@ -405,7 +407,12 @@
     }).join('');
     var live = rows.some(function(t){return t.live;});
     el('liveFlag').style.display = live?'inline-flex':'none';
-    el('standingsUpdated').textContent = (I18N.t('common.updated')||'')+' '+hm();
+    /* Horodatage de la dernière réponse de l'API ESPN, pas de l'affichage. */
+    var sync = ESPN.lastSeasonSync && ESPN.lastSeasonSync();
+    el('standingsUpdated').textContent = sync
+      ? (I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleString(lang()==='en'?'en-GB':'fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})
+      : (I18N.t('common.updated')||'')+' '+hm();
+    if(sync) el('standingsUpdated').title = sync.toISOString();
   }
 
   /* ================= PHASE FINALE (cartes) ================= */
@@ -595,25 +602,23 @@
     var arr=lastEvents.map(ESPN.normalizeEvent).filter(function(m){ return m && m.round==='league' && (replayAll || m.state==='pre'); });
     arr.sort(byAscDate); return arr;
   }
-  function emptyRow(c){ return {teamId:c.teamId,name:c.name,shortName:c.shortName,abbr:c.abbr,logo:c.logo,pld:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,form:[],live:false}; }
-  function cloneRow(t){ return {teamId:t.teamId,name:t.name,shortName:t.shortName,abbr:t.abbr,logo:t.logo,pld:t.pld,w:t.w,d:t.d,l:t.l,gf:t.gf,ga:t.ga,gd:t.gd,pts:t.pts,form:(t.form||[]).slice(),live:false}; }
-  function applyResult(map,m,pick){
-    var hk=m.home.teamId||m.home.name, ak=m.away.teamId||m.away.name;
-    var H=map[hk]||(map[hk]=emptyRow(m.home)), A=map[ak]||(map[ak]=emptyRow(m.away));
-    H.pld++; A.pld++;
-    if(pick==='H'){ H.gf++; A.ga++; H.w++; A.l++; H.pts+=3; H.form.push('w'); A.form.push('l'); }
-    else if(pick==='A'){ A.gf++; H.ga++; A.w++; H.l++; A.pts+=3; A.form.push('w'); H.form.push('l'); }
-    else { H.gf++; A.gf++; H.ga++; A.ga++; H.d++; A.d++; H.pts++; A.pts++; H.form.push('d'); A.form.push('d'); }
-  }
+  /* Mode prédiction : un pronostic 1/N/2 devient un score conventionnel
+     (1-0, 0-1 ou 1-1) — convention propre à ce mode, qui ne connaît pas de
+     score exact. Le CLASSEMENT, lui, passe par le moteur réglementaire
+     (article 18.01), comme le classement réel. */
   function predictedStandings(){
-    var map={}, ms=predictableMatches();
-    if(replayAll){ ms.forEach(function(m){ var hk=m.home.teamId||m.home.name, ak=m.away.teamId||m.away.name; if(!map[hk]) map[hk]=emptyRow(m.home); if(!map[ak]) map[ak]=emptyRow(m.away); }); }
-    else { (lastStandings||[]).forEach(function(t){ map[t.teamId||t.name]=cloneRow(t); }); }
-    ms.forEach(function(m){ var p=predictions[m.id]; if(p) applyResult(map,m,p); });
-    var arr=Object.keys(map).map(function(k){ var t=map[k]; t.gd=t.gf-t.ga; t.form=t.form.slice(-5); return t; });
-    arr.sort(function(a,b){ if(b.pts!==a.pts)return b.pts-a.pts; if(b.gd!==a.gd)return b.gd-a.gd; if(b.gf!==a.gf)return b.gf-a.gf; return a.name.localeCompare(b.name); });
-    arr.forEach(function(t,i){ t.pos=i+1; });
-    return arr;
+    var ms=predictableMatches(), predIds={};
+    ms.forEach(function(m){ predIds[m.id]=true; });
+    var base = replayAll ? [] : ESPN.leagueMatches(lastEvents).filter(function(m){ return !predIds[m.id]; });
+    var picked = ms.filter(function(m){ return predictions[m.id]; }).map(function(m){
+      var p=predictions[m.id], hg=(p==='A')?0:1, ag=(p==='H')?0:1;
+      return { id:m.id, state:'post', dateObj:m.dateObj,
+               home:Object.assign({},m.home,{score:hg}), away:Object.assign({},m.away,{score:ag}) };
+    });
+    var seed;
+    if(replayAll){ var seen={}; seed=[]; ms.forEach(function(m){ [m.home,m.away].forEach(function(c){ if(c.teamId && !seen[c.teamId]){ seen[c.teamId]=1; seed.push({id:c.teamId,name:c.name,abbr:c.abbr,logo:c.logo}); } }); }); }
+    else { seed=(lastStandings||[]).map(function(t){ return {id:t.teamId,name:t.name,abbr:t.abbr,logo:t.logo}; }); }
+    return ESPN.rankLeagueMatches(base.concat(picked), seed);
   }
   function renderPredictPanel(){
     var host=el('predictPanel'); if(!host) return;
