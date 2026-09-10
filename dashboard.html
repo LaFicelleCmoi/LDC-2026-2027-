@@ -206,7 +206,11 @@ a{ text-decoration:none; color:inherit; }
 .live-cards-grid.is-swapping{ opacity:0; pointer-events:none; }
 
 /* ═══════════ 2. WIDGETS DE STATISTIQUES ═══════════ */
-.widgets{ max-width:1200px; margin:0 auto 26px; }
+/* La bande de stats juste au-dessus a margin-bottom:0 : sans marge haute ici,
+   les deux blocs se collent, seuls de la page à ne pas respirer. 22px les
+   sépare tout en les gardant visuellement groupés (le reste de la page est
+   à 24-30px entre sections). */
+.widgets{ max-width:1200px; margin:22px auto 26px; }
 .wgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .wcard{ background:#111a36; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
 .wcard-head{ display:flex; align-items:center; gap:8px; padding:11px 14px; border-bottom:1px solid var(--border);
