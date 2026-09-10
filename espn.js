@@ -211,6 +211,19 @@
     return null;
   }
 
+  /* Titres par identifiant ESPN — à préférer à clubTitles(name), dont la
+     recherche par sous-chaîne attribue à tort des titres à des noms voisins
+     (« Real Madrid Castilla » -> 15, « Inter Turku » -> 3, « Benfica B » -> 2).
+     Les trophées ne viennent pas de l'API ESPN, qui n'en expose aucun : c'est
+     la table UCL_PALMARES, vérifiée contre les 71 finales 1956-2026. */
+  function clubTitlesById(id) {
+    if (id == null || id === '') return null;
+    for (var i = 0; i < UCL_PALMARES.length; i++) {
+      if (String(UCL_PALMARES[i].id) === String(id)) return { n: UCL_PALMARES[i].n, years: UCL_PALMARES[i].years };
+    }
+    return null;
+  }
+
   /* Liste des saisons : { year, current }. Actuelle d'abord, puis archives. */
   function seasonOptions() {
     var opts = [{ year: CURRENT_SEASON, current: true }];
@@ -325,10 +338,22 @@
   }
 
   /* Tous les matchs de la saison courante (plage de dates). */
+  /* Horodatage de la dernière réponse RÉSEAU de l'API pour la saison (un
+     service depuis le cache mémoire ne compte pas comme une synchronisation). */
+  var _seasonSyncAt = null;
+  function lastSeasonSync() { return _seasonSyncAt ? new Date(_seasonSyncAt) : null; }
+
   function fetchSeasonEvents(opts) {
     var r = seasonRange();
-    return fetchScoreboard(r.start + '-' + r.end, Object.assign({ limit: 500, ttl: 20000 }, opts || {}))
+    var o = Object.assign({ limit: 500, ttl: 20000 }, opts || {});
+    var url = scoreboardURL(r.start + '-' + r.end, o.limit);
+    return fetchScoreboard(r.start + '-' + r.end, o)
       .then(function (events) {
+        var hit = scoreboardCache[url];
+        if (hit && hit.ts !== _seasonSyncAt) {
+          _seasonSyncAt = hit.ts;
+          try { console.info('[LDC] Synchronisation API ESPN (saison ' + seasonLabel() + ') : ' + new Date(hit.ts).toISOString()); } catch (e) {}
+        }
         // La plage de dates récupère parfois les qualifs de la saison SUIVANTE (juin-juillet).
         // On ne garde que les matchs de la saison demandée (ev.season.year).
         return (events || []).filter(function (e) {
@@ -496,7 +521,38 @@
      (sinon le tableau n'a que 24 lignes après la 1re journée, ce qui rend la
      légende « 25–36 : éliminés » incohérente).
      ======================================================================= */
+  /* Matchs de phase de ligue au format attendu par le moteur (couche 1 -> 2). */
+  function leagueMatches(events) {
+    return (events || []).map(normalizeEvent).filter(function (m) { return m && m.round === 'league'; })
+      .map(function (m) { return { id: m.id, state: m.state, dateObj: m.dateObj, home: m.home, away: m.away }; });
+  }
+
+  /* Classe des matchs de phase de ligue selon l'article 18.01, avec les
+     données annexes disponibles : fair-play depuis le cache des résumés,
+     coefficients uniquement pour la saison qu'ils couvrent (2026/27). */
+  function rankLeagueMatches(matches, seedClubs) {
+    var coef = (seasonStartYear() === 2026 && global.LDCCoefficients2026) ? global.LDCCoefficients2026 : null;
+    return global.LDCStandings.rankLeaguePhase(matches, {
+      seed: seedClubs || null,
+      disciplinary: disciplinaryFor(matches),
+      coefficients: coef ? coef.clubs : null,
+      coefficientSeasons: coef ? coef.seasons : null
+    });
+  }
+
+  var _warnedEngine = false;
   function computeStandings(events, seedClubs) {
+    /* Format phase de ligue (2024-25 et après) : moteur réglementaire. */
+    if (isLeaguePhaseFormat()) {
+      if (global.LDCStandings) return rankLeagueMatches(leagueMatches(events), seedClubs);
+      if (!_warnedEngine && global.console) {
+        _warnedEngine = true;
+        console.warn('[LDC] standings-engine.js non chargé : classement de repli sans les critères UEFA complets.');
+      }
+    }
+    /* Anciennes phases de groupes (avant 2024-25) : leurs règles de départage
+       sont différentes (confrontation directe en tête) et ne sont pas
+       implémentées ici — ce tri reste celui d'origine. */
     var teams = {}; // teamId -> ligne
 
     function row(c) {
@@ -547,7 +603,7 @@
       return t;
     });
 
-    // Tri : pts, diff, BP, nom (départage UEFA simplifié)
+    // Tri de repli : pts, diff, BP, nom — PAS le règlement UEFA (voir plus haut)
     arr.sort(function (a, b) {
       if (b.pts !== a.pts) return b.pts - a.pts;
       if (b.gd !== a.gd) return b.gd - a.gd;
@@ -927,7 +983,9 @@
      ======================================================================= */
   var GOAL_SLUG = /^(goal|penalty---scored)/;   // goal, goal---header/free-kick/volley, penalty---scored
   var scorerAgg = {};                            // eventId -> { g:{}, a:{}, t:{} }
-  var SCORER_LS = 'ldc_scorers_';
+  /* v2 : chaque entrée porte aussi les points disciplinaires (`c`). Changer de
+     clé invalide proprement les entrées v1, qui en sont dépourvues. */
+  var SCORER_LS = 'ldc_match_agg_v2_';
 
   function _scorerLSKey() { return SCORER_LS + seasonStartYear(); }
   function _loadScorerCache() {
@@ -941,6 +999,67 @@
   }
 
   /* Agrège UN résumé : buts et passes décisives par joueur, avec son club. */
+  /* =======================================================================
+     FAIR-PLAY — critère 9 de l'article 18.01 (phase de ligue terminée)
+     « lower disciplinary points total (red card = 3 points, yellow card =
+       1 point, expulsion for two yellow cards in one match = 3 points) »
+
+     Source : les keyEvents du résumé de match, PAS le boxscore. Le boxscore
+     d'ESPN est incohérent sur les expulsions : sur la phase 2024-25, un joueur
+     ayant reçu un jaune puis un rouge sur second avertissement apparaît en
+     « jaunes 0, rouges 1 » (Danilo, Juventus).
+
+     Représentation ESPN d'une expulsion sur deux jaunes, vérifiée sur les
+     23 expulsions de la phase 2024-25 : le PREMIER jaune est un événement
+     `yellow-card`, puis un unique `red-card` au texte « Second yellow card to
+     … ». Les 10 rouges précédés d'un jaune du même joueur portent tous ce
+     texte ; aucun rouge direct n'en était précédé.
+
+     Par joueur et par match :
+       expulsion sur deux jaunes  -> 3   (le premier jaune est inclus)
+       rouge direct               -> 3 + ses jaunes antérieurs (1 chacun)
+       sinon                      -> 1 par jaune
+     Un carton sans joueur identifié compte 1 (jaune) ou 3 (rouge).
+     Retourne { teamId: points } pour les DEUX équipes du match, 0 compris :
+     une équipe absente de la table serait une donnée manquante, pas un zéro.
+     ======================================================================= */
+  function disciplinaryFromSummary(summary) {
+    var out = {};
+    try {
+      var comp = summary && summary.header && summary.header.competitions && summary.header.competitions[0];
+      (comp && comp.competitors || []).forEach(function (c) {
+        var id = String(c.id || (c.team && c.team.id) || ''); if (id) out[id] = 0;
+      });
+      ((summary && summary.boxscore && summary.boxscore.teams) || []).forEach(function (b) {
+        var id = String((b.team && b.team.id) || ''); if (id && out[id] == null) out[id] = 0;
+      });
+    } catch (e) {}
+
+    var players = {};
+    normalizeKeyEvents(summary).forEach(function (ev) {
+      var slug = ev.typeSlug || '', tx = ev.typeText || '';
+      var yellow = slug === 'yellow-card' || (!slug && /yellow card/i.test(tx));
+      var red = slug === 'red-card' || (!slug && /red card/i.test(tx));
+      if (!yellow && !red) return;
+      var team = String(ev.teamId || '');
+      if (!team) return;
+      if (out[team] == null) out[team] = 0;
+      if (!ev.playerId) { out[team] += red ? 3 : 1; return; }
+      var k = team + '|' + ev.playerId;
+      var p = players[k] || (players[k] = { team: team, y: 0, red: null });
+      if (yellow) p.y++;
+      else {
+        var second = /second yellow/i.test(ev.text || '') || (!ev.text && p.y > 0);
+        p.red = second ? 'second-yellow' : 'direct';
+      }
+    });
+    Object.keys(players).forEach(function (k) {
+      var p = players[k];
+      out[p.team] += p.red === 'second-yellow' ? 3 : (p.red === 'direct' ? 3 + p.y : p.y);
+    });
+    return out;
+  }
+
   function aggregateMatchScorers(summary) {
     var g = {}, a = {}, t = {};
     normalizeKeyEvents(summary).forEach(function (ev) {
@@ -953,7 +1072,7 @@
       if (ev.player) { g[ev.player] = (g[ev.player] || 0) + 1; if (ev.teamId) t[ev.player] = ev.teamId; }
       if (ev.assist) { a[ev.assist] = (a[ev.assist] || 0) + 1; if (ev.teamId) t[ev.assist] = ev.teamId; }
     });
-    return { g: g, a: a, t: t };
+    return { g: g, a: a, t: t, c: disciplinaryFromSummary(summary) };
   }
 
   function _mergeBoards(ids) {
@@ -975,12 +1094,37 @@
      -> Promise<{ goals:[{name,value,teamId}], assists:[...] }>
      onProgress reçoit un tableau partiel dès qu'un lot est agrégé, pour que
      l'interface se remplisse au fil de l'eau au lieu d'attendre le dernier match. */
+  /* Points disciplinaires cumulés sur la phase, par équipe, depuis le cache.
+     Une équipe n'a de valeur QUE si tous ses matchs comptés sont en cache :
+     une somme partielle serait fausse, et le moteur doit alors savoir que la
+     donnée manque (il s'arrête au lieu d'appliquer le critère suivant). */
+  function disciplinaryFor(matches) {
+    _loadScorerCache();
+    var total = {}, incomplete = {};
+    (matches || []).forEach(function (m) {
+      if (!m || m.state !== 'post' || !m.home || !m.away) return;
+      var e = scorerAgg[String(m.id)];
+      [m.home.teamId, m.away.teamId].forEach(function (id) {
+        id = String(id);
+        if (!e || !e.c || e.c[id] == null) { incomplete[id] = true; return; }
+        total[id] = (total[id] || 0) + e.c[id];
+      });
+    });
+    Object.keys(incomplete).forEach(function (id) { delete total[id]; });
+    return total;
+  }
+
+  /* Charge les résumés manquants (buteurs + cartons) puis rend le fair-play. */
+  function ensureMatchAggregates(matches) {
+    return fetchScorerBoard(matches).then(function () { return disciplinaryFor(matches); });
+  }
+
   function fetchScorerBoard(matches, opts) {
     opts = opts || {};
     _loadScorerCache();
     var done = (matches || []).filter(function (m) { return m && m.state === 'post'; });
     var ids = done.map(function (m) { return String(m.id); });
-    var todo = ids.filter(function (id) { return !scorerAgg[id]; });
+    var todo = ids.filter(function (id) { return !scorerAgg[id] || !scorerAgg[id].c; });
 
     if (!todo.length) return Promise.resolve(_mergeBoards(ids));
     if (opts.onProgress && ids.length > todo.length) opts.onProgress(_mergeBoards(ids));
@@ -1119,6 +1263,13 @@
     matchdayOf: matchdayOf,
     fetchLeaders: fetchLeaders,
     computeCleanSheets: computeCleanSheets,
+    disciplinaryFromSummary: disciplinaryFromSummary,
+    disciplinaryFor: disciplinaryFor,
+    ensureMatchAggregates: ensureMatchAggregates,
+    leagueMatches: leagueMatches,
+    rankLeagueMatches: rankLeagueMatches,
+    lastSeasonSync: lastSeasonSync,
+    clubTitlesById: clubTitlesById,
     fetchScorerBoard: fetchScorerBoard,
     aggregateMatchScorers: aggregateMatchScorers,
     buildBracket: buildBracket,
