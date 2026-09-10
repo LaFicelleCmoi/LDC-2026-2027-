@@ -1,0 +1,207 @@
+{
+ "description": "Événements de cartons réels (ESPN, phase de ligue 2024-25) pour tester le calcul du fair-play.",
+ "source": "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/summary?event=<id>",
+ "retrieved": "2026-09-10",
+ "secondYellow": {
+  "eventId": "720331",
+  "header": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "id": "364",
+       "homeAway": "home",
+       "team": {
+        "id": "364",
+        "displayName": "Liverpool"
+       }
+      },
+      {
+       "id": "166",
+       "homeAway": "away",
+       "team": {
+        "id": "166",
+        "displayName": "Lille"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "keyEvents": [
+   {
+    "type": {
+     "id": "94",
+     "text": "Yellow Card",
+     "type": "yellow-card"
+    },
+    "text": "Aïssa Mandi (Lille) is shown the yellow card.",
+    "team": {
+     "id": "166",
+     "displayName": "Lille"
+    },
+    "participants": [
+     {
+      "athlete": {
+       "id": "150451",
+       "displayName": "Aïssa Mandi"
+      }
+     }
+    ],
+    "clock": {
+     "value": 2049,
+     "displayValue": "35'"
+    }
+   },
+   {
+    "type": {
+     "id": "93",
+     "text": "Red Card",
+     "type": "red-card"
+    },
+    "text": "Second yellow card to Aïssa Mandi (Lille) for a bad foul.",
+    "team": {
+     "id": "166",
+     "displayName": "Lille"
+    },
+    "participants": [
+     {
+      "athlete": {
+       "id": "150451",
+       "displayName": "Aïssa Mandi"
+      }
+     }
+    ],
+    "clock": {
+     "value": 3519,
+     "displayValue": "59'"
+    }
+   },
+   {
+    "type": {
+     "id": "94",
+     "text": "Yellow Card",
+     "type": "yellow-card"
+    },
+    "text": "Benjamin André (Lille) is shown the yellow card for a bad foul.",
+    "team": {
+     "id": "166",
+     "displayName": "Lille"
+    },
+    "participants": [
+     {
+      "athlete": {
+       "id": "123683",
+       "displayName": "Benjamin André"
+      }
+     }
+    ],
+    "clock": {
+     "value": 5259,
+     "displayValue": "88'"
+    }
+   },
+   {
+    "type": {
+     "id": "94",
+     "text": "Yellow Card",
+     "type": "yellow-card"
+    },
+    "text": "Alexis Mac Allister (Liverpool) is shown the yellow card for a bad foul.",
+    "team": {
+     "id": "364",
+     "displayName": "Liverpool"
+    },
+    "participants": [
+     {
+      "athlete": {
+       "id": "249299",
+       "displayName": "Alexis Mac Allister"
+      }
+     }
+    ],
+    "clock": {
+     "value": 5400,
+     "displayValue": "90'+2'"
+    }
+   },
+   {
+    "type": {
+     "id": "94",
+     "text": "Yellow Card",
+     "type": "yellow-card"
+    },
+    "text": "Harvey Elliott (Liverpool) is shown the yellow card.",
+    "team": {
+     "id": "364",
+     "displayName": "Liverpool"
+    },
+    "participants": [
+     {
+      "athlete": {
+       "id": "280806",
+       "displayName": "Harvey Elliott"
+      }
+     }
+    ],
+    "clock": {
+     "value": 5400,
+     "displayValue": "90'+4'"
+    }
+   }
+  ]
+ },
+ "directRed": {
+  "eventId": "720332",
+  "header": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "id": "2290",
+       "homeAway": "home",
+       "team": {
+        "id": "2290",
+        "displayName": "Red Star Belgrade"
+       }
+      },
+      {
+       "id": "148",
+       "homeAway": "away",
+       "team": {
+        "id": "148",
+        "displayName": "PSV Eindhoven"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "keyEvents": [
+   {
+    "type": {
+     "id": "93",
+     "text": "Red Card",
+     "type": "red-card"
+    },
+    "text": "Ryan Flamingo (PSV Eindhoven) is shown the red card.",
+    "team": {
+     "id": "148",
+     "displayName": "PSV Eindhoven"
+    },
+    "participants": [
+     {
+      "athlete": {
+       "id": "304478",
+       "displayName": "Ryan Flamingo"
+      }
+     }
+    ],
+    "clock": {
+     "value": 3000,
+     "displayValue": "50'"
+    }
+   }
+  ]
+ }
+}
