@@ -10,15 +10,15 @@
 <link rel="preconnect" href="https://site.api.espn.com" />
 <link rel="preconnect" href="https://a.espncdn.com" />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=19" />
+<link rel="stylesheet" href="styles.css?v=20" />
 <style>
   .cal-wrap{ max-width:920px; }
-  .cal-view-switch{ display:inline-grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin:0 0 18px; padding:4px; border:1px solid var(--line-2); border-radius:13px; background:rgba(7,14,35,.7); box-shadow:0 10px 28px rgba(0,0,0,.18); }
-  .cal-view-btn{ min-width:190px; padding:10px 16px; border:0; border-radius:9px; background:transparent; color:var(--muted); font-family:inherit; font-size:12.5px; font-weight:900; cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease; }
+  /* flat : conteneur sans ombre portée */
+  .cal-view-switch{ display:inline-grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin:0 0 18px; padding:4px; border:1px solid var(--line-2); border-radius:13px; background:rgba(7,14,35,.7); }
+  .cal-view-btn{ min-width:190px; padding:10px 16px; border:0; border-radius:9px; background:transparent; color:var(--muted); font-family:inherit; font-size:12.5px; font-weight:900; cursor:pointer; transition:background .18s ease,color .18s ease; }
   .cal-view-btn:hover{ color:var(--txt); }
   .cal-view-btn:focus-visible{ outline:2px solid var(--upcoming); outline-offset:2px; }
-  .cal-view-btn.active{ color:#1a1300; background:linear-gradient(180deg,#ffe9a8,#f7bd39 55%,#d68d06); box-shadow:0 5px 14px rgba(0,0,0,.28); }
-  .cal-view-btn:active{ transform:scale(.98); }
+  .cal-view-btn.active{ color:#1a1300; background:#f5b50a; }
   /* Filtres */
   .cal-filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:20px; }
   /* Bouton flottant « prochain match » */
