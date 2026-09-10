@@ -133,42 +133,42 @@
      fiches équipes ESPN. La qualification reste une donnée UEFA : l'API ESPN
      ne publie pas encore la saison 2026-27 au moment du tirage. */
   var QUALIFIED_CLUBS_2026 = [
-    { pot: 1, id: 160,   name: 'Paris Saint-Germain', abbr: 'PSG',  color: '011F68' },
-    { pot: 1, id: 132,   name: 'Bayern München',      abbr: 'MUN',  color: 'dc052d' },
-    { pot: 1, id: 86,    name: 'Real Madrid',         abbr: 'RMA',  color: 'ffffff' },
-    { pot: 1, id: 364,   name: 'Liverpool',           abbr: 'LIV',  color: 'd11317' },
-    { pot: 1, id: 110,   name: 'Inter',               abbr: 'INT',  color: '00239c' },
-    { pot: 1, id: 382,   name: 'Manchester City',     abbr: 'MNC',  color: '99c5ea' },
-    { pot: 1, id: 359,   name: 'Arsenal',             abbr: 'ARS',  color: 'e20520' },
-    { pot: 1, id: 83,    name: 'Barcelona',           abbr: 'BAR',  color: '990000' },
-    { pot: 1, id: 1068,  name: 'Atlético de Madrid',  abbr: 'ATM',  color: 'ca3624' },
-    { pot: 2, id: 124,   name: 'Borussia Dortmund',   abbr: 'DOR',  color: 'ffee00' },
-    { pot: 2, id: 104,   name: 'AS Roma',             abbr: 'ROMA', color: '990a2c' },
-    { pot: 2, id: 2250,  name: 'Sporting CP',         abbr: 'SCP',  color: '008127' },
-    { pot: 2, id: 362,   name: 'Aston Villa',         abbr: 'AVL',  color: '660e36' },
-    { pot: 2, id: 437,   name: 'FC Porto',            abbr: 'FCP',  color: '0000dd' },
-    { pot: 2, id: 360,   name: 'Manchester United',   abbr: 'MAN',  color: 'da020e' },
-    { pot: 2, id: 570,   name: 'Club Brugge',         abbr: 'BRU',  color: '0081ff' },
-    { pot: 2, id: 244,   name: 'Real Betis',          abbr: 'BET',  color: '288A00' },
-    { pot: 2, id: 148,   name: 'PSV Eindhoven',       abbr: 'PSV',  color: 'ef2f24' },
-    { pot: 3, id: 142,   name: 'Feyenoord',           abbr: 'FEY',  color: 'ef2f24' },
-    { pot: 3, id: 166,   name: 'Lille',               abbr: 'LILL', color: 'c2051b' },
-    { pot: 3, id: 2980,  name: 'Bodø/Glimt',          abbr: 'BODO', color: 'FCEE33' },
-    { pot: 3, id: 114,   name: 'Napoli',              abbr: 'NAP',  color: '0677d2' },
-    { pot: 3, id: 11420, name: 'RB Leipzig',          abbr: 'RBL',  color: 'ffffff' },
-    { pot: 3, id: 102,   name: 'Villarreal',          abbr: 'VIL',  color: 'ffff00' },
-    { pot: 3, id: 436,   name: 'Fenerbahçe',          abbr: 'FEN',  color: 'ffff00' },
-    { pot: 3, id: 493,   name: 'Shakhtar Donetsk',    abbr: 'SHK',  color: 'ff5900' },
-    { pot: 3, id: 432,   name: 'Galatasaray',         abbr: 'GAL',  color: 'aa0031' },
-    { pot: 4, id: 494,   name: 'Slavia Prague',       abbr: 'SLP',  color: 'dc1f26' },
-    { pot: 4, id: 521,   name: 'Slovan Bratislava',   abbr: 'SLB',  color: '81c0ff' },
-    { pot: 4, id: 134,   name: 'VfB Stuttgart',       abbr: 'VFB',  color: 'ffffff' },
-    { pot: 4, id: 887,   name: 'AEK Athens',          abbr: 'AEK',  color: 'ffff00' },
-    { pot: 4, id: 4411,  name: 'LASK',                abbr: 'LAS',  color: 'ffffff' },
-    { pot: 4, id: 2572,  name: 'Como',                abbr: 'COMO', color: '4169E1' },
-    { pot: 4, id: 175,   name: 'Lens',                abbr: 'RCL',  color: 'E91514' },
-    { pot: 4, id: 510,   name: 'Viking',              abbr: 'VIK',  color: '000080' },
-    { pot: 4, id: 21922, name: 'Sabah',               abbr: 'SAB',  color: '000000' }
+    { pot: 1, id: 160,   name: 'Paris Saint-Germain', abbr: 'PSG',  color: '011F68', co: 'FRA' },
+    { pot: 1, id: 132,   name: 'Bayern München',      abbr: 'MUN',  color: 'dc052d', co: 'GER' },
+    { pot: 1, id: 86,    name: 'Real Madrid',         abbr: 'RMA',  color: 'ffffff', co: 'ESP' },
+    { pot: 1, id: 364,   name: 'Liverpool',           abbr: 'LIV',  color: 'd11317', co: 'ENG' },
+    { pot: 1, id: 110,   name: 'Inter',               abbr: 'INT',  color: '00239c', co: 'ITA' },
+    { pot: 1, id: 382,   name: 'Manchester City',     abbr: 'MNC',  color: '99c5ea', co: 'ENG' },
+    { pot: 1, id: 359,   name: 'Arsenal',             abbr: 'ARS',  color: 'e20520', co: 'ENG' },
+    { pot: 1, id: 83,    name: 'Barcelona',           abbr: 'BAR',  color: '990000', co: 'ESP' },
+    { pot: 1, id: 1068,  name: 'Atlético de Madrid',  abbr: 'ATM',  color: 'ca3624', co: 'ESP' },
+    { pot: 2, id: 124,   name: 'Borussia Dortmund',   abbr: 'DOR',  color: 'ffee00', co: 'GER' },
+    { pot: 2, id: 104,   name: 'AS Roma',             abbr: 'ROMA', color: '990a2c', co: 'ITA' },
+    { pot: 2, id: 2250,  name: 'Sporting CP',         abbr: 'SCP',  color: '008127', co: 'POR' },
+    { pot: 2, id: 362,   name: 'Aston Villa',         abbr: 'AVL',  color: '660e36', co: 'ENG' },
+    { pot: 2, id: 437,   name: 'FC Porto',            abbr: 'FCP',  color: '0000dd', co: 'POR' },
+    { pot: 2, id: 360,   name: 'Manchester United',   abbr: 'MAN',  color: 'da020e', co: 'ENG' },
+    { pot: 2, id: 570,   name: 'Club Brugge',         abbr: 'BRU',  color: '0081ff', co: 'BEL' },
+    { pot: 2, id: 244,   name: 'Real Betis',          abbr: 'BET',  color: '288A00', co: 'ESP' },
+    { pot: 2, id: 148,   name: 'PSV Eindhoven',       abbr: 'PSV',  color: 'ef2f24', co: 'NED' },
+    { pot: 3, id: 142,   name: 'Feyenoord',           abbr: 'FEY',  color: 'ef2f24', co: 'NED' },
+    { pot: 3, id: 166,   name: 'Lille',               abbr: 'LILL', color: 'c2051b', co: 'FRA' },
+    { pot: 3, id: 2980,  name: 'Bodø/Glimt',          abbr: 'BODO', color: 'FCEE33', co: 'NOR' },
+    { pot: 3, id: 114,   name: 'Napoli',              abbr: 'NAP',  color: '0677d2', co: 'ITA' },
+    { pot: 3, id: 11420, name: 'RB Leipzig',          abbr: 'RBL',  color: 'ffffff', co: 'GER' },
+    { pot: 3, id: 102,   name: 'Villarreal',          abbr: 'VIL',  color: 'ffff00', co: 'ESP' },
+    { pot: 3, id: 436,   name: 'Fenerbahçe',          abbr: 'FEN',  color: 'ffff00', co: 'TUR' },
+    { pot: 3, id: 493,   name: 'Shakhtar Donetsk',    abbr: 'SHK',  color: 'ff5900', co: 'UKR' },
+    { pot: 3, id: 432,   name: 'Galatasaray',         abbr: 'GAL',  color: 'aa0031', co: 'TUR' },
+    { pot: 4, id: 494,   name: 'Slavia Prague',       abbr: 'SLP',  color: 'dc1f26', co: 'CZE' },
+    { pot: 4, id: 521,   name: 'Slovan Bratislava',   abbr: 'SLB',  color: '81c0ff', co: 'SVK' },
+    { pot: 4, id: 134,   name: 'VfB Stuttgart',       abbr: 'VFB',  color: 'ffffff', co: 'GER' },
+    { pot: 4, id: 887,   name: 'AEK Athens',          abbr: 'AEK',  color: 'ffff00', co: 'GRE' },
+    { pot: 4, id: 4411,  name: 'LASK',                abbr: 'LAS',  color: 'ffffff', co: 'AUT' },
+    { pot: 4, id: 2572,  name: 'Como',                abbr: 'COMO', color: '4169E1', co: 'ITA' },
+    { pot: 4, id: 175,   name: 'Lens',                abbr: 'RCL',  color: 'E91514', co: 'FRA' },
+    { pot: 4, id: 510,   name: 'Viking',              abbr: 'VIK',  color: '000080', co: 'NOR' },
+    { pot: 4, id: 21922, name: 'Sabah',               abbr: 'SAB',  color: '000000', co: 'AZE' }
   ];
   /* Logo officiel ESPN d'un club du palmarès (par id). */
   function palmaresLogo(id) { return id ? 'https://a.espncdn.com/i/teamlogos/soccer/500/' + id + '.png' : ''; }
@@ -781,7 +781,7 @@
       return {
         id: String(c.id), name: c.name, abbr: c.abbr,
         logo: palmaresLogo(c.id), color: c.color,
-        qualified: true, pot: c.pot, historical: !!titles,
+        qualified: true, pot: c.pot, country: c.co, historical: !!titles,
         titles: titles ? titles.n : 0
       };
     });
@@ -791,7 +791,7 @@
       return {
         id: String(c.id), name: c.name, abbr: '',
         logo: palmaresLogo(c.id), color: '',
-        qualified: false, pot: null, historical: true, titles: c.n
+        qualified: false, pot: null, country: null, historical: true, titles: c.n
       };
     });
     return official.concat(historic);
@@ -805,7 +805,7 @@
       return {
         id: c.id, name: c.name, abbr: x.abbr || c.abbr,
         logo: x.logo || c.logo, color: x.color || c.color,
-        qualified: c.qualified, pot: c.pot,
+        qualified: c.qualified, pot: c.pot, country: c.country,
         historical: c.historical, titles: c.titles
       };
     });
@@ -820,6 +820,115 @@
       _clubListCache = base;
       return _clubListCache;
     });
+  }
+
+  /* =======================================================================
+     JOURNÉES — regroupement des matchs de phase de ligue
+     ESPN ne numérote pas les journées. Elles se déduisent des dates : la phase
+     de ligue se joue par salves de 18 matchs séparées de plusieurs semaines,
+     donc un écart de plus de 5 jours ouvre une nouvelle journée. Vérifié sur
+     2026-27 : 8 journées de 18 matchs, 144/144 répartis.
+     ======================================================================= */
+  function clusterMatchdays(matches) {
+    var withDate = (matches || []).filter(function (m) { return m && m.dateObj; })
+      .sort(function (a, b) { return a.dateObj - b.dateObj; });
+    var groups = [], cur = null, last = null;
+    withDate.forEach(function (m) {
+      var t = m.dateObj.getTime();
+      if (last === null || (t - last) > 5 * 86400000) { cur = []; groups.push(cur); }
+      cur.push(m); last = t;
+    });
+    var noDate = (matches || []).filter(function (m) { return m && !m.dateObj; });
+    if (noDate.length) groups.push(noDate);
+    return groups;
+  }
+
+  /* Numéro de journée (1-based) d'un match, ou null. */
+  function matchdayOf(match, matches) {
+    var g = clusterMatchdays(matches);
+    for (var i = 0; i < g.length; i++) {
+      for (var j = 0; j < g[i].length; j++) if (g[i][j].id === match.id) return i + 1;
+    }
+    return null;
+  }
+
+  /* =======================================================================
+     STATISTIQUES INDIVIDUELLES — buteurs et passeurs
+     Endpoint /statistics : ESPN renvoie deux classements de 50 joueurs
+     (goalsLeaders, assistsLeaders). Aucune photo de joueur n'est publiée pour
+     le football (les URLs /headshots/soccer/ renvoient 404) : on affiche donc
+     le blason du club et le numéro de maillot.
+     ======================================================================= */
+  var leadersCache = null;
+  var LEADERS_TTL = 300000; // 5 min — ces classements bougent lentement
+
+  function normalizeLeader(entry) {
+    try {
+      var a = entry && entry.athlete; if (!a) return null;
+      var team = a.team || {};
+      var logo = (team.logos && team.logos[0] && team.logos[0].href) || palmaresLogo(team.id);
+      /* entry.value porte le total (buts ou passes) ; entry.displayValue est une
+         phrase ("Matches: 1, Goals: 2") inutilisable telle quelle. */
+      var v = (entry.value != null) ? Number(entry.value) : null;
+      if (v == null || isNaN(v)) return null;
+      return {
+        id: String(a.id || ''), name: a.displayName || a.shortName || '—',
+        shortName: a.shortName || a.displayName || '—',
+        jersey: a.jersey || '',
+        value: v,
+        teamId: String(team.id || ''), teamName: team.displayName || team.name || '',
+        teamAbbr: (team.abbreviation || '').toUpperCase(), logo: logo
+      };
+    } catch (e) { return null; }
+  }
+
+  /* -> { goals: [...], assists: [...] }, triés décroissant. */
+  function fetchLeaders(opts) {
+    opts = opts || {};
+    if (leadersCache && (Date.now() - leadersCache.ts) < (opts.ttl || LEADERS_TTL) && !opts.force) {
+      return Promise.resolve(leadersCache.data);
+    }
+    return fetchJSON(BASE + '/statistics', opts.timeout).then(function (data) {
+      var out = { goals: [], assists: [] };
+      ((data && data.stats) || []).forEach(function (cat) {
+        var key = /assist/i.test(cat.name || '') ? 'assists' : (/goal/i.test(cat.name || '') ? 'goals' : null);
+        if (!key) return;
+        out[key] = (cat.leaders || []).map(normalizeLeader).filter(Boolean)
+          .sort(function (a, b) { return b.value - a.value; });
+      });
+      leadersCache = { ts: Date.now(), data: out };
+      return out;
+    });
+  }
+
+  /* =======================================================================
+     CLEAN SHEETS — « murailles »
+     ESPN ne publie pas cette statistique : elle se calcule depuis les matchs
+     déjà joués (un match terminé sans but encaissé = un clean sheet).
+     Donnée réelle, dérivée — pas une estimation.
+     ======================================================================= */
+  function computeCleanSheets(events) {
+    var map = {};
+    function row(c) {
+      var k = c.teamId || c.name;
+      if (!map[k]) map[k] = { teamId: c.teamId, name: c.name, abbr: c.abbr, logo: c.logo, cs: 0, pld: 0, ga: 0 };
+      return map[k];
+    }
+    (events || []).forEach(function (ev) {
+      var m = normalizeEvent(ev);
+      if (!m || m.round !== 'league' || m.state !== 'post') return;
+      var H = row(m.home), A = row(m.away);
+      H.pld++; A.pld++;
+      H.ga += m.away.score; A.ga += m.home.score;
+      if (m.away.score === 0) H.cs++;
+      if (m.home.score === 0) A.cs++;
+    });
+    return Object.keys(map).map(function (k) { return map[k]; })
+      .sort(function (a, b) {
+        if (b.cs !== a.cs) return b.cs - a.cs;      // plus de clean sheets d'abord
+        if (a.ga !== b.ga) return a.ga - b.ga;       // puis le moins encaissé
+        return a.name.localeCompare(b.name);
+      });
   }
 
   /* Couleur d'accent du club favori, ajustée pour rester lisible sur fond sombre.
@@ -905,6 +1014,10 @@
     normalizeEvent: normalizeEvent,
     normalizeKeyEvents: normalizeKeyEvents,
     computeStandings: computeStandings,
+    clusterMatchdays: clusterMatchdays,
+    matchdayOf: matchdayOf,
+    fetchLeaders: fetchLeaders,
+    computeCleanSheets: computeCleanSheets,
     buildBracket: buildBracket,
     findChampion: findChampion,
     classifyRound: classifyRound,
