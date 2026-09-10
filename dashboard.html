@@ -188,6 +188,99 @@ a{ text-decoration:none; color:inherit; }
 /* ---- Zones overview ---- */
 .zones{ max-width:1200px; margin:46px auto 10px; }
 .zones-title{ font-family:var(--font-d); font-size:1.8em; letter-spacing:0.05em; color:#fff; margin-bottom:16px; }
+/* ═══════════ 1. NAVIGATION TEMPORELLE ═══════════ */
+.tnav{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid var(--border); }
+.tnav-days{ display:inline-flex; padding:3px; gap:3px; border:1px solid var(--border); border-radius:11px; background:rgba(7,14,35,.6); }
+.tnav-btn{ padding:7px 14px; border:0; border-radius:8px; background:transparent; color:var(--muted);
+  font-family:inherit; font-size:0.78em; font-weight:800; cursor:pointer; white-space:nowrap;
+  transition:background .18s ease,color .18s ease; }
+.tnav-btn:hover{ color:#fff; }
+.tnav-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+.tnav-btn.active{ color:#1a1300; background:linear-gradient(180deg,#ffe9a8,#f7bd39 55%,#d68d06); }
+.tnav-md{ padding:8px 12px; border:1px solid var(--border); border-radius:9px; background:#111a36; color:#fff;
+  font-family:inherit; font-size:0.78em; font-weight:700; cursor:pointer; }
+.tnav-md:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+.tnav-count{ margin-left:auto; font-size:0.72em; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+/* Fondu au changement de période : évite le clignotement d'un remplacement sec. */
+.live-cards-grid{ transition:opacity .17s ease; }
+.live-cards-grid.is-swapping{ opacity:0; pointer-events:none; }
+
+/* ═══════════ 2. WIDGETS DE STATISTIQUES ═══════════ */
+.widgets{ max-width:1200px; margin:0 auto 26px; }
+.wgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.wcard{ background:#111a36; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+.wcard-head{ display:flex; align-items:center; gap:8px; padding:11px 14px; border-bottom:1px solid var(--border);
+  font-size:0.72em; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
+.wcard.w-goals .wcard-head{ color:var(--gold); background:rgba(var(--gold-rgb,245,181,10),.07); }
+.wcard.w-assists .wcard-head{ color:var(--blue); background:rgba(59,123,255,.08); }
+.wcard.w-cs .wcard-head{ color:var(--green); background:rgba(46,213,115,.08); }
+.wcard-ico{ font-size:1.25em; line-height:1; }
+.wrow{ display:grid; grid-template-columns:auto auto 1fr auto; align-items:center; gap:9px; padding:9px 14px; }
+.wrow + .wrow{ border-top:1px solid rgba(255,255,255,.05); }
+.wrow-rk{ font-family:var(--font-d); font-size:1.05em; color:var(--muted); min-width:14px; text-align:center; }
+.wrow:first-of-type .wrow-rk{ color:var(--gold); }
+.wrow-crest{ position:relative; width:26px; height:26px; flex:0 0 auto; }
+.wrow-crest img{ width:26px; height:26px; object-fit:contain; }
+/* ESPN ne publie pas de portrait pour le football : le numéro de maillot sur le
+   blason remplace la photo demandée, sans laisser de trou visuel. */
+.wrow-jersey{ position:absolute; right:-4px; bottom:-3px; min-width:14px; height:14px; padding:0 3px;
+  display:flex; align-items:center; justify-content:center; border-radius:7px;
+  background:#0b1329; border:1px solid var(--border); font-size:8.5px; font-weight:900; color:var(--muted); }
+.wrow-id{ min-width:0; }
+.wrow-nm{ font-size:0.82em; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wrow-tm{ font-size:0.68em; font-weight:700; letter-spacing:.06em; color:var(--muted); }
+.wrow-v{ font-family:var(--font-d); font-size:1.3em; line-height:1; }
+.wcard.w-goals .wrow-v{ color:var(--gold); } .wcard.w-assists .wrow-v{ color:var(--blue); } .wcard.w-cs .wrow-v{ color:var(--green); }
+.wcard-empty{ padding:16px 14px; font-size:0.78em; color:var(--muted); text-align:center; }
+@media (max-width:900px){ .wgrid{ grid-template-columns:1fr; } }
+
+/* ═══════════ 3. RECHERCHE + SIMULATEUR ═══════════ */
+.zbar{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:14px; }
+.zsearch{ position:relative; flex:1 1 220px; min-width:0; }
+.zsearch input{ width:100%; padding:9px 32px 9px 32px; border:1px solid var(--border); border-radius:10px;
+  background:#111a36; color:#fff; font-family:inherit; font-size:0.82em; }
+.zsearch input::placeholder{ color:var(--muted); }
+.zsearch input:focus{ outline:none; border-color:rgba(var(--gold-rgb,245,181,10),.6); }
+.zsearch .zs-ico{ position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:0.85em; pointer-events:none; }
+.zsearch input::-webkit-search-cancel-button{ -webkit-appearance:none; }
+.zs-clear{ position:absolute; right:8px; top:50%; transform:translateY(-50%); border:0; background:transparent;
+  color:var(--muted); font-size:1.05em; cursor:pointer; line-height:1; padding:2px 4px; }
+.zs-clear:hover{ color:#fff; }
+.zchips{ display:inline-flex; gap:4px; padding:3px; border:1px solid var(--border); border-radius:10px; background:rgba(7,14,35,.6); }
+.zchip{ padding:6px 10px; border:0; border-radius:7px; background:transparent; color:var(--muted);
+  font-family:inherit; font-size:0.72em; font-weight:800; cursor:pointer; white-space:nowrap; transition:background .16s,color .16s; }
+.zchip:hover{ color:#fff; } .zchip.active{ color:#1a1300; background:var(--gold); }
+.zcountry{ padding:8px 10px; border:1px solid var(--border); border-radius:9px; background:#111a36; color:#fff;
+  font-family:inherit; font-size:0.76em; font-weight:700; cursor:pointer; }
+.zbar-hits{ font-size:0.72em; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.zone-team.zt-dim{ opacity:.22; }
+.zone-team.zt-hit{ background:rgba(var(--gold-rgb,245,181,10),.14); box-shadow:inset 3px 0 0 var(--gold); }
+
+/* Simulateur */
+.simbar{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-bottom:14px; padding:10px 13px;
+  border:1px solid rgba(var(--gold-rgb,245,181,10),.4); border-radius:12px;
+  background:linear-gradient(135deg,rgba(var(--gold-rgb,245,181,10),.1),rgba(255,255,255,.02)); }
+.simbar-t{ font-size:0.76em; font-weight:800; color:#fff; }
+.simbar-t b{ color:var(--gold); }
+.simbar .btn-mini{ margin-left:auto; padding:6px 11px; border:1px solid var(--border); border-radius:8px;
+  background:#111a36; color:var(--muted); font-family:inherit; font-size:0.72em; font-weight:800; cursor:pointer; }
+.simbar .btn-mini:hover{ color:#fff; border-color:var(--gold); }
+.live-card.can-sim{ cursor:pointer; }
+.live-card.is-simmed{ border-color:rgba(var(--gold-rgb,245,181,10),.65)!important; }
+.sim-editor{ display:flex; align-items:center; justify-content:center; gap:7px; margin-top:9px; }
+.sim-editor input{ width:42px; padding:5px 0; border:1px solid var(--border); border-radius:8px; background:#0b1329;
+  color:#fff; font-family:var(--font-d); font-size:1.15em; text-align:center; }
+.sim-editor input:focus{ outline:none; border-color:var(--gold); }
+.sim-editor .sim-x{ border:0; background:transparent; color:var(--muted); cursor:pointer; font-size:1em; padding:2px 5px; }
+.sim-editor .sim-x:hover{ color:var(--red); }
+.zt-delta{ font-size:0.74em; font-weight:900; font-variant-numeric:tabular-nums; min-width:30px; text-align:right; }
+.zt-delta.up{ color:var(--green); } .zt-delta.down{ color:var(--red); } .zt-delta.flat{ color:rgba(255,255,255,.22); }
+.zone-team.sim-up{ background:rgba(46,213,115,.13); box-shadow:inset 3px 0 0 var(--green); }
+.zone-team.sim-down{ background:rgba(255,71,87,.12); box-shadow:inset 3px 0 0 var(--red); }
+@media (prefers-reduced-motion:no-preference){
+  .zone-team.sim-up,.zone-team.sim-down{ animation:simPop .42s ease; }
+  @keyframes simPop{ from{ transform:translateX(-6px); opacity:.4; } to{ transform:none; opacity:1; } }
+}
 .zones-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .zone-card{ background:#111a36; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
 .zone-head{ font-family:var(--font-d); font-size:1.15em; letter-spacing:0.05em; padding:10px 14px; border-bottom:1px solid var(--border); }
@@ -667,13 +760,46 @@ a{ text-decoration:none; color:inherit; }
       </button>
     </div>
   </div>
+  <div class="tnav" id="tnav">
+    <div class="tnav-days" role="group" aria-label="Navigation par jour">
+      <button class="tnav-btn" type="button" data-day="-1" id="tnavPrev">‹ <span data-i18n="tnav.yesterday">Hier</span></button>
+      <button class="tnav-btn active" type="button" data-day="0" id="tnavToday" aria-pressed="true"><span data-i18n="tnav.today">Aujourd'hui</span></button>
+      <button class="tnav-btn" type="button" data-day="1" id="tnavNext"><span data-i18n="tnav.tomorrow">Demain</span> ›</button>
+    </div>
+    <select class="tnav-md" id="tnavMd" aria-label="Choisir une journée"></select>
+    <span class="tnav-count" id="tnavCount"></span>
+  </div>
   <div class="live-cards-grid" id="live-cards-grid"><div class="loader-wrap"><div class="soccer"></div><div class="loader-label" data-i18n="common.loading">Chargement…</div></div></div>
 </section>
 
 <section class="stats-strip" id="stats-strip" style="display:none;"></section>
 
+<section class="widgets" id="widgets" style="display:none">
+  <div class="wgrid" id="wgrid"></div>
+</section>
+
 <section class="zones">
   <div class="zones-title">🏆 <span class="shiny" data-i18n="dash.zonesTitle2">Le classement par zone</span></div>
+  <div class="simbar" id="simbar" style="display:none">
+    <span class="simbar-t"></span>
+    <button class="btn-mini" type="button" id="simReset" data-i18n="sim.reset">Réinitialiser</button>
+  </div>
+  <div class="zbar">
+    <div class="zsearch">
+      <span class="zs-ico">🔍</span>
+      <input type="search" id="zq" autocomplete="off" spellcheck="false" data-i18n-placeholder="zbar.search" placeholder="Rechercher un club…" aria-label="Rechercher un club">
+      <button class="zs-clear" type="button" id="zqClear" style="display:none" aria-label="Effacer">×</button>
+    </div>
+    <div class="zchips" id="zpots" role="group" aria-label="Filtrer par chapeau">
+      <button class="zchip active" type="button" data-pot="" data-i18n="zbar.allPots">Tous</button>
+      <button class="zchip" type="button" data-pot="1">Ch. 1</button>
+      <button class="zchip" type="button" data-pot="2">Ch. 2</button>
+      <button class="zchip" type="button" data-pot="3">Ch. 3</button>
+      <button class="zchip" type="button" data-pot="4">Ch. 4</button>
+    </div>
+    <select class="zcountry" id="zco" aria-label="Filtrer par pays"></select>
+    <span class="zbar-hits" id="zhits"></span>
+  </div>
   <div class="zones-grid" id="zones-grid"><div class="loader-wrap"><div class="soccer"></div></div></div>
 </section>
 
@@ -695,8 +821,9 @@ a{ text-decoration:none; color:inherit; }
   </p>
 </footer>
 
-<script src="i18n.js?v=20"></script>
-<script src="espn.js?v=12"></script>
+<script src="i18n.js?v=21"></script>
+<script src="espn.js?v=13"></script>
+<script src="simulate.js?v=1"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
 <script>
@@ -813,7 +940,7 @@ a{ text-decoration:none; color:inherit; }
     var state=m.state, stateLbl = state==='in'?I18N.t('common.live'):(state==='pre'?I18N.t('common.upcoming'):I18N.t('common.finished'));
     if(ESPN.isInterrupted(m)) stateLbl = '⏸';
     var card=document.createElement('div');
-    card.className='live-card state-'+state+' '+size; card.style.animationDelay=(0.05+idx*0.05)+'s'; card.dataset.id=m.id;
+    card.className='live-card state-'+state+' '+size+(state==='pre'?' can-sim':'')+(sims[m.id]?' is-simmed':''); card.style.animationDelay=(0.05+idx*0.05)+'s'; card.dataset.id=m.id;
     var hWin=state==='post' && m.home.winner, aWin=state==='post' && m.away.winner;
     var clockPart = state==='pre'
       ? '<span class="live-card-clock live-countdown" data-kickoff="'+(m.dateObj?m.dateObj.getTime():'')+'">'+upcomingWhen(m.dateObj)+'</span>'
@@ -868,13 +995,362 @@ a{ text-decoration:none; color:inherit; }
     list.forEach(function(m,idx){ var c=buildLiveCard(m,idx,sizeForIndex(idx,list.length)); grid.appendChild(c); bindTilt(c,5); });
     bindGlow(); stamp();
   }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     BLOC 1 — NAVIGATION TEMPORELLE
+     État unique `timeView`, source de vérité de ce qu'affiche la grille :
+       { mode:'day', day:-1|0|1 }  -> une date (scoreboard ESPN)
+       { mode:'md',  md:1..8 }     -> une journée (filtre local sur seasonMatches)
+     Tout passe par setTimeView() : aucun autre code ne touche à la grille
+     directement, ce qui évite les états incohérents entre le poll et l'UI.
+     ═══════════════════════════════════════════════════════════════════ */
+  var timeView={ mode:'day', day:0, md:null };
+  var dayCache={};                     // 'YYYYMMDD' -> matchs normalisés
+
+  /* Vrai quand la grille montre « aujourd'hui » : le seul cas où le poll
+     automatique a le droit de rafraîchir l'affichage. */
+  function isLiveToday(){ return timeView.mode==='day' && timeView.day===0; }
+
+  function dateForOffset(off){ var d=new Date(); d.setDate(d.getDate()+off); return d; }
+
+  /* Journées de phase de ligue, recalculées quand la saison change. */
+  function matchdayGroups(){
+    return ESPN.clusterMatchdays((seasonMatches||[]).filter(function(m){ return m.round==='league'; }));
+  }
+
+  function buildMdSelect(){
+    var sel=el('tnavMd'); if(!sel) return;
+    var groups=matchdayGroups(), en=lang()==='en';
+    var opts='<option value="">'+esc(en?'Matchday…':'Journée…')+'</option>';
+    for(var i=0;i<groups.length;i++){
+      opts+='<option value="'+(i+1)+'"'+(timeView.mode==='md'&&timeView.md===i+1?' selected':'')+'>'+
+        esc((en?'Matchday ':'Journée ')+(i+1))+'</option>';
+    }
+    sel.innerHTML=opts;
+    el('tnav').style.display=groups.length?'flex':'none';
+  }
+
+  /* Fondu : on masque, on remplace hors écran, on ré-affiche. Sans ça le
+     remplacement du innerHTML produit un flash blanc à chaque changement. */
+  function swapGrid(render){
+    var grid=el('live-cards-grid'); if(!grid){ render(); return; }
+    grid.classList.add('is-swapping');
+    setTimeout(function(){
+      try{ render(); }catch(e){}
+      requestAnimationFrame(function(){ grid.classList.remove('is-swapping'); });
+    },170);
+  }
+
+  function syncTnavUI(){
+    var days=document.querySelectorAll('.tnav-btn');
+    for(var i=0;i<days.length;i++){
+      var on=timeView.mode==='day' && parseInt(days[i].getAttribute('data-day'),10)===timeView.day;
+      days[i].classList.toggle('active',on);
+      days[i].setAttribute('aria-pressed',on?'true':'false');
+    }
+    var sel=el('tnavMd'); if(sel) sel.value=timeView.mode==='md'?String(timeView.md):'';
+    var c=el('tnavCount');
+    if(c) c.textContent=todayMatches.length?(todayMatches.length+' '+(lang()==='en'?'matches':'matchs')):'';
+  }
+
+  /* Charge les matchs correspondant à l'état courant, puis rend avec fondu. */
+  function applyTimeView(){
+    syncTnavUI();
+    if(timeView.mode==='md'){
+      var g=matchdayGroups()[timeView.md-1]||[];
+      lastRenderSig='';                                  // force le re-rendu
+      swapGrid(function(){ todayMatches=g.slice(); renderLive(); syncTnavUI(); });
+      return Promise.resolve();
+    }
+    var d=dateForOffset(timeView.day), key=ESPN.ymd(d);
+    var done=function(list){
+      lastRenderSig='';
+      swapGrid(function(){ todayMatches=list.slice(); renderLive(); syncTnavUI(); });
+    };
+    if(dayCache[key] && timeView.day!==0){ done(dayCache[key]); return Promise.resolve(); }
+    return ESPN.fetchScoreboard(key).then(function(events){
+      var list=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
+      dayCache[key]=list; done(list);
+    }).catch(function(){ done(dayCache[key]||[]); });
+  }
+
+  function setTimeView(next){
+    timeView=next;
+    applyTimeView();
+  }
+
+  (function bindTnav(){
+    var days=document.querySelectorAll('.tnav-btn');
+    for(var i=0;i<days.length;i++){
+      days[i].addEventListener('click',function(){
+        setTimeView({ mode:'day', day:parseInt(this.getAttribute('data-day'),10), md:null });
+      });
+    }
+    var sel=el('tnavMd');
+    if(sel) sel.addEventListener('change',function(){
+      var v=parseInt(this.value,10);
+      if(!v) setTimeView({ mode:'day', day:0, md:null });
+      else setTimeView({ mode:'md', day:0, md:v });
+    });
+  })();
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     BLOC 2 — WIDGETS DE STATISTIQUES
+     Aucune donnée mockée : buteurs et passeurs viennent de l'endpoint ESPN
+     /statistics, les clean sheets sont calculés depuis les matchs joués
+     (ESPN ne publie pas cette stat). ESPN ne fournit pas de portrait joueur
+     pour le football, d'où blason + numéro de maillot à la place de la photo.
+     ═══════════════════════════════════════════════════════════════════ */
+  var widgetData={ goals:null, assists:null, cs:null };
+  var TOP_N=3;
+
+  function wRow(rank, logo, jersey, name, sub, value){
+    return '<div class="wrow">'+
+      '<span class="wrow-rk">'+rank+'</span>'+
+      '<span class="wrow-crest">'+
+        (logo?'<img src="'+esc(logo)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'')+
+        (jersey?'<span class="wrow-jersey">'+esc(jersey)+'</span>':'')+
+      '</span>'+
+      '<span class="wrow-id"><span class="wrow-nm">'+esc(name)+'</span><span class="wrow-tm">'+esc(sub)+'</span></span>'+
+      '<span class="wrow-v">'+value+'</span>'+
+    '</div>';
+  }
+  function wCard(cls, ico, title, rowsHTML){
+    return '<div class="wcard '+cls+'"><div class="wcard-head"><span class="wcard-ico">'+ico+'</span>'+esc(title)+'</div>'+
+      (rowsHTML||'<div class="wcard-empty">'+esc(I18N.t('wg.empty'))+'</div>')+'</div>';
+  }
+
+  function renderWidgets(){
+    var host=el('wgrid'), sec=el('widgets'); if(!host||!sec) return;
+    var en=lang()==='en';
+    var g=(widgetData.goals||[]).slice(0,TOP_N), a=(widgetData.assists||[]).slice(0,TOP_N);
+    /* Une équipe sans match joué n'a pas « 0 clean sheet » : elle n'a rien à
+       montrer. On n'affiche donc que celles qui en ont au moins un. */
+    var c=(widgetData.cs||[]).filter(function(t){ return t.cs>0; }).slice(0,TOP_N);
+    if(!g.length && !a.length && !c.length){ sec.style.display='none'; return; }
+    sec.style.display='block';
+    host.innerHTML=
+      wCard('w-goals','⚽',I18N.t('wg.scorers'), g.map(function(p,i){
+        return wRow(i+1,p.logo,p.jersey,p.name,p.teamAbbr||p.teamName,p.value); }).join(''))+
+      wCard('w-assists','🅰️',I18N.t('wg.assists'), a.map(function(p,i){
+        return wRow(i+1,p.logo,p.jersey,p.name,p.teamAbbr||p.teamName,p.value); }).join(''))+
+      wCard('w-cs','🧱',I18N.t('wg.cleansheets'), c.map(function(t,i){
+        var sub=(en?'conceded ':'encaissés ')+t.ga+' · '+t.pld+(en?' pl':' j');
+        return wRow(i+1,t.logo,'',t.name,sub,t.cs); }).join(''));
+  }
+
+  function loadWidgets(){
+    if(seasonMatches && seasonMatches.length){
+      widgetData.cs=ESPN.computeCleanSheets(rawSeasonEvents||[]);
+    }
+    renderWidgets();
+    if(widgetData.goals) return;                   // déjà chargé (cache 5 min côté ESPN)
+    ESPN.fetchLeaders().then(function(L){
+      widgetData.goals=L.goals; widgetData.assists=L.assists; renderWidgets();
+    }).catch(function(){ renderWidgets(); });       // hors-ligne : on garde les clean sheets
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     BLOC 3a — RECHERCHE & FILTRES (debounce)
+     ═══════════════════════════════════════════════════════════════════
+     Pourquoi un debounce : chaque frappe déclencherait sinon un re-rendu
+     complet des 36 lignes. À la vitesse d'une frappe normale (~8 caractères
+     par seconde) cela fait 8 reflows par seconde pour un résultat que
+     l'utilisateur ne voit pas — il tape encore. On attend donc 220 ms de
+     silence avant de filtrer : un seul rendu, sur la saisie stabilisée.
+     220 ms est le compromis usuel (au-delà de ~300 ms l'interface paraît molle).
+
+     Le timer est stocké HORS de la fonction et réarmé à chaque appel : c'est
+     ce qui distingue un debounce (ne s'exécute qu'après la fin de la rafale)
+     d'un throttle (s'exécute à cadence fixe pendant la rafale).
+  */
+  function debounce(fn, wait){
+    var t=null;
+    return function(){
+      var ctx=this, args=arguments;
+      clearTimeout(t);                       // annule l'exécution encore en attente
+      t=setTimeout(function(){ fn.apply(ctx,args); }, wait);
+    };
+  }
+
+  var zFilter={ q:'', pot:'', co:'' };
+
+  /* Normalisation accents-insensible : « Bodo » doit trouver « Bodø/Glimt »,
+     « atletico » doit trouver « Atlético de Madrid ». */
+  function fold(str){
+    var v=String(str==null?'':str).toLowerCase();
+    /* NFD sépare lettre et accent, puis on retire les diacritiques (U+0300-U+036F).
+       ø et ß n'ont pas de forme décomposée : ils sont traités à part. */
+    try{ v=v.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }catch(e){}
+    return v.replace(/\u00f8/g,'o').replace(/\u00df/g,'ss');
+  }
+
+
+  var clubMeta={};                            // teamId -> { pot, country }
+  function buildClubMeta(){
+    clubMeta={};
+    (ESPN.qualifiedClubs?ESPN.qualifiedClubs():[]).forEach(function(c){
+      clubMeta[String(c.id)]={ pot:c.pot, country:c.country, name:c.name, abbr:c.abbr };
+    });
+  }
+  var CO_NAMES={FRA:'France',GER:'Allemagne',ESP:'Espagne',ENG:'Angleterre',ITA:'Italie',POR:'Portugal',
+    BEL:'Belgique',NED:'Pays-Bas',NOR:'Norvège',TUR:'Turquie',UKR:'Ukraine',CZE:'Tchéquie',SVK:'Slovaquie',
+    GRE:'Grèce',AUT:'Autriche',AZE:'Azerbaïdjan'};
+  var CO_NAMES_EN={FRA:'France',GER:'Germany',ESP:'Spain',ENG:'England',ITA:'Italy',POR:'Portugal',
+    BEL:'Belgium',NED:'Netherlands',NOR:'Norway',TUR:'Türkiye',UKR:'Ukraine',CZE:'Czechia',SVK:'Slovakia',
+    GRE:'Greece',AUT:'Austria',AZE:'Azerbaijan'};
+  function coName(code){ return (lang()==='en'?CO_NAMES_EN:CO_NAMES)[code]||code; }
+
+  function buildCountrySelect(){
+    var sel=el('zco'); if(!sel) return;
+    buildClubMeta();
+    var codes={};
+    Object.keys(clubMeta).forEach(function(k){ if(clubMeta[k].country) codes[clubMeta[k].country]=1; });
+    var list=Object.keys(codes).sort(function(a,b){ return coName(a).localeCompare(coName(b)); });
+    sel.innerHTML='<option value="">'+esc(I18N.t('zbar.allCountries'))+'</option>'+
+      list.map(function(c){ return '<option value="'+esc(c)+'"'+(zFilter.co===c?' selected':'')+'>'+esc(coName(c))+'</option>'; }).join('');
+  }
+
+  /* Un club passe le filtre s'il satisfait TOUS les critères actifs. */
+  function matchesFilter(row){
+    var meta=clubMeta[String(row.teamId)]||{};
+    if(zFilter.pot && String(meta.pot)!==zFilter.pot) return false;
+    if(zFilter.co && meta.country!==zFilter.co) return false;
+    if(zFilter.q){
+      var q=fold(zFilter.q);
+      var hay=fold(row.name)+' '+fold(row.abbr)+' '+fold(row.shortName)+' '+fold(meta.name)+' '+fold(coName(meta.country));
+      if(hay.indexOf(q)===-1) return false;
+    }
+    return true;
+  }
+  function filterActive(){ return !!(zFilter.q||zFilter.pot||zFilter.co); }
+
+  /* Applique le filtre SANS re-rendre : on ne touche qu'aux classes des lignes
+     déjà en place. Re-générer le HTML ferait perdre le scroll et clignoter. */
+  function applyZoneFilter(){
+    var rows=document.querySelectorAll('#zones-grid .zone-team[data-team]');
+    var hits=0, active=filterActive();
+    for(var i=0;i<rows.length;i++){
+      var id=rows[i].getAttribute('data-team');
+      var row=standingsById[id];
+      var ok=!active || (row && matchesFilter(row));
+      rows[i].classList.toggle('zt-dim', active && !ok);
+      rows[i].classList.toggle('zt-hit', active && ok);
+      if(active && ok) hits++;
+    }
+    var h=el('zhits');
+    if(h) h.textContent=active?(hits+' / '+rows.length):'';
+    var cl=el('zqClear'); if(cl) cl.style.display=zFilter.q?'block':'none';
+  }
+
+  var standingsById={};
+  function indexStandings(rows){ standingsById={}; (rows||[]).forEach(function(t){ standingsById[String(t.teamId)]=t; }); }
+
+  (function bindSearch(){
+    var input=el('zq'); if(!input) return;
+    var run=debounce(function(){ zFilter.q=input.value.trim(); applyZoneFilter(); }, 220);
+    input.addEventListener('input',run);
+    /* Échap efface immédiatement — un debounce sur une annulation serait perçu
+       comme une latence. */
+    input.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){ input.value=''; zFilter.q=''; applyZoneFilter(); }
+    });
+    var cl=el('zqClear');
+    if(cl) cl.addEventListener('click',function(){ input.value=''; zFilter.q=''; applyZoneFilter(); input.focus(); });
+
+    var pots=el('zpots');
+    if(pots) pots.addEventListener('click',function(e){
+      var b=e.target.closest?e.target.closest('.zchip'):null; if(!b) return;
+      zFilter.pot=b.getAttribute('data-pot')||'';
+      var all=pots.querySelectorAll('.zchip');
+      for(var i=0;i<all.length;i++) all[i].classList.toggle('active',all[i]===b);
+      applyZoneFilter();
+    });
+    var co=el('zco');
+    if(co) co.addEventListener('change',function(){ zFilter.co=this.value; applyZoneFilter(); });
+  })();
+
+  /* ═══════════════════════════════════════════════════════════════════
+     BLOC 3b — SIMULATEUR « WHAT-IF »
+     Le calcul vit dans simulate.js (LDCSim), testable sans navigateur.
+     Ici, uniquement l'UI : saisie du score sur une carte à venir, puis
+     re-rendu du classement avec les deltas.
+     ═══════════════════════════════════════════════════════════════════ */
+  var sims={};                                  // matchId -> { match, hg, ag }
+
+  function simCount(){ return Object.keys(sims).length; }
+  function simList(){ return Object.keys(sims).map(function(k){ return sims[k]; }); }
+
+  /* Classement affiché : réel, ou simulé si au moins un score est saisi. */
+  function displayStandings(){
+    if(!simCount()) return standings;
+    return LDCSim.simulateStandings(standings, simList());
+  }
+
+  function renderSimBar(){
+    var bar=el('simbar'); if(!bar) return;
+    var n=simCount();
+    bar.style.display=n?'flex':'none';
+    if(!n) return;
+    var en=lang()==='en';
+    bar.querySelector('.simbar-t').innerHTML='🔮 '+esc(en?'Simulation active — ':'Simulation en cours — ')+
+      '<b>'+n+'</b> '+esc(n>1?(en?'matches':'matchs'):(en?'match':'match'))+' '+esc(en?'simulated':'simulé'+(n>1?'s':''));
+  }
+
+  function refreshSimulation(){
+    renderSimBar(); renderZones();
+    document.querySelectorAll('.live-card').forEach(function(c){
+      c.classList.toggle('is-simmed', !!sims[c.dataset.id]);
+    });
+  }
+
+  function setSim(match, hg, ag){
+    if(hg===''||ag===''||hg==null||ag==null) delete sims[match.id];
+    else sims[match.id]={ match:match, hg:hg, ag:ag };
+    refreshSimulation();
+  }
+
+  /* Éditeur de score injecté dans la carte du match à venir. */
+  function openSimEditor(card, m){
+    if(card.querySelector('.sim-editor')) return;
+    var cur=sims[m.id];
+    var box=document.createElement('div');
+    box.className='sim-editor';
+    box.innerHTML='<input type="number" min="0" max="99" inputmode="numeric" value="'+(cur?cur.hg:'')+'" aria-label="'+esc(m.home.name)+'">'+
+      '<span style="color:var(--muted)">-</span>'+
+      '<input type="number" min="0" max="99" inputmode="numeric" value="'+(cur?cur.ag:'')+'" aria-label="'+esc(m.away.name)+'">'+
+      '<button class="sim-x" type="button" title="'+esc(I18N.t('sim.clear'))+'">×</button>';
+    card.appendChild(box);
+    var ins=box.querySelectorAll('input');
+    var push=debounce(function(){ setSim(m, ins[0].value, ins[1].value); }, 180);
+    ins[0].addEventListener('input',push); ins[1].addEventListener('input',push);
+    box.addEventListener('click',function(e){ e.stopPropagation(); });
+    box.querySelector('.sim-x').addEventListener('click',function(){
+      ins[0].value=''; ins[1].value=''; delete sims[m.id]; box.remove(); refreshSimulation();
+    });
+    ins[0].focus();
+  }
+
+  /* Clic sur une carte « à venir » -> éditeur. Le clic sur un blason continue
+     d'ouvrir la modale club : on ne capture que le reste de la carte. */
+  document.addEventListener('click',function(e){
+    var card=e.target.closest?e.target.closest('.live-card.can-sim'):null;
+    if(!card || e.target.closest('[data-team]') || e.target.closest('.sim-editor')) return;
+    var m=(todayMatches||[]).filter(function(x){ return String(x.id)===String(card.dataset.id); })[0];
+    if(m && m.state==='pre') openSimEditor(card,m);
+  });
+  (function(){ var r=el('simReset'); if(r) r.addEventListener('click',function(){
+    sims={}; document.querySelectorAll('.sim-editor').forEach(function(b){ b.remove(); }); refreshSimulation(); }); })();
+
   function stamp(){ el('live-last-update').textContent=(I18N.t('common.updated')||'')+' '+hm(new Date()); }
   function renderLiveError(){ var grid=el('live-cards-grid'); if(grid.querySelector('.live-card')) return; grid.innerHTML='<div class="live-error">'+esc(I18N.t('common.offline'))+'</div>'; }
 
   el('live-refresh-btn').addEventListener('click',function(){ var b=this; b.classList.add('spinning'); try{ loadSeason(); }catch(e){} loadToday().then(function(){ setTimeout(function(){b.classList.remove('spinning');},400); }); });
 
   /* ================= SEASON: zones + marquee + modal ================= */
-  var seasonMatches=[], standings=[], clubIndex={}, championDone=false, seasonLoaded=false;
+  var seasonMatches=[], rawSeasonEvents=[], standings=[], clubIndex={}, championDone=false, seasonLoaded=false;
 
   function indexClubs(){
     clubIndex={};
@@ -891,9 +1367,12 @@ a{ text-decoration:none; color:inherit; }
   function renderZones(){
     var grid=el('zones-grid');
     var fid=favId();
+    var view=displayStandings();          // réel, ou simulé si des scores sont saisis
+    var simOn=simCount()>0;
+    indexStandings(view);
     var nf=ESPN.isLeaguePhaseFormat();
     var ts=document.querySelector('.zones-title .shiny'); if(ts) ts.textContent=I18N.t(nf?'dash.zonesTitle2':'dash.rankingAll');
-    if(!standings.length){
+    if(!view.length){
       if(!ESPN.isArchive() && seasonLoaded){
         grid.innerHTML='<div class="season-hint" style="grid-column:1/-1"><p>'+esc(I18N.t('dash.notStarted'))+'</p>'+
           '<a class="star-border" href="dashboard.html?season=2025">'+esc(I18N.t('dash.seeSouvenir'))+'</a></div>';
@@ -904,19 +1383,33 @@ a{ text-decoration:none; color:inherit; }
     buildStats();
     var defs = nf
       ? [{cls:'z-q',key:'dash.zoneQ',from:0,to:8},{cls:'z-po',key:'dash.zonePO',from:8,to:24},{cls:'z-out',key:'dash.zoneOut',from:24,to:36}]
-      : [{cls:'z-all full',key:'dash.rankingAll',from:0,to:standings.length}];
+      : [{cls:'z-all full',key:'dash.rankingAll',from:0,to:view.length}];
     grid.innerHTML=defs.map(function(d){
-      var rows=standings.slice(d.from,d.to).map(function(t){
+      var rows=view.slice(d.from,d.to).map(function(t){
         var tit=ESPN.clubTitles(t.name);
         var cup=tit?'<span class="zt-cup" title="'+tit.n+' '+esc(I18N.t('pal.titlesN'))+'">🏆'+tit.n+'</span>':'';
         var isFav=fid && t.teamId===fid;
-        return '<div class="zone-team'+(isFav?' is-fav':'')+'" data-team="'+esc(t.teamId)+'">'+
+        /* En simulation : le chiffre de mouvement pour TOUTE équipe qui bouge,
+           mais le surlignage vert/rouge réservé aux mouvements qui comptent —
+           l'équipe dont on a simulé le match, ou celle qui change de zone
+           (top 8 / barrages / éliminés).
+           Sans ce filtre, un seul score simulé repeint jusqu'à 21 lignes sur 36 :
+           toutes celles décalées d'un rang au passage. Le signal se noie. */
+        var mv='', mvCls='';
+        if(simOn && t.delta!=null){
+          var notable=t.simulated || LDCSim.changedZone(t);
+          if(t.delta>0){ mv='<span class="zt-delta up">📈 +'+t.delta+'</span>'; if(notable) mvCls=' sim-up'; }
+          else if(t.delta<0){ mv='<span class="zt-delta down">📉 '+t.delta+'</span>'; if(notable) mvCls=' sim-down'; }
+          else mv='<span class="zt-delta flat">–</span>';
+        }
+        return '<div class="zone-team'+(isFav?' is-fav':'')+mvCls+'" data-team="'+esc(t.teamId)+'">'+
           '<span class="rk">'+t.pos+'</span>'+
           (t.logo?'<img src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span style="width:22px"></span>')+
-          '<span class="nm">'+(isFav?'<span class="zt-fav">★</span>':'')+esc(t.name)+'</span>'+cup+'<span class="pts">'+t.pts+'</span></div>';
+          '<span class="nm">'+(isFav?'<span class="zt-fav">★</span>':'')+esc(t.name)+'</span>'+cup+mv+'<span class="pts">'+t.pts+'</span></div>';
       }).join('') || '<div class="zone-team"><span class="nm muted">—</span></div>';
       return '<div class="zone-card '+d.cls+'"><div class="zone-head">'+esc(I18N.t(d.key))+'</div><div class="zone-list">'+rows+'</div></div>';
     }).join('');
+    applyZoneFilter();                    // le filtre survit au re-rendu
   }
 
   function renderMarquee(){
@@ -1128,8 +1621,12 @@ a{ text-decoration:none; color:inherit; }
     return ESPN.fetchScoreboard().then(function(events){
       var all=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
       var cur=all.filter(inCurrentSeason);               // uniquement la saison actuelle
-      if(cur.length){ todayMatches=cur; renderLive(); }
-      else { renderFeatured(); }                          // hors-saison : dernier match de la saison actuelle (souvent aucun)
+      try{ dayCache[ESPN.ymd(new Date())]=cur; }catch(e){}
+      /* Le poll (20 s) ne doit PAS écraser une vue « Hier » ou « Journée 3 » :
+         il ne rafraîchit la grille que si l'on regarde bien aujourd'hui. */
+      if(!isLiveToday()){ renderFav(); scheduleFavNotif(); return; }
+      if(cur.length){ todayMatches=cur; renderLive(); syncTnavUI(); }
+      else { renderFeatured(); syncTnavUI(); }             // hors-saison : dernier match de la saison actuelle
       renderFav(); scheduleFavNotif();
     }).catch(function(){ if(!todayMatches.length) renderFeatured(); });
   }
@@ -1137,9 +1634,11 @@ a{ text-decoration:none; color:inherit; }
     if(document.visibilityState==='hidden') return;
     ESPN.fetchSeasonEvents().then(function(events){
       seasonLoaded=true;
+      rawSeasonEvents=events||[];
       seasonMatches=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
       standings=ESPN.computeStandings(events, (!ESPN.isArchive() && ESPN.isLeaguePhaseFormat()) ? ESPN.qualifiedClubs() : null);
       indexClubs(); renderZones(); renderMarquee(); renderFav(); scheduleFavNotif(); renderOffseason();
+      buildMdSelect(); buildCountrySelect(); loadWidgets();
       if(ESPN.isArchive() || !todayMatches.length) renderFeatured();  // dernier match de la saison sélectionnée
       if(!championDone && !ESPN.isArchive()){ var champ=ESPN.findChampion(ESPN.buildBracket(events)); if(champ){ championDone=true; Confetti.champion(); } }
     }).catch(function(){ seasonLoaded=true; renderZones(); });
