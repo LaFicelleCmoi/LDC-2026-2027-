@@ -830,7 +830,7 @@ a{ text-decoration:none; color:inherit; }
 </footer>
 
 <script src="i18n.js?v=21"></script>
-<script src="espn.js?v=13"></script>
+<script src="espn.js?v=14"></script>
 <script src="simulate.js?v=1"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
@@ -1155,15 +1155,54 @@ a{ text-decoration:none; color:inherit; }
         return wRow(i+1,t.logo,'',t.name,sub,t.cs); }).join(''));
   }
 
+  /* Résout le blason d'un joueur depuis son club (les keyEvents ne portent
+     qu'un teamId), avec repli sur le classement puis sur le logo ESPN par id. */
+  function teamLogoById(id){
+    var e=clubIndex[String(id)];
+    if(e && e.team && e.team.logo) return e.team.logo;
+    var r=standingsById[String(id)];
+    if(r && r.logo) return r.logo;
+    return id?('https://a.espncdn.com/i/teamlogos/soccer/500/'+id+'.png'):'';
+  }
+  function teamAbbrById(id){
+    var e=clubIndex[String(id)];
+    if(e && e.team && (e.team.abbr||e.team.shortName)) return e.team.abbr||e.team.shortName;
+    var r=standingsById[String(id)];
+    return (r && (r.abbr||r.name))||'';
+  }
+  function adaptBoard(list){
+    return (list||[]).map(function(p){
+      return { name:p.name, value:p.value, jersey:'',
+               logo:teamLogoById(p.teamId), teamAbbr:teamAbbrById(p.teamId), teamName:'' };
+    });
+  }
+
   function loadWidgets(){
-    if(seasonMatches && seasonMatches.length){
-      widgetData.cs=ESPN.computeCleanSheets(rawSeasonEvents||[]);
+    if(rawSeasonEvents && rawSeasonEvents.length){
+      widgetData.cs=ESPN.computeCleanSheets(rawSeasonEvents);
     }
     renderWidgets();
-    if(widgetData.goals) return;                   // déjà chargé (cache 5 min côté ESPN)
-    ESPN.fetchLeaders().then(function(L){
-      widgetData.goals=L.goals; widgetData.assists=L.assists; renderWidgets();
-    }).catch(function(){ renderWidgets(); });       // hors-ligne : on garde les clean sheets
+
+    /* Buteurs et passeurs : agrégés depuis les résumés de match, PAS depuis
+       /statistics — cet agrégat ESPN est faux entre deux recalculs (il ignorait
+       les triplés de Demirovic et Ferran Torres le 10/09/2026).
+       onProgress remplit les widgets au fil des lots, sans attendre le dernier
+       match. Rejoué à chaque loadSeason (60 s), les matchs déjà connus étant
+       servis par le cache : seul un match nouvellement terminé coûte une requête. */
+    var played=(seasonMatches||[]).filter(function(m){ return m.state==='post'; });
+    if(!played.length){ renderWidgets(); return; }
+    ESPN.fetchScorerBoard(played,{ onProgress:function(b){
+      widgetData.goals=adaptBoard(b.goals); widgetData.assists=adaptBoard(b.assists); renderWidgets();
+    }}).then(function(b){
+      widgetData.goals=adaptBoard(b.goals); widgetData.assists=adaptBoard(b.assists); renderWidgets();
+    }).catch(function(){
+      /* Repli : si les résumés sont injoignables, mieux vaut l'agrégat ESPN
+         imparfait qu'un widget vide. */
+      ESPN.fetchLeaders().then(function(L){
+        if(widgetData.goals && widgetData.goals.length) return;
+        widgetData.goals=L.goals; widgetData.assists=L.assists; renderWidgets();
+      }).catch(function(){ renderWidgets(); });
+    });
   }
 
 
