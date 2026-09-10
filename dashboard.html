@@ -215,7 +215,7 @@ a{ text-decoration:none; color:inherit; }
 .wcard.w-assists .wcard-head{ color:var(--blue); background:rgba(59,123,255,.08); }
 .wcard.w-cs .wcard-head{ color:var(--green); background:rgba(46,213,115,.08); }
 .wcard-ico{ font-size:1.25em; line-height:1; }
-.wrow{ display:grid; grid-template-columns:auto auto 1fr auto; align-items:center; gap:9px; padding:9px 14px; }
+.wrow{ display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; align-items:center; gap:11px; padding:10px 14px; }
 .wrow + .wrow{ border-top:1px solid rgba(255,255,255,.05); }
 .wrow-rk{ font-family:var(--font-d); font-size:1.05em; color:var(--muted); min-width:14px; text-align:center; }
 .wrow:first-of-type .wrow-rk{ color:var(--gold); }
@@ -226,9 +226,13 @@ a{ text-decoration:none; color:inherit; }
 .wrow-jersey{ position:absolute; right:-4px; bottom:-3px; min-width:14px; height:14px; padding:0 3px;
   display:flex; align-items:center; justify-content:center; border-radius:7px;
   background:#0b1329; border:1px solid var(--border); font-size:8.5px; font-weight:900; color:var(--muted); }
-.wrow-id{ min-width:0; }
-.wrow-nm{ font-size:0.82em; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.wrow-tm{ font-size:0.68em; font-weight:700; letter-spacing:.06em; color:var(--muted); }
+/* Nom au-dessus du club : sans display:flex ces deux <span> restent inline et
+   se collent (« Erling HaalandMNC »). */
+.wrow-id{ display:flex; flex-direction:column; justify-content:center; gap:2px; min-width:0; }
+.wrow-nm{ display:block; font-size:0.82em; font-weight:700; color:#fff; line-height:1.2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wrow-tm{ display:block; font-size:0.68em; font-weight:700; letter-spacing:.06em; color:var(--muted);
+  line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .wrow-v{ font-family:var(--font-d); font-size:1.3em; line-height:1; }
 .wcard.w-goals .wrow-v{ color:var(--gold); } .wcard.w-assists .wrow-v{ color:var(--blue); } .wcard.w-cs .wrow-v{ color:var(--green); }
 .wcard-empty{ padding:16px 14px; font-size:0.78em; color:var(--muted); text-align:center; }
@@ -1011,6 +1015,13 @@ a{ text-decoration:none; color:inherit; }
      automatique a le droit de rafraîchir l'affichage. */
   function isLiveToday(){ return timeView.mode==='day' && timeView.day===0; }
 
+  /* Saison en cours = il reste des matchs à jouer (ou en cours). Sert à décider
+     si « aucun match aujourd'hui » doit afficher un état vide honnête ou
+     retomber sur le dernier match de la saison. */
+  function seasonHasFixtures(){
+    return (seasonMatches||[]).some(function(m){ return m && m.state!=='post' && m.round!=='qualifying'; });
+  }
+
   function dateForOffset(off){ var d=new Date(); d.setDate(d.getDate()+off); return d; }
 
   /* Journées de phase de ligue, recalculées quand la saison change. */
@@ -1618,7 +1629,12 @@ a{ text-decoration:none; color:inherit; }
   function loadToday(){
     if(document.visibilityState==='hidden') return Promise.resolve();
     if(ESPN.isArchive()){ return Promise.resolve(); }   // saison archivée : vedette = dernier match de la saison (via loadSeason)
-    return ESPN.fetchScoreboard().then(function(events){
+    /* IMPÉRATIF : interroger la date du jour, pas le scoreboard nu.
+       Sans paramètre `dates`, ESPN renvoie la DERNIÈRE JOURNÉE JOUÉE et non le
+       jour calendaire : le 10 septembre à 02 h 30 il sert encore les matchs du
+       9. L'onglet « Aujourd'hui » affichait donc la veille, et le poll (20 s)
+       réécrasait la vue chaque fois que l'utilisateur changeait de jour. */
+    return ESPN.fetchScoreboard(ESPN.ymd(new Date())).then(function(events){
       var all=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
       var cur=all.filter(inCurrentSeason);               // uniquement la saison actuelle
       try{ dayCache[ESPN.ymd(new Date())]=cur; }catch(e){}
@@ -1626,7 +1642,11 @@ a{ text-decoration:none; color:inherit; }
          il ne rafraîchit la grille que si l'on regarde bien aujourd'hui. */
       if(!isLiveToday()){ renderFav(); scheduleFavNotif(); return; }
       if(cur.length){ todayMatches=cur; renderLive(); syncTnavUI(); }
-      else { renderFeatured(); syncTnavUI(); }             // hors-saison : dernier match de la saison actuelle
+      /* Aucun match aujourd'hui : on ne bascule sur la vedette que HORS SAISON.
+         En pleine saison, afficher le prochain match sous un onglet
+         « Aujourd'hui » serait le même mensonge que le bug ci-dessus. */
+      else if(!seasonHasFixtures()){ renderFeatured(); syncTnavUI(); }
+      else { todayMatches=[]; renderLive(); syncTnavUI(); }
       renderFav(); scheduleFavNotif();
     }).catch(function(){ if(!todayMatches.length) renderFeatured(); });
   }
