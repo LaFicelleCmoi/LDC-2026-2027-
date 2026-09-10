@@ -45,6 +45,7 @@
     'common.retry':    { fr: 'Réessayer',      en: 'Retry' },
     'common.offline':  { fr: 'Données indisponibles — dernier affichage conservé', en: 'Data unavailable — keeping last view' },
     'common.updated':  { fr: 'Mis à jour',     en: 'Updated' },
+    'sync.espn':       { fr: 'Synchro ESPN',   en: 'ESPN sync' },
     'common.vs':       { fr: 'vs',             en: 'vs' },
     'common.pen':      { fr: 'tab',            en: 'pens' },
     'common.back':     { fr: '← Retour',       en: '← Back' },
