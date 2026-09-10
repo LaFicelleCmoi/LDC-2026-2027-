@@ -685,9 +685,15 @@
       try {
         var typeText = (e.type && e.type.text) || '';
         var participant = (e.participants && e.participants[0] && e.participants[0].athlete) || null;
+        /* participants[1] = le passeur (« Assisted by … »), quand il y en a un. */
+        var assister = (e.participants && e.participants[1] && e.participants[1].athlete) || null;
         out.push({
           typeText: typeText,
+          typeSlug: (e.type && e.type.type) || '',
           typeId: (e.type && e.type.id) || '',
+          assist: assister ? assister.displayName : '',
+          assistId: assister ? String(assister.id || '') : '',
+          playerId: participant ? String(participant.id || '') : '',
           clock: (e.clock && e.clock.displayValue) || '',
           period: (e.period && e.period.number) || 0,
           teamId: (e.team && e.team.id) || '',
@@ -902,6 +908,101 @@
   }
 
   /* =======================================================================
+     BUTEURS & PASSEURS — dérivés des résumés de match
+     -----------------------------------------------------------------------
+     Pourquoi ne PAS utiliser /statistics : cet endpoint est un agrégat
+     recalculé périodiquement, et il est faux entre deux recalculs. Constaté le
+     10/09/2026 : il annonçait Haaland en tête avec 2 buts alors que Demirovic
+     et Ferran Torres avaient déjà inscrit un triplé chacun — tous deux étaient
+     purement absents du classement.
+
+     Les keyEvents des résumés, eux, sont la donnée de terrain : 46 actions de
+     but sur 46 portent un joueur identifié. On les agrège donc nous-mêmes.
+     Contrôle : 46 buts marqués - 3 csc = 43 buts crédités à un joueur.
+
+     Coût maîtrisé : un match TERMINÉ ne change plus, son agrégat est donc mis
+     en cache définitivement (mémoire + localStorage). Seuls les matchs encore
+     inconnus sont téléchargés, par petits lots, pour ne pas lancer 144 requêtes
+     simultanées en fin de phase de ligue.
+     ======================================================================= */
+  var GOAL_SLUG = /^(goal|penalty---scored)/;   // goal, goal---header/free-kick/volley, penalty---scored
+  var scorerAgg = {};                            // eventId -> { g:{}, a:{}, t:{} }
+  var SCORER_LS = 'ldc_scorers_';
+
+  function _scorerLSKey() { return SCORER_LS + seasonStartYear(); }
+  function _loadScorerCache() {
+    try {
+      var o = JSON.parse(global.localStorage.getItem(_scorerLSKey()) || 'null');
+      if (o && typeof o === 'object') scorerAgg = o;
+    } catch (e) {}
+  }
+  function _saveScorerCache() {
+    try { global.localStorage.setItem(_scorerLSKey(), JSON.stringify(scorerAgg)); } catch (e) {}
+  }
+
+  /* Agrège UN résumé : buts et passes décisives par joueur, avec son club. */
+  function aggregateMatchScorers(summary) {
+    var g = {}, a = {}, t = {};
+    normalizeKeyEvents(summary).forEach(function (ev) {
+      if (!ev.scoringPlay) return;
+      if (ev.typeSlug === 'own-goal') return;              // jamais crédité au joueur
+      /* Repli sur le texte si ESPN n'a pas rempli type.type. */
+      var isGoal = ev.typeSlug ? GOAL_SLUG.test(ev.typeSlug)
+                 : (/goal/i.test(ev.typeText) && !/own goal/i.test(ev.typeText));
+      if (!isGoal) return;
+      if (ev.player) { g[ev.player] = (g[ev.player] || 0) + 1; if (ev.teamId) t[ev.player] = ev.teamId; }
+      if (ev.assist) { a[ev.assist] = (a[ev.assist] || 0) + 1; if (ev.teamId) t[ev.assist] = ev.teamId; }
+    });
+    return { g: g, a: a, t: t };
+  }
+
+  function _mergeBoards(ids) {
+    var G = {}, A = {}, T = {};
+    ids.forEach(function (id) {
+      var e = scorerAgg[id]; if (!e) return;
+      Object.keys(e.g || {}).forEach(function (n) { G[n] = (G[n] || 0) + e.g[n]; });
+      Object.keys(e.a || {}).forEach(function (n) { A[n] = (A[n] || 0) + e.a[n]; });
+      Object.keys(e.t || {}).forEach(function (n) { T[n] = e.t[n]; });
+    });
+    function rank(obj) {
+      return Object.keys(obj).map(function (n) { return { name: n, value: obj[n], teamId: T[n] || '' }; })
+        .sort(function (x, y) { return (y.value - x.value) || x.name.localeCompare(y.name); });
+    }
+    return { goals: rank(G), assists: rank(A) };
+  }
+
+  /* fetchScorerBoard(matches, { onProgress, batch })
+     -> Promise<{ goals:[{name,value,teamId}], assists:[...] }>
+     onProgress reçoit un tableau partiel dès qu'un lot est agrégé, pour que
+     l'interface se remplisse au fil de l'eau au lieu d'attendre le dernier match. */
+  function fetchScorerBoard(matches, opts) {
+    opts = opts || {};
+    _loadScorerCache();
+    var done = (matches || []).filter(function (m) { return m && m.state === 'post'; });
+    var ids = done.map(function (m) { return String(m.id); });
+    var todo = ids.filter(function (id) { return !scorerAgg[id]; });
+
+    if (!todo.length) return Promise.resolve(_mergeBoards(ids));
+    if (opts.onProgress && ids.length > todo.length) opts.onProgress(_mergeBoards(ids));
+
+    var size = opts.batch || 6;
+    function step(i) {
+      if (i >= todo.length) { _saveScorerCache(); return _mergeBoards(ids); }
+      var slice = todo.slice(i, i + size);
+      return Promise.all(slice.map(function (id) {
+        return fetchSummary(id, { ttl: 3600000 })
+          .then(function (sum) { scorerAgg[id] = aggregateMatchScorers(sum); })
+          .catch(function () { /* un match manquant ne doit pas casser le tableau */ });
+      })).then(function () {
+        _saveScorerCache();
+        if (opts.onProgress) opts.onProgress(_mergeBoards(ids));
+        return step(i + size);
+      });
+    }
+    return step(0);
+  }
+
+  /* =======================================================================
      CLEAN SHEETS — « murailles »
      ESPN ne publie pas cette statistique : elle se calcule depuis les matchs
      déjà joués (un match terminé sans but encaissé = un clean sheet).
@@ -1018,6 +1119,8 @@
     matchdayOf: matchdayOf,
     fetchLeaders: fetchLeaders,
     computeCleanSheets: computeCleanSheets,
+    fetchScorerBoard: fetchScorerBoard,
+    aggregateMatchScorers: aggregateMatchScorers,
     buildBracket: buildBracket,
     findChampion: findChampion,
     classifyRound: classifyRound,
