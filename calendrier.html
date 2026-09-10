@@ -154,8 +154,8 @@
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=20"></script>
-<script src="espn.js?v=12"></script>
+<script src="i18n.js?v=21"></script>
+<script src="espn.js?v=13"></script>
 <script src="draw2026.js?v=1"></script>
 <script src="ui.js?v=1"></script>
 <script>
@@ -211,19 +211,10 @@
     syncViewUI(); render();
   }
 
-  /* Découpe les matchs de phase de ligue en journées (saut > 5 jours = nouvelle journée). */
-  function clusterMatchdays(matches){
-    var withDate=matches.filter(function(m){return m.dateObj;}).sort(function(a,b){return a.dateObj-b.dateObj;});
-    var groups=[], cur=null, last=null;
-    withDate.forEach(function(m){
-      var t=m.dateObj.getTime();
-      if(last===null || (t-last)>5*86400000){ cur=[]; groups.push(cur); }
-      cur.push(m); last=t;
-    });
-    var noDate=matches.filter(function(m){return !m.dateObj;});
-    if(noDate.length) groups.push(noDate);
-    return groups;
-  }
+  /* Le découpage en journées vit dans espn.js (ESPN.clusterMatchdays) : le
+     dashboard en a besoin aussi pour son sélecteur de journée, et deux copies
+     divergeraient. */
+
 
   function logo(c){ return c.logo?'<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span class="nl"></span>'; }
   function side(c,cls){ return '<div class="cal-side '+cls+'">'+logo(c)+'<span class="nm">'+esc(c.shortName||c.name)+'</span></div>'; }
@@ -431,7 +422,7 @@
 
     var groups=[];
     var league=matches.filter(function(m){return m.round==='league';});
-    clusterMatchdays(league).forEach(function(md,i){ groups.push({title:I18N.t('cal.matchday')+' '+(i+1), matches:md}); });
+    ESPN.clusterMatchdays(league).forEach(function(md,i){ groups.push({title:I18N.t('cal.matchday')+' '+(i+1), matches:md}); });
     var RL={po:'trk.round.po',r16:'trk.round.r16',qf:'trk.round.qf',sf:'trk.round.sf',final:'trk.round.final'};
     ['po','r16','qf','sf','final'].forEach(function(rk){
       var ms=matches.filter(function(m){return m.round===rk;}).sort(function(a,b){return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0);});
