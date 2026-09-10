@@ -180,6 +180,8 @@ a{ text-decoration:none; color:inherit; }
 /* ---- Zones overview ---- */
 .zones{ max-width:1200px; margin:46px auto 10px; }
 .zones-title{ font-family:var(--font-d); font-size:1.8em; letter-spacing:0.05em; color:#fff; margin-bottom:16px; }
+.zones-sync{ display:block; margin-top:4px; font-family:var(--font-b,inherit); font-size:0.4em; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.zones-sync:empty{ display:none; }
 /* ═══════════ 1. NAVIGATION TEMPORELLE ═══════════ */
 .tnav{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid var(--border); }
 .tnav-days{ display:inline-flex; padding:3px; gap:3px; border:1px solid var(--border); border-radius:11px; background:rgba(7,14,35,.6); }
@@ -787,7 +789,7 @@ a{ text-decoration:none; color:inherit; }
 </section>
 
 <section class="zones">
-  <div class="zones-title">🏆 <span class="shiny" data-i18n="dash.zonesTitle2">Le classement par zone</span></div>
+  <div class="zones-title">🏆 <span class="shiny" data-i18n="dash.zonesTitle2">Le classement par zone</span><span class="zones-sync" id="zonesSync"></span></div>
   <div class="simbar" id="simbar" style="display:none">
     <span class="simbar-t"></span>
     <button class="btn-mini" type="button" id="simReset" data-i18n="sim.reset">Réinitialiser</button>
@@ -829,9 +831,11 @@ a{ text-decoration:none; color:inherit; }
   </p>
 </footer>
 
-<script src="i18n.js?v=21"></script>
-<script src="espn.js?v=14"></script>
-<script src="simulate.js?v=1"></script>
+<script src="i18n.js?v=22"></script>
+<script src="standings-engine.js?v=1"></script>
+<script src="coefficients2026.js?v=1"></script>
+<script src="espn.js?v=15"></script>
+<script src="simulate.js?v=2"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
 <script>
@@ -1340,7 +1344,13 @@ a{ text-decoration:none; color:inherit; }
   /* Classement affiché : réel, ou simulé si au moins un score est saisi. */
   function displayStandings(){
     if(!simCount()) return standings;
-    return LDCSim.simulateStandings(standings, simList());
+    /* Même moteur réglementaire que le classement réel : les critères 6 à 8
+       (force du calendrier) dépendent des résultats de toutes les équipes,
+       on ne peut donc pas se contenter d'ajouter des points ligne par ligne. */
+    return LDCSim.simulateStandings(standings, simList(), {
+      matches: ESPN.leagueMatches(rawSeasonEvents),
+      rank: function(ms){ return ESPN.rankLeagueMatches(ms, (!ESPN.isArchive() && ESPN.isLeaguePhaseFormat()) ? ESPN.qualifiedClubs() : null); }
+    });
   }
 
   function renderSimBar(){
@@ -1418,8 +1428,18 @@ a{ text-decoration:none; color:inherit; }
     });
   }
 
+  /* Date/heure de la dernière réponse de l'API ESPN pour la saison. */
+  function renderSyncStamp(){
+    var s=el('zonesSync'); if(!s) return;
+    var d=ESPN.lastSeasonSync&&ESPN.lastSeasonSync();
+    if(!d){ s.textContent=''; s.removeAttribute('title'); return; }
+    s.textContent=(I18N.t('sync.espn')||'Synchro ESPN')+' · '+d.toLocaleString(lang()==='en'?'en-GB':'fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    s.title=d.toISOString();
+  }
+
   function renderZones(){
     var grid=el('zones-grid');
+    renderSyncStamp();
     var fid=favId();
     var view=displayStandings();          // réel, ou simulé si des scores sont saisis
     var simOn=simCount()>0;
@@ -1440,7 +1460,7 @@ a{ text-decoration:none; color:inherit; }
       : [{cls:'z-all full',key:'dash.rankingAll',from:0,to:view.length}];
     grid.innerHTML=defs.map(function(d){
       var rows=view.slice(d.from,d.to).map(function(t){
-        var tit=ESPN.clubTitles(t.name);
+        var tit=ESPN.clubTitlesById(t.teamId);   /* par identifiant : la recherche par nom attribuait des titres à des noms voisins */
         var cup=tit?'<span class="zt-cup" title="'+tit.n+' '+esc(I18N.t('pal.titlesN'))+'">🏆'+tit.n+'</span>':'';
         var isFav=fid && t.teamId===fid;
         /* En simulation : le chiffre de mouvement pour TOUTE équipe qui bouge,
@@ -1457,7 +1477,7 @@ a{ text-decoration:none; color:inherit; }
           else mv='<span class="zt-delta flat">–</span>';
         }
         return '<div class="zone-team'+(isFav?' is-fav':'')+mvCls+'" data-team="'+esc(t.teamId)+'">'+
-          '<span class="rk">'+t.pos+'</span>'+
+          '<span class="rk">'+t.rank+'</span>'+
           (t.logo?'<img src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span style="width:22px"></span>')+
           '<span class="nm">'+(isFav?'<span class="zt-fav">★</span>':'')+esc(t.name)+'</span>'+cup+mv+'<span class="pts">'+t.pts+'</span></div>';
       }).join('') || '<div class="zone-team"><span class="nm muted">—</span></div>';
@@ -1487,7 +1507,7 @@ a{ text-decoration:none; color:inherit; }
     var entry=clubIndex[teamId]; if(!entry) return;
     var me=entry.team;
     var row=standings.filter(function(r){return r.teamId===teamId;})[0];
-    var zoneSub = row ? (I18N.t('dash.rank')+' #'+row.pos+' · '+row.pts+' pts') : '';
+    var zoneSub = row ? (I18N.t('dash.rank')+' #'+(row.rank||row.pos)+' · '+row.pts+' pts') : '';
     var matches=entry.matches.slice().sort(function(a,b){return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0);});
     var played=matches.filter(function(m){return m.state==='post' || m.state==='in';});
     var upcoming=matches.filter(function(m){return m.state==='pre';});
@@ -1571,7 +1591,7 @@ a{ text-decoration:none; color:inherit; }
     var leagueNext=upcoming.filter(function(m){return m.round==='league';}).length;
     var leagueTotal=leaguePlayed+leagueNext;
 
-    var titles=ESPN.clubTitles(me.name);
+    var titles=ESPN.clubTitlesById(teamId);
     var palBlock = titles ?
       '<div class="cc-pal">'+
         '<div class="cc-pal-count">🏆 <b>'+titles.n+'</b><span>'+esc(titles.n>1?I18N.t('pal.titlesN'):I18N.t('pal.title1'))+'</span></div>'+
@@ -1738,7 +1758,7 @@ a{ text-decoration:none; color:inherit; }
   function favStatusHTML(f){
     var id=f.id, m=favMatch(id);
     if(!m){
-      var tit=ESPN.clubTitles(f.name);
+      var tit=ESPN.clubTitlesById(f.id);
       if(tit) return '<span class="fav-pill post">🏆 '+tit.n+'</span> '+esc(tit.n>1?I18N.t('pal.titlesN'):I18N.t('pal.title1'))+' · '+tit.years[tit.years.length-1];
       return '<span class="fav-none">'+esc(I18N.t('fav.noMatch'))+'</span>';
     }
