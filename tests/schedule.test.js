@@ -92,3 +92,61 @@ test('données réelles 2024-25 : les vrais trous du calendrier', async (t) => {
     assert.equal(getNextMatchDate(fx.matches, moment(2025, 2, 1, 12)), null);
   });
 });
+
+/* ======================================================================= */
+const { getNextKickoff, getLiveMatches, countdownParts } = require('../schedule.js');
+
+test('getNextKickoff : vise l’instant, donc les matchs de ce soir comptent', () => {
+  // Même situation que plus haut, résultat opposé à getNextMatchDate — et c'est voulu.
+  const tonight = match(2026, 10, 14, 21), tomorrow = match(2026, 10, 15, 18, 45);
+  const r = getNextKickoff([tomorrow, tonight], moment(2026, 10, 14, 14));
+  assert.equal(r.match, tonight);
+  assert.equal(r.time, tonight.dateObj.getTime());
+  assert.equal(r.dayKey, 20261014);
+});
+
+test('getNextKickoff : ignore les matchs en cours ou terminés, garde les matchs sans état', () => {
+  const live = match(2026, 10, 14, 21, 0, { state: 'in' });
+  const done = match(2026, 10, 15, 21, 0, { state: 'post' });
+  const noState = match(2026, 10, 16, 21);
+  const r = getNextKickoff([live, done, noState], moment(2026, 10, 14, 12));
+  assert.equal(r.match, noState);
+});
+
+test('getNextKickoff : tolérance après l’heure officielle (ESPN en retard sur le coup d’envoi)', () => {
+  const kick = match(2026, 10, 14, 18, 45, { state: 'pre' }), later = match(2026, 10, 14, 21, 0, { state: 'pre' });
+  const at = moment(2026, 10, 14, 18, 50);
+  assert.equal(getNextKickoff([kick, later], at).match, later, 'sans tolérance : le match de 18 h 45 est dépassé');
+  assert.equal(getNextKickoff([kick, later], at, { graceMs: 15 * 60000 }).match, kick, 'avec 15 min : encore « imminent »');
+});
+
+test('getNextKickoff : sameDay liste les matchs restants du même jour, triés', () => {
+  const a = match(2026, 10, 14, 21), b = match(2026, 10, 14, 18, 45), c = match(2026, 10, 15, 21);
+  const r = getNextKickoff([c, a, b], moment(2026, 10, 14, 9));
+  assert.deepEqual(r.sameDay, [b, a]);
+  assert.equal(getNextKickoff([], moment(2026, 10, 14, 9)), null);
+});
+
+test('getLiveMatches : uniquement les matchs en cours, par heure de coup d’envoi', () => {
+  const l2 = match(2026, 10, 14, 21, 0, { state: 'in' }), l1 = match(2026, 10, 14, 18, 45, { state: 'in' });
+  assert.deepEqual(getLiveMatches([match(2026, 10, 14, 12, 0, { state: 'post' }), l2, l1]), [l1, l2]);
+  assert.deepEqual(getLiveMatches(undefined), []);
+});
+
+test('countdownParts : arrondi à la minute supérieure, jamais « 0 min » avant le coup d’envoi', () => {
+  assert.deepEqual(countdownParts(30 * 1000), { days: 0, hours: 0, minutes: 1, total: 1 });
+  assert.deepEqual(countdownParts(61 * 60000), { days: 0, hours: 1, minutes: 1, total: 61 });
+  assert.deepEqual(countdownParts((26 * 60 + 3) * 60000), { days: 1, hours: 2, minutes: 3, total: 1563 });
+  assert.deepEqual(countdownParts(0), { days: 0, hours: 0, minutes: 0, total: 0 });
+  assert.deepEqual(countdownParts(-5000), { days: 0, hours: 0, minutes: 0, total: 0 });
+});
+
+test('getNextKickoff sur données réelles 2024-25 : le lendemain de la J2, premier coup d’envoi de la J3', () => {
+  const fx = require(path.join(__dirname, 'fixtures', 'league-phase-2024-25.json'));
+  const upcoming = fx.matches.map(m => Object.assign({}, m, { state: 'pre' }));   // rejoué « avant » les matchs
+  const parisDay = new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const firstJ3 = Math.min(...upcoming.filter(m => parisDay.format(new Date(m.time)) === '2024-10-22').map(m => m.time));
+  const r = getNextKickoff(upcoming, moment(2024, 10, 3, 12));
+  assert.equal(r.time, firstJ3);
+  assert.equal(r.sameDay.length, upcoming.filter(m => parisDay.format(new Date(m.time)) === '2024-10-22').length);
+});
