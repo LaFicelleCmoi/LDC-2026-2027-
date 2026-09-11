@@ -21,7 +21,8 @@ Tracker + simulateur **live** de la Ligue des Champions, avec **overlay OBS** po
 | `standings-engine.js` | **Moteur de classement pur** (sans DOM ni réseau) : article 18.01 du règlement UEFA, testé. |
 | `coefficients2026.js` | Coefficients clubs UEFA 2026/27 (dernier critère de départage), source et règle documentées. |
 | `simulate.js`    | Simulateur « What-If » : injecte des scores fictifs et reclasse via le moteur. |
-| `schedule.js`    | Calendrier, logique pure : `getNextMatchDate()` trouve la prochaine date qui a des matchs (onglet « À venir »). |
+| `schedule.js`    | Calendrier, logique pure : `getNextMatchDate()` (onglet « À venir »), `getNextKickoff()` et `countdownParts()` (compte à rebours du pied de page). |
+| `footer.js` / `footer.css` | Pied de page commun aux 7 pages : plan du site, prochain match réel (cache local), mention légale. Remplace le `<footer id="ldc-footer">` minimal de chaque page, qui reste affiché sans JavaScript. |
 | `tests/`         | Tests unitaires (`node --test tests/*.test.js`), dont le classement officiel 2024-25 reproduit. |
 | `styles.css`     | Thème sombre partagé. |
 
