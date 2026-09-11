@@ -114,3 +114,25 @@ test('titres par identifiant : exacts, et sans les faux positifs de la recherche
   // L'ancienne recherche par nom se trompe sur des noms voisins : c'est pour cela qu'elle n'est plus utilisée
   assert.equal(ESPN.clubTitles('Real Madrid Castilla').n, 15);
 });
+
+/* ======================================================================= */
+test('preserveSeasonLinks : la saison se place avant l’ancre, pas après', () => {
+  const ESPN = loadESPN('?season=2024');
+  const link = href => {
+    const a = { attrs: { href } };
+    return Object.assign(a, {
+      getAttribute: k => a.attrs[k], setAttribute: (k, v) => { a.attrs[k] = v; }, hasAttribute: k => k in a.attrs
+    });
+  };
+  const links = [link('dashboard.html#widgets'), link('tracker.html'), link('calendrier.html?x=1#draw-results'),
+                 link('https://www.uefa.com/'), link('#local'), link('palmares.html?season=2019')];
+  ESPN.preserveSeasonLinks({ querySelectorAll: () => links });
+  assert.deepEqual(links.map(l => l.attrs.href), [
+    'dashboard.html?season=2024#widgets',
+    'tracker.html?season=2024',
+    'calendrier.html?x=1&season=2024#draw-results',
+    'https://www.uefa.com/',
+    '#local',
+    'palmares.html?season=2019'
+  ]);
+});
