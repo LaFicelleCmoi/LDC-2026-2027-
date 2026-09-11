@@ -1,0 +1,228 @@
+/* =========================================================================
+   footer.css — Pied de page commun à toutes les pages
+   -------------------------------------------------------------------------
+   Autonome : ses couleurs sont déclarées ici. Le tableau de bord et les autres
+   pages n'ont pas les mêmes variables CSS (le dashboard ne charge pas
+   styles.css), un footer qui s'appuierait sur elles changerait de teinte
+   d'une page à l'autre.
+
+   Contrastes mesurés sur le fond du footer (#0c1730 → #060a18) :
+     texte secondaire #9aa3c4 : 7,1:1  (le #5c6789 d'origine plafonnait à 3,2:1,
+                                         sous le seuil AA pour du petit texte)
+     liens            #c7cfe0 : 12,4:1
+     or du projet     #f5b50a : 10,6:1
+   ========================================================================= */
+.ldc-footer{
+  --ft-top:#0c1730;
+  --ft-bottom:#060a18;
+  --ft-text:#c7cfe0;
+  --ft-muted:#9aa3c4;
+  --ft-white:#f4f6fb;
+  --ft-gold:#f5b50a;
+  --ft-blue:#8fc9ff;
+  --ft-live:#ff8a95;
+  --ft-line:rgba(255,255,255,.08);
+  --ft-display:'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+
+  position:relative; z-index:2;
+  display:block; box-sizing:border-box;
+  /* Pleine largeur quel que soit le padding du body (40 px sur le dashboard,
+     0 ailleurs) ; le body masque déjà le débordement horizontal. */
+  width:100vw; max-width:none;
+  margin:4.5rem calc(50% - 50vw) 0;
+  padding:0; border:0;
+  text-align:left; color:var(--ft-text); line-height:1.5;
+}
+.ldc-footer *, .ldc-footer *::before, .ldc-footer *::after{ box-sizing:border-box; }
+.ldc-footer [hidden]{ display:none !important; }
+
+/* ---------- transition « gooey » -------------------------------------------
+   Les gouttes naissent dans la bande pleine du bas et restent DANS la zone
+   réservée : elles ne recouvrent jamais le contenu de la page au-dessus. */
+.ldc-footer .ft-goo{
+  position:relative; height:5.5rem;
+  overflow:hidden; overflow:clip;
+  contain:paint; pointer-events:none;
+}
+/* Le flou arrondit aussi les extrémités de la bande pleine : la couche déborde
+   de 10 % de chaque côté pour rejeter ces coins arrondis hors écran (le
+   conteneur coupe l'excédent). À 100 % de large, une encoche apparaissait sur
+   chaque bord. */
+.ldc-footer .ft-goo-layer{
+  position:absolute; top:0; bottom:0; left:-10%; right:-10%;
+  background:linear-gradient(to top, var(--ft-top) 0, var(--ft-top) 1.6rem, transparent 1.6rem);
+  filter:url('#ldc-goo');
+}
+.ldc-footer .ft-drop{
+  position:absolute; bottom:.9rem; left:var(--x,50%);
+  width:var(--d,2rem); height:var(--d,2rem);
+  border-radius:50%; background:var(--ft-top);
+  transform:translate(-50%,50%);
+  animation:ldc-rise var(--dur,4s) ease-in infinite;
+  animation-delay:var(--delay,0s);
+}
+@keyframes ldc-rise{
+  0%  { transform:translate(-50%,50%) scale(1); }
+  100%{ transform:translate(-50%,calc(-1 * var(--h,3rem))) scale(0); }
+}
+.ldc-footer .ft-spark{
+  position:absolute; bottom:1.2rem; left:var(--x,50%);
+  width:2px; height:2px; border-radius:50%;
+  background:var(--ft-blue); box-shadow:0 0 6px 1px var(--ft-blue);
+  opacity:0;
+  animation:ldc-spark var(--dur,3s) ease-out infinite;
+  animation-delay:var(--delay,0s);
+}
+.ldc-footer .ft-spark.gold{ background:var(--ft-gold); box-shadow:0 0 6px 1px var(--ft-gold); }
+@keyframes ldc-spark{
+  0%  { opacity:0; transform:translate(-50%,0) scale(1); }
+  15% { opacity:1; }
+  100%{ opacity:0; transform:translate(-50%,-4rem) scale(.3); }
+}
+/* Hors écran ou onglet masqué : le flou SVG animé est coûteux, on fige tout. */
+.ldc-footer.is-paused .ft-drop,
+.ldc-footer.is-paused .ft-spark,
+.ldc-footer.is-paused .ft-live-dot{ animation-play-state:paused; }
+.ldc-footer .ft-defs{ position:absolute; width:0; height:0; overflow:hidden; }
+
+/* ---------- corps -------------------------------------------------------- */
+.ldc-footer .ft-body{
+  position:relative;
+  margin-top:-1px;                                   /* aucune ligne entre la bande et le corps */
+  padding:3rem 2rem calc(2rem + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(30,64,175,.28), transparent 60%),
+    linear-gradient(180deg, var(--ft-top) 0%, var(--ft-bottom) 100%);
+}
+.ldc-footer .ft-body::before{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.035; mix-blend-mode:overlay;
+}
+
+.ldc-footer .ft-grid{
+  position:relative; max-width:1180px; margin:0 auto;
+  display:grid; grid-template-columns:1.35fr 3fr; gap:3rem;
+}
+
+/* ---------- marque ------------------------------------------------------- */
+.ldc-footer .ft-brand{ display:flex; flex-direction:column; gap:1.4rem; min-width:0; }
+.ldc-footer .ft-brand-top{ display:flex; gap:1.1rem; align-items:flex-start; }
+.ldc-footer .ft-mark{ position:relative; flex:none; width:56px; height:56px; }
+.ldc-footer .ft-mark img{ position:absolute; top:8px; left:8px; width:40px; height:40px; }
+.ldc-footer .ft-mark svg{ position:absolute; inset:0; width:56px; height:56px; overflow:visible; }
+.ldc-footer .ft-ring{
+  fill:none; stroke:rgba(143,201,255,.45); stroke-width:1.1;
+  stroke-dasharray:289; stroke-dashoffset:289;       /* circonférence de r=46 */
+}
+.ldc-footer .ft-mark.drawn .ft-ring{ animation:ldc-draw 1.4s ease-out forwards; }
+@keyframes ldc-draw{ to{ stroke-dashoffset:0; } }
+.ldc-footer .ft-name{
+  margin:0 0 .45rem; font-family:var(--ft-display); font-weight:400;
+  font-size:1.75rem; line-height:1; letter-spacing:.02em; color:var(--ft-white);
+}
+.ldc-footer .ft-tagline{ margin:0; font-size:.92rem; line-height:1.65; color:var(--ft-muted); max-width:38ch; }
+
+/* ---------- prochain match (données réelles) ---------------------------- */
+.ldc-footer .ft-next{
+  display:flex; align-items:center; gap:1rem;
+  width:fit-content; max-width:100%;
+  padding:.85rem 1.1rem;
+  border:1px solid rgba(143,201,255,.15); border-radius:10px;
+  background:rgba(143,201,255,.04);
+  color:inherit; text-decoration:none;
+  transition:border-color .2s ease, background-color .2s ease;
+}
+.ldc-footer a.ft-next:hover{ border-color:rgba(143,201,255,.35); background:rgba(143,201,255,.08); }
+.ldc-footer .ft-slot{ display:block; min-width:0; }
+.ldc-footer .ft-label{
+  display:block; margin-bottom:.15rem;
+  font-family:var(--ft-display); font-size:.82rem; letter-spacing:.1em; color:var(--ft-muted);
+}
+.ldc-footer .ft-value{
+  display:block; white-space:nowrap;
+  font-family:var(--ft-display); font-size:1.35rem; line-height:1.1; letter-spacing:.04em;
+  color:var(--ft-blue); font-variant-numeric:tabular-nums;
+}
+.ldc-footer .ft-value-sm{ font-size:1.1rem; color:var(--ft-white); }
+.ldc-footer .ft-divider{ flex:none; width:1px; height:32px; background:rgba(255,255,255,.1); }
+.ldc-footer .ft-next.is-live{ border-color:rgba(255,93,108,.35); background:rgba(255,93,108,.06); }
+.ldc-footer .ft-next.is-live .ft-value{ color:var(--ft-live); }
+.ldc-footer .ft-live-dot{
+  display:inline-block; width:7px; height:7px; margin-right:6px; border-radius:50%;
+  background:#ff5d6c; vertical-align:middle; animation:ldc-pulse 1.4s ease-in-out infinite;
+}
+@keyframes ldc-pulse{ 50%{ opacity:.35; } }
+
+/* ---------- colonnes de liens ------------------------------------------- */
+.ldc-footer .ft-nav{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:3rem; }
+.ldc-footer .ft-col h2{
+  margin:0 0 1.1rem; padding-bottom:.6rem; border-bottom:1px solid var(--ft-line);
+  font-family:var(--ft-display); font-weight:400; font-size:1.2rem; letter-spacing:.06em; color:var(--ft-white);
+}
+.ldc-footer .ft-col ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.8rem; }
+.ldc-footer .ft-col a{
+  position:relative; display:inline-block; padding-bottom:2px;
+  color:var(--ft-text); text-decoration:none; font-size:.9rem;
+}
+.ldc-footer .ft-col a::after{
+  content:''; position:absolute; left:0; bottom:0; width:0; height:1px;
+  background:var(--ft-blue); transition:width .28s ease;
+}
+.ldc-footer .ft-col a:hover,
+.ldc-footer .ft-col a:focus-visible,
+.ldc-footer .ft-col a[aria-current="page"]{ color:var(--ft-white); }
+.ldc-footer .ft-col a:hover::after,
+.ldc-footer .ft-col a:focus-visible::after,
+.ldc-footer .ft-col a[aria-current="page"]::after{ width:100%; }
+/* Le soulignement animé seul ne suffit pas au clavier : contour explicite. */
+.ldc-footer a:focus-visible{ outline:2px solid var(--ft-gold); outline-offset:3px; border-radius:3px; }
+
+/* ---------- bas de page -------------------------------------------------- */
+.ldc-footer .ft-bottom{
+  position:relative; max-width:1180px; margin:2.75rem auto 0; padding-top:1.4rem;
+  border-top:1px solid var(--ft-line);
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:1rem;
+  font-size:.8rem; color:var(--ft-muted);
+}
+.ldc-footer .ft-marks{ display:flex; gap:.4rem; justify-self:center; }
+.ldc-footer .ft-marks span{ width:4px; height:4px; border-radius:50%; background:var(--ft-muted); opacity:.6; }
+.ldc-footer .ft-bottom .ft-legal{ justify-self:end; color:var(--ft-muted); text-decoration:none; }
+.ldc-footer .ft-bottom .ft-legal:hover{ color:var(--ft-white); text-decoration:underline; }
+.ldc-footer .ft-disclaimer{
+  position:relative; max-width:1180px; margin:1rem auto 0;
+  font-size:.74rem; line-height:1.6; color:var(--ft-muted);
+}
+.ldc-footer .ft-disclaimer strong{ color:var(--ft-text); font-weight:600; }
+
+/* ---------- responsive --------------------------------------------------- */
+@media (max-width:900px){
+  .ldc-footer .ft-grid{ grid-template-columns:1fr; gap:2.4rem; }
+  .ldc-footer .ft-nav{ gap:2rem; }
+}
+@media (max-width:640px){
+  .ldc-footer{ margin-top:3.5rem; }
+  .ldc-footer .ft-body{ padding:2.5rem 1.25rem calc(1.75rem + env(safe-area-inset-bottom, 0px)); }
+  .ldc-footer .ft-nav{ grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:2rem; }
+  .ldc-footer .ft-next{ width:100%; justify-content:center; }
+  .ldc-footer .ft-bottom{ grid-template-columns:1fr; justify-items:center; text-align:center; gap:.8rem; }
+  .ldc-footer .ft-bottom .ft-legal{ justify-self:center; }
+  .ldc-footer .ft-disclaimer{ text-align:center; }
+}
+@media (max-width:380px){
+  .ldc-footer .ft-nav{ grid-template-columns:1fr; }
+  .ldc-footer .ft-brand-top{ flex-direction:column; }
+}
+
+/* ---------- préférences -------------------------------------------------- */
+@media (prefers-reduced-motion:reduce){
+  .ldc-footer .ft-drop, .ldc-footer .ft-spark, .ldc-footer .ft-live-dot,
+  .ldc-footer .ft-mark.drawn .ft-ring{ animation:none; }
+  .ldc-footer .ft-ring{ stroke-dashoffset:0; }
+  .ldc-footer .ft-col a::after, .ldc-footer .ft-next{ transition:none; }
+}
+@media print{
+  .ldc-footer .ft-goo, .ldc-footer .ft-next, .ldc-footer .ft-marks{ display:none; }
+  .ldc-footer .ft-body{ background:none; }
+  .ldc-footer, .ldc-footer .ft-muted, .ldc-footer a{ color:#000; }
+}
