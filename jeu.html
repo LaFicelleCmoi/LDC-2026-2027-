@@ -83,7 +83,7 @@
 
   /* ---- Récompenses (succès + records) ---- */
   .ach-frac{ font-size:11px; font-weight:800; color:var(--upcoming); }
-  .ach-toast{ position:fixed; left:50%; bottom:26px; transform:translate(-50%,20px); z-index:120; opacity:0; transition:.4s;
+  .ach-toast{ position:fixed; left:50%; bottom:calc(26px + var(--ldc-footer-overlap, 0px)); transform:translate(-50%,20px); z-index:120; opacity:0; transition:.4s;
     display:flex; align-items:center; gap:12px; padding:12px 18px; border-radius:14px;
     background:linear-gradient(160deg,#12203f,#0a1330); border:1px solid rgba(var(--gold-rgb,245,181,10),.5);
     box-shadow:0 16px 40px rgba(0,0,0,.55), 0 0 30px rgba(var(--gold-rgb,245,181,10),.2); pointer-events:none; max-width:90vw; }
@@ -117,6 +117,7 @@
   .ach-tile .ach-ds{ font-size:11px; color:var(--muted); line-height:1.3; }
   @media (max-width:560px){ .ach-grid{ grid-template-columns:1fr 1fr; } }
 </style>
+<link rel="stylesheet" href="footer.css?v=1">
 </head>
 <body>
 <div id="cl-ball"></div>
@@ -178,13 +179,15 @@
 
 <div id="achModal" class="ach-modal"></div>
 
-<footer class="site-footer">
+<footer class="site-footer" id="ldc-footer">
   <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=23"></script>
-<script src="espn.js?v=15"></script>
+<script src="i18n.js?v=24"></script>
+<script src="espn.js?v=16"></script>
+<script src="schedule.js?v=2"></script>
+<script src="footer.js?v=1"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
 <script>
