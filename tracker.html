@@ -86,7 +86,8 @@
 
   /* ---- Widget live ------------------------------------------------------- */
   #liveWidget{
-    position:fixed; right:18px; bottom:18px; width:300px; z-index:60;
+    /* remonte au-dessus du footer quand il entre à l'écran (voir footer.js) */
+    position:fixed; right:18px; bottom:calc(18px + var(--ldc-footer-overlap, 0px)); width:300px; z-index:60;
     background:var(--card); border:1px solid var(--line-2);
     border-radius:12px; overflow:hidden; transition:transform .2s;
   }
@@ -104,7 +105,7 @@
   #liveWidget .wdots{ display:flex; gap:4px; justify-content:center; margin-top:8px; }
   #liveWidget .wdots i{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.25); }
   #liveWidget .wdots i.on{ background:var(--txt); }
-  #widgetReopen{ position:fixed; right:18px; bottom:18px; z-index:59; display:none; }
+  #widgetReopen{ position:fixed; right:18px; bottom:calc(18px + var(--ldc-footer-overlap, 0px)); z-index:59; display:none; }
 
   #confetti{ position:fixed; inset:0; pointer-events:none; z-index:70; display:none; }
 
@@ -155,8 +156,8 @@
   .run-champion .nm{ font-size:22px; font-weight:900; }
 
   @media (max-width:720px){
-    #liveWidget{ width:calc(100vw - 28px); right:14px; bottom:14px; }
-    #widgetReopen{ right:14px; bottom:14px; }
+    #liveWidget{ width:calc(100vw - 28px); right:14px; bottom:calc(14px + var(--ldc-footer-overlap, 0px)); }
+    #widgetReopen{ right:14px; bottom:calc(14px + var(--ldc-footer-overlap, 0px)); }
     .view-toggle{ flex-wrap:wrap; }
   }
   @media (max-width:560px){
@@ -175,6 +176,7 @@
     .round-col{ min-width:200px; }
   }
 </style>
+<link rel="stylesheet" href="footer.css?v=1">
 </head>
 <body>
 <div id="cl-ball"></div>
@@ -295,15 +297,17 @@
 
 <canvas id="confetti"></canvas>
 
-<footer class="site-footer">
+<footer class="site-footer" id="ldc-footer">
   <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
   <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
 </footer>
 
-<script src="i18n.js?v=23"></script>
+<script src="i18n.js?v=24"></script>
 <script src="standings-engine.js?v=1"></script>
 <script src="coefficients2026.js?v=1"></script>
-<script src="espn.js?v=15"></script>
+<script src="espn.js?v=16"></script>
+<script src="schedule.js?v=2"></script>
+<script src="footer.js?v=1"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/brackets-viewer@1.6.2/dist/brackets-viewer.min.js"
