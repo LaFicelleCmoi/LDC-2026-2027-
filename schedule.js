@@ -95,8 +95,71 @@
     };
   }
 
+  /* -----------------------------------------------------------------------
+     getNextKickoff(schedule, currentDate, opts)
+
+     Pour un compte à rebours, on vise un INSTANT et non un jour : le prochain
+     coup d'envoi postérieur à maintenant, y compris plus tard dans la journée
+     (à la différence de getNextMatchDate).
+
+     Seuls les matchs « à venir » comptent (state 'pre', ou sans état) : un
+     match en cours ou terminé n'est jamais « le prochain ».
+
+     opts.graceMs : tolérance après l'heure officielle. ESPN met souvent une
+     minute ou deux à passer un match « en cours » ; sans tolérance, le compte
+     à rebours sauterait au match suivant pendant ce laps de temps.
+
+     Retour : { match, time, dayKey, sameDay: [matchs encore à venir ce jour-là] }
+              ou null.
+     ----------------------------------------------------------------------- */
+  function byTimeThenId(a, b) {
+    return (a.t - b.t) || String(a.m && a.m.id).localeCompare(String(b.m && b.m.id));
+  }
+
+  function getNextKickoff(schedule, currentDate, opts) {
+    var now = toTime(currentDate);
+    if (isNaN(now)) throw new TypeError('getNextKickoff : currentDate invalide');
+    var grace = (opts && opts.graceMs > 0) ? opts.graceMs : 0;
+
+    var future = [];
+    (schedule || []).forEach(function (m) {
+      if (!m || (m.state && m.state !== 'pre')) return;
+      var t = kickoff(m);
+      if (isNaN(t) || t <= now - grace) return;
+      future.push({ m: m, t: t });
+    });
+    if (!future.length) return null;
+
+    future.sort(byTimeThenId);
+    var key = localDayKey(future[0].t);
+    return {
+      match: future[0].m,
+      time: future[0].t,
+      dayKey: key,
+      sameDay: future.filter(function (x) { return localDayKey(x.t) === key; }).map(function (x) { return x.m; })
+    };
+  }
+
+  /* Matchs en cours, par ordre de coup d'envoi. */
+  function getLiveMatches(schedule) {
+    return (schedule || []).filter(function (m) { return m && m.state === 'in'; })
+      .sort(function (a, b) { return kickoff(a) - kickoff(b); });
+  }
+
+  /* Durée -> { days, hours, minutes, total } en minutes ARRONDIES AU-DESSUS :
+     à 30 secondes du coup d'envoi on affiche « 1 min », jamais « 0 min » alors
+     que le match n'a pas commencé. Durée nulle ou négative : tout à zéro. */
+  function countdownParts(ms) {
+    if (!(ms > 0)) return { days: 0, hours: 0, minutes: 0, total: 0 };
+    var total = Math.ceil(ms / 60000);
+    return { days: Math.floor(total / 1440), hours: Math.floor((total % 1440) / 60), minutes: total % 60, total: total };
+  }
+
   return {
     getNextMatchDate: getNextMatchDate,
+    getNextKickoff: getNextKickoff,
+    getLiveMatches: getLiveMatches,
+    countdownParts: countdownParts,
     localDayKey: localDayKey,
     kickoff: kickoff
   };
