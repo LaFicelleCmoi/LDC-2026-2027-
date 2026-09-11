@@ -93,7 +93,12 @@
       if (!href || /^(https?:|#|mailto:)/.test(href)) continue;
       if (!/\.html(\?|#|$)/.test(href) && href !== '') continue;
       if (/[?&]season=/.test(href)) continue;
-      links[i].setAttribute('href', href + (href.indexOf('?') === -1 ? '?' : '&') + 'season=' + s);
+      /* La requête se place AVANT l'ancre. Collée après, « page.html#x?season=N »
+         est lue comme l'ancre « x?season=N » : la saison était perdue au clic. */
+      var hashAt = href.indexOf('#');
+      var base = hashAt === -1 ? href : href.slice(0, hashAt);
+      var hash = hashAt === -1 ? '' : href.slice(hashAt);
+      links[i].setAttribute('href', base + (base.indexOf('?') === -1 ? '?' : '&') + 'season=' + s + hash);
     }
   }
 
