@@ -67,6 +67,18 @@ a{ color:inherit; text-decoration:none; }
 }
 .nav a:hover{ color:var(--txt); background:var(--card); }
 .nav a.active{ color:#fff; background:var(--accent); border-color:transparent; }
+/* Lien vers LeagueHub (projet frère : les 5 grands championnats). Même gabarit
+   que les autres entrées, teinté du bleu de LeagueHub pour signaler qu'il sort
+   du site ; LeagueHub renvoie vers ce tracker de la même façon. */
+.nav a.nav-ext{
+  display:inline-flex; align-items:center; gap:6px; margin-left:4px;
+  color:var(--txt); background:rgba(47,159,216,.08); border-color:rgba(47,159,216,.32);
+}
+.nav a.nav-ext img{ width:16px; height:16px; flex:none; }
+.nav a.nav-ext .nav-ext-arrow{ font-size:.85em; color:#8fd0f2; transition:transform .15s ease; }
+.nav a.nav-ext:hover{ color:#fff; background:rgba(47,159,216,.16); border-color:rgba(47,159,216,.55); }
+.nav a.nav-ext:hover .nav-ext-arrow{ transform:translate(2px,-2px); }
+@media (prefers-reduced-motion:reduce){ .nav a.nav-ext .nav-ext-arrow{ transition:none; } }
 
 .header-right{ margin-left:auto; display:flex; align-items:center; gap:12px; }
 .lang-switch{ display:flex; gap:4px; }
