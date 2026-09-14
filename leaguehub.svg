@@ -1,0 +1,26 @@
+<!-- Icône de LeagueHub (https://league-hub-teal.vercel.app/icon.svg), projet frère du tracker LDC.
+     Copiée localement : la CSP du site n'autorise que les images servies par le site lui-même. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="ball"><circle cx="262" cy="186" r="76"/></clipPath>
+    <linearGradient id="bar" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0.5" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#8fd0f2"/>
+      <stop offset="1" stop-color="#2f9fd8"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 28C300 52 360 64 430 62V250C430 364 352 436 256 484C160 436 82 364 82 250V62C152 64 212 52 256 28Z" fill="#13295b"/>
+  <path d="M256 60C296 80 350 90 404 89V250C404 350 336 410 256 452C176 410 108 350 108 250V89C162 90 216 80 256 60Z" fill="none" stroke="#c9a052" stroke-width="9"/>
+  <polygon points="256.0,34.0 263.6,55.5 286.4,56.1 268.4,70.0 274.8,91.9 256.0,79.0 237.2,91.9 243.6,70.0 225.6,56.1 248.4,55.5" fill="#f5b52e" stroke="#13295b" stroke-width="12" stroke-linejoin="round" paint-order="stroke"/>
+  <path d="M206 236Q150 290 174 372Q172 312 226 256Z" fill="#2f9fd8"/>
+  <path d="M224 258Q186 302 196 348Q204 314 240 278Z" fill="#8fd0f2"/>
+  <circle cx="262" cy="186" r="76" fill="#ffffff"/>
+  <g clip-path="url(#ball)" fill="#2f9fd8">
+    <polygon points="262.0,152.0 270.8,173.9 294.3,175.5 276.3,190.6 282.0,213.5 262.0,201.0 242.0,213.5 247.7,190.6 229.7,175.5 253.2,173.9"/>
+    <polygon points="323.1,101.9 317.9,122.1 334.0,135.4 313.1,136.6 305.5,156.1 297.9,136.6 277.0,135.4 293.1,122.1 287.9,101.9 305.5,113.1"/><polygon points="360.9,218.1 340.0,219.4 332.4,238.9 324.7,219.4 303.8,218.1 320.0,204.9 314.7,184.6 332.4,195.9 350.0,184.6 344.7,204.9"/><polygon points="262.0,290.0 254.4,270.5 233.5,269.3 249.6,256.0 244.4,235.7 262.0,247.0 279.6,235.7 274.4,256.0 290.5,269.3 269.6,270.5"/><polygon points="163.1,218.1 179.3,204.9 174.0,184.6 191.6,195.9 209.3,184.6 204.0,204.9 220.2,218.1 199.3,219.4 191.6,238.9 184.0,219.4"/><polygon points="200.9,101.9 218.5,113.1 236.1,101.9 230.9,122.1 247.0,135.4 226.1,136.6 218.5,156.1 210.9,136.6 190.0,135.4 206.1,122.1"/>
+    <circle cx="282" cy="208" r="76" fill="none" stroke="#8fd0f2" stroke-opacity="0.35" stroke-width="14"/>
+  </g>
+  <rect x="200" y="360" width="32" height="44" fill="url(#bar)"/>
+  <rect x="242" y="322" width="32" height="82" fill="url(#bar)"/>
+  <rect x="284" y="284" width="32" height="120" fill="url(#bar)"/>
+</svg>
