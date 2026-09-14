@@ -175,6 +175,13 @@
 .ldc-footer .ft-col a:hover::after,
 .ldc-footer .ft-col a:focus-visible::after,
 .ldc-footer .ft-col a[aria-current="page"]::after{ width:100%; }
+/* Lien externe : flèche discrète, qui s'écarte au survol. */
+.ldc-footer .ft-col a .ft-ext-arrow{
+  display:inline-block; margin-left:.35em; font-size:.8em; color:var(--ft-blue);
+  transition:transform .2s ease;
+}
+.ldc-footer .ft-col a:hover .ft-ext-arrow,
+.ldc-footer .ft-col a:focus-visible .ft-ext-arrow{ transform:translate(2px,-2px); }
 /* Le soulignement animé seul ne suffit pas au clavier : contour explicite. */
 .ldc-footer a:focus-visible{ outline:2px solid var(--ft-gold); outline-offset:3px; border-radius:3px; }
 
@@ -219,7 +226,7 @@
   .ldc-footer .ft-drop, .ldc-footer .ft-spark, .ldc-footer .ft-live-dot,
   .ldc-footer .ft-mark.drawn .ft-ring{ animation:none; }
   .ldc-footer .ft-ring{ stroke-dashoffset:0; }
-  .ldc-footer .ft-col a::after, .ldc-footer .ft-next{ transition:none; }
+  .ldc-footer .ft-col a::after, .ldc-footer .ft-next, .ldc-footer .ft-col a .ft-ext-arrow{ transition:none; }
 }
 @media print{
   .ldc-footer .ft-goo, .ldc-footer .ft-next, .ldc-footer .ft-marks{ display:none; }
