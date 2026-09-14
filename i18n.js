@@ -263,6 +263,8 @@
     'nav.calendar':     { fr: 'Calendrier',              en: 'Schedule' },
     'nav.game':         { fr: 'Jeu',                     en: 'Game' },
     'nav.myclub':       { fr: 'Mon club',                en: 'My club' },
+    'nav.leaguehub':    { fr: 'LeagueHub',               en: 'LeagueHub' },
+    'nav.leaguehubAria':{ fr: 'LeagueHub : les 5 grands championnats européens (nouvel onglet)', en: 'LeagueHub: Europe’s big five leagues (opens in a new tab)' },
     'trk.col.form':     { fr: 'Forme',                   en: 'Form' },
     'cal.title':        { fr: 'Calendrier',              en: 'Schedule' },
     'cal.sub':          { fr: 'Tous les matchs de la saison, par journée', en: 'All season matches, by matchday' },
