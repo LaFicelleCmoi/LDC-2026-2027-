@@ -52,7 +52,9 @@
      Plan du site. Uniquement des pages et sections qui EXISTENT : pas de lien
      « # » ni de fonctionnalité imaginaire (« chances de qualification » n'a
      jamais existé dans le projet).
-     [clé i18n, lien, texte de repli FR, marqueur optionnel]
+     [clé i18n, lien, texte de repli FR, marqueur optionnel, clé i18n du libellé accessible]
+     Un lien absolu (http…) est traité comme externe : nouvel onglet, flèche ↗,
+     et le libellé accessible annonce l'ouverture d'un nouvel onglet.
      ----------------------------------------------------------------------- */
   var COLUMNS = [
     { key: 'foot.competition', fr: 'Compétition', items: [
@@ -69,7 +71,10 @@
     { key: 'foot.more', fr: 'Et aussi', items: [
       ['nav.myclub', 'monclub.html', 'Mon club'],
       ['nav.game', 'jeu.html', 'Jeu'],
-      ['nav.overlay', 'overlay.html', 'Overlay OBS']
+      ['nav.overlay', 'overlay.html', 'Overlay OBS'],
+      /* Projet frère : les 5 grands championnats. LeagueHub renvoie déjà vers ce
+         tracker, ce lien rend la navigation réciproque. */
+      ['nav.leaguehub', 'https://league-hub-teal.vercel.app/', 'LeagueHub', null, 'nav.leaguehubAria']
     ] }
   ];
 
@@ -80,6 +85,14 @@
 
   function linkHTML(item) {
     var href = item[1];
+    if (/^https?:/i.test(href)) {
+      /* Externe : le texte vit dans un <span> pour que I18N (qui remplace le
+         textContent) n'efface pas la flèche. */
+      return '<li><a class="ft-ext" href="' + href + '" target="_blank" rel="noopener noreferrer"' +
+        (item[4] ? ' data-i18n-aria-label="' + item[4] + '"' : '') + '>' +
+        '<span data-i18n="' + item[0] + '">' + esc(item[2]) + '</span>' +
+        '<span class="ft-ext-arrow" aria-hidden="true">↗</span></a></li>';
+    }
     var current = href.indexOf('#') === -1 && href === currentPage();
     return '<li><a href="' + href + '" data-i18n="' + item[0] + '"' +
       (current ? ' aria-current="page"' : '') + (item[3] ? ' data-ft="' + item[3] + '"' : '') + '>' +
