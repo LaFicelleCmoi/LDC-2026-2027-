@@ -99,7 +99,7 @@
 </footer>
 
 <script src="i18n.js?v=25"></script>
-<script src="espn.js?v=16"></script>
+<script src="espn.js?v=17"></script>
 <script src="schedule.js?v=2"></script>
 <script src="footer.js?v=2"></script>
 <script src="ui.js?v=1"></script>
@@ -125,11 +125,8 @@
     if(!n||!fn) return false;
     return n===fn || n.indexOf(fn)>=0 || fn.indexOf(n)>=0;
   }
-  function seasonDates(y){ return { start:y+'0901', end:(y+1)+'0831' }; }
-  function fetchYear(y){
-    return ESPN.fetchScoreboard(seasonDates(y).start+'-'+seasonDates(y).end, {limit:500, ttl:900000})
-      .then(function(events){ return (events||[]).filter(function(e){ return !e||!e.season||e.season.year==null||e.season.year===y; }); });
-  }
+  /* Même source que le reste du site : ESPN refuse désormais les plages de dates. */
+  function fetchYear(y){ return ESPN.fetchSeasonEvents({ year:y, ttl:900000 }); }
   function other(tie, side){ var t=side==='A'?tie.teamB:tie.teamA; return t?(t.abbr||t.shortName||t.name||''):''; }
   function outcome(events, fav){
     var norm=(events||[]).map(ESPN.normalizeEvent).filter(Boolean);
