@@ -136,3 +136,32 @@ test('preserveSeasonLinks : la saison se place avant l’ancre, pas après', () 
     'palmares.html?season=2019'
   ]);
 });
+
+/* ======================================================================= */
+test('fetchSeasonEvents : jamais de plage de dates (rejetée par ESPN depuis le 16/09/2026), saison fusionnée sur deux années', async () => {
+  const calls = [];
+  const ev = (id, date, year, slug) => ({ id, date, season: { year, slug: slug || 'league-phase' } });
+  const byYear = {
+    2024: [ev('q', '2024-08-20T19:00Z', 2024, 'qualifying'), ev('a', '2024-09-17T19:00Z', 2024), ev('old', '2024-03-12T20:00Z', 2023, 'round-of-16')],
+    2025: [ev('b', '2025-01-29T20:00Z', 2024), ev('f', '2025-05-31T19:00Z', 2024, 'final'), ev('next', '2025-09-16T19:00Z', 2025)]
+  };
+  const LS = {};
+  const sandbox = {
+    location: { search: '?season=2024' },
+    localStorage: { getItem: k => LS[k] || null, setItem: (k, v) => { LS[k] = v; }, removeItem: k => { delete LS[k]; } },
+    document: {}, console: { info() {}, warn() {}, log() {} }, setTimeout, clearTimeout, URLSearchParams,
+    fetch: u => {
+      calls.push(String(u));
+      if (/dates=\d{8}-\d{8}/.test(u)) return Promise.resolve({ ok: false, status: 400, json: () => Promise.resolve({ code: 400 }) });
+      const y = (String(u).match(/dates=(\d{4})(?:&|$)/) || [])[1];
+      return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ events: byYear[y] || [] }) });
+    }
+  };
+  sandbox.window = sandbox; sandbox.self = sandbox;
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'espn.js'), 'utf8'), sandbox);
+
+  const out = await sandbox.ESPN.fetchSeasonEvents();
+  assert.ok(calls.length === 2 && calls.every(u => !/dates=\d{8}-\d{8}/.test(u)), 'requêtes : ' + calls.join(' '));
+  assert.deepEqual(Array.from(out, e => e.id), ['a', 'b', 'f'], 'qualifs d’août, saison précédente et saison suivante écartées, ordre chronologique');
+  assert.ok(sandbox.ESPN.lastSeasonSync(), 'date de synchronisation enregistrée');
+});
