@@ -348,22 +348,48 @@
   var _seasonSyncAt = null;
   function lastSeasonSync() { return _seasonSyncAt ? new Date(_seasonSyncAt) : null; }
 
+  /* Tous les matchs d'une saison.
+
+     ⚠ Depuis le 16/09/2026, ESPN rejette le format « plage de dates »
+     (dates=AAAAMMJJ-AAAAMMJJ) avec « 400 Failed to get events endpoint », pour
+     toutes les compétitions et quelle que soit la largeur de la plage. C'est ce
+     qui a vidé tout le site. Les formats « année » (dates=AAAA) et « mois »
+     (dates=AAAAMM) répondent toujours : une saison de septembre à août tient
+     sur deux années civiles, on les demande donc séparément puis on fusionne.
+     Vérifié : 2024-25 reconstituée à l'identique (189 matchs, dont 144 de
+     phase de ligue), archives 2002-03, 2010-11 et 2020-21 complètes.
+
+     opts.year : année de début de saison (défaut : saison affichée). */
   function fetchSeasonEvents(opts) {
-    var r = seasonRange();
-    var o = Object.assign({ limit: 500, ttl: 20000 }, opts || {});
-    var url = scoreboardURL(r.start + '-' + r.end, o.limit);
-    return fetchScoreboard(r.start + '-' + r.end, o)
-      .then(function (events) {
-        var hit = scoreboardCache[url];
-        if (hit && hit.ts !== _seasonSyncAt) {
-          _seasonSyncAt = hit.ts;
-          try { console.info('[LDC] Synchronisation API ESPN (saison ' + seasonLabel() + ') : ' + new Date(hit.ts).toISOString()); } catch (e) {}
+    opts = opts || {};
+    var y = (opts.year != null) ? opts.year : seasonStartYear();
+    var o = Object.assign({ limit: 1000, ttl: 20000 }, opts);
+    var from = y + '-09-01', to = (y + 1) + '-08-31';
+    var urls = [scoreboardURL(String(y), o.limit), scoreboardURL(String(y + 1), o.limit)];
+    return Promise.all([fetchScoreboard(String(y), o), fetchScoreboard(String(y + 1), o)])
+      .then(function (parts) {
+        if (opts.year == null) {
+          var ts = Math.max.apply(null, urls.map(function (u) { return scoreboardCache[u] ? scoreboardCache[u].ts : 0; }));
+          if (ts && ts !== _seasonSyncAt) {
+            _seasonSyncAt = ts;
+            try { console.info('[LDC] Synchronisation API ESPN (saison ' + seasonLabel() + ') : ' + new Date(ts).toISOString()); } catch (e) {}
+          }
         }
-        // La plage de dates récupère parfois les qualifs de la saison SUIVANTE (juin-juillet).
-        // On ne garde que les matchs de la saison demandée (ev.season.year).
-        return (events || []).filter(function (e) {
-          return !e || !e.season || e.season.year == null || e.season.year === r.startYear;
+        /* Fenêtre 1er septembre -> 31 août : écarte les qualifs de l'été et les
+           matchs de la saison voisine présents dans les mêmes années civiles.
+           Le filtre season.year complète (un match de janvier 2025 appartient
+           à la saison 2024). */
+        var seen = {}, out = [];
+        parts[0].concat(parts[1]).forEach(function (e) {
+          if (!e || seen[e.id]) return;
+          var d = String(e.date || '').slice(0, 10);
+          if (d && (d < from || d > to)) return;
+          if (e.season && e.season.year != null && e.season.year !== y) return;
+          seen[e.id] = true;
+          out.push(e);
         });
+        out.sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+        return out;
       });
   }
 
