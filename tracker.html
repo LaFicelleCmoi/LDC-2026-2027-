@@ -30,7 +30,15 @@
   tr.z-q td.pos::before{ background:var(--zone-q); }
   tr.z-po td.pos::before{ background:var(--zone-po); }
   tr.z-out td.pos::before{ background:var(--zone-out); }
-  .standings td.live-dot{ width:10px; padding:0; }
+  .standings td.live-dot{ width:30px; padding:0 2px; text-align:center; }
+  /* Club en train de jouer : logo de l'adversaire du moment, cerclé de rouge,
+     à la place du simple point « en direct ». */
+  .standings td.live-dot .live-opp{ display:inline-flex; align-items:center; justify-content:center;
+    width:24px; height:24px; border-radius:50%; background:rgba(255,59,70,.10);
+    box-shadow:0 0 0 2px var(--live); animation:liveRing 1.6s ease-in-out infinite; vertical-align:middle; }
+  .standings td.live-dot .live-opp img{ width:17px; height:17px; object-fit:contain; }
+  @keyframes liveRing{ 0%,100%{ box-shadow:0 0 0 2px var(--live), 0 0 0 0 rgba(255,59,70,.45); } 60%{ box-shadow:0 0 0 2px var(--live), 0 0 0 6px rgba(255,59,70,0); } }
+  @media (prefers-reduced-motion:reduce){ .standings td.live-dot .live-opp{ animation:none; } }
   .standings td.gd.pos-v{ color:var(--finished); }
   .standings td.gd.neg-v{ color:var(--live); }
   /* Forme : 5 derniers résultats */
@@ -365,6 +373,27 @@
   applySeasonUI();
 
   /* ================= PHASE DE LIGUE ================= */
+  /* teamId -> { me, opp } pour chaque match en cours de la saison chargée. */
+  function liveOpponents(){
+    var map={};
+    (lastEvents||[]).forEach(function(ev){
+      var m=ESPN.normalizeEvent(ev); if(!m || m.state!=='in') return;
+      map[String(m.home.teamId)]={ me:m.home, opp:m.away };
+      map[String(m.away.teamId)]={ me:m.away, opp:m.home };
+    });
+    return map;
+  }
+  /* Logo de l'adversaire en direct ; repli sur le point rouge si l'adversaire
+     ou son logo sont inconnus (ex. classement simulé). */
+  function liveCell(t,map){
+    if(!t.live) return '';
+    var x=map[String(t.teamId)];
+    if(!x || !x.opp || !x.opp.logo) return '<span class="dot live"></span>';
+    var label=(lang()==='en'?'Live vs ':'En direct contre ')+(x.opp.name||'')+' · '+x.me.score+'–'+x.opp.score;
+    return '<span class="live-opp" title="'+esc(label)+'" aria-label="'+esc(label)+'" role="img">'+
+      '<img src="'+esc(x.opp.logo)+'" alt="" onerror="this.parentNode.outerHTML=\'<span class=&quot;dot live&quot;></span>\'"></span>';
+  }
+
   function renderStandings(rows){
     var body=el('standingsBody');
     if(!rows || !rows.length){
@@ -382,6 +411,7 @@
     else if(!predictMode && posBase){ baseMap=posBase; }
     var pdTitle = predictMode ? (lang()==='en'?'vs real table':'vs classement réel')
                               : (lang()==='en'?'vs last visit':'vs dernière visite');
+    var liveMap=liveOpponents();
     body.innerHTML = rows.map(function(t){
       var zone = nf ? (t.pos<=8?'z-q':(t.pos<=24?'z-po':'z-out')) : '';
       var gdCls = t.gd>0?'pos-v':(t.gd<0?'neg-v':'');
@@ -396,7 +426,7 @@
       }
       return '<tr class="'+zone+(isFav?' is-fav':'')+'">'+
         '<td class="pos">'+(t.rank||t.pos)+pd+'</td>'+
-        '<td class="live-dot">'+(t.live?'<span class="dot live"></span>':'')+'</td>'+
+        '<td class="live-dot">'+liveCell(t,liveMap)+'</td>'+
         '<td class="club"><span class="club-cell">'+
           (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
           (isFav?'<span class="tbl-fav">★</span>':'')+
