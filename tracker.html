@@ -30,15 +30,16 @@
   tr.z-q td.pos::before{ background:var(--zone-q); }
   tr.z-po td.pos::before{ background:var(--zone-po); }
   tr.z-out td.pos::before{ background:var(--zone-out); }
-  .standings td.live-dot{ width:30px; padding:0 2px; text-align:center; }
-  /* Club en train de jouer : logo de l'adversaire du moment, cerclé de rouge,
-     à la place du simple point « en direct ». */
-  .standings td.live-dot .live-opp{ display:inline-flex; align-items:center; justify-content:center;
-    width:24px; height:24px; border-radius:50%; background:rgba(255,59,70,.10);
-    box-shadow:0 0 0 2px var(--live); animation:liveRing 1.6s ease-in-out infinite; vertical-align:middle; }
-  .standings td.live-dot .live-opp img{ width:17px; height:17px; object-fit:contain; }
-  @keyframes liveRing{ 0%,100%{ box-shadow:0 0 0 2px var(--live), 0 0 0 0 rgba(255,59,70,.45); } 60%{ box-shadow:0 0 0 2px var(--live), 0 0 0 6px rgba(255,59,70,0); } }
-  @media (prefers-reduced-motion:reduce){ .standings td.live-dot .live-opp{ animation:none; } }
+  /* Club en train de jouer : pastille « ● score [logo adversaire] » collée au
+     nom, score du point de vue du club. Rouge clair #ff8a95 sur le fond teinté : 6,7:1,
+     niveau AA. */
+  .standings .live-pill{ display:inline-flex; align-items:center; gap:6px; flex:none;
+    padding:3px 6px 3px 8px; border-radius:999px; background:rgba(255,59,70,.16);
+    font-size:12px; font-weight:800; color:#ff8a95; font-variant-numeric:tabular-nums; white-space:nowrap; line-height:1; }
+  .standings .live-pill .lp-dot{ width:6px; height:6px; border-radius:50%; background:var(--live); animation:lpPulse 1.4s ease-in-out infinite; }
+  .standings .live-pill img{ width:16px; height:16px; object-fit:contain; }
+  @keyframes lpPulse{ 50%{ opacity:.35; } }
+  @media (prefers-reduced-motion:reduce){ .standings .live-pill .lp-dot{ animation:none; } }
   .standings td.gd.pos-v{ color:var(--finished); }
   .standings td.gd.neg-v{ color:var(--live); }
   /* Forme : 5 derniers résultats */
@@ -240,7 +241,6 @@
         <thead>
           <tr>
             <th data-i18n="trk.col.pos">#</th>
-            <th></th>
             <th style="text-align:left" data-i18n="trk.col.club">Club</th>
             <th data-i18n="trk.col.pld">J</th>
             <th data-i18n="trk.col.w">V</th>
@@ -254,7 +254,7 @@
           </tr>
         </thead>
         <tbody id="standingsBody">
-          <tr><td colspan="12" class="empty-state" data-i18n="common.loading">Chargement…</td></tr>
+          <tr><td colspan="11" class="empty-state" data-i18n="common.loading">Chargement…</td></tr>
         </tbody>
       </table>
       <div class="legend">
@@ -383,15 +383,16 @@
     });
     return map;
   }
-  /* Logo de l'adversaire en direct ; repli sur le point rouge si l'adversaire
-     ou son logo sont inconnus (ex. classement simulé). */
+  /* Pastille « en direct » : point, score du point de vue du club, logo de
+     l'adversaire. Sans logo connu, le score seul reste affiché. */
   function liveCell(t,map){
     if(!t.live) return '';
     var x=map[String(t.teamId)];
-    if(!x || !x.opp || !x.opp.logo) return '<span class="dot live"></span>';
+    if(!x || !x.opp){ return '<span class="live-pill"><span class="lp-dot"></span>'+esc(I18N.t('common.live'))+'</span>'; }
     var label=(lang()==='en'?'Live vs ':'En direct contre ')+(x.opp.name||'')+' · '+x.me.score+'–'+x.opp.score;
-    return '<span class="live-opp" title="'+esc(label)+'" aria-label="'+esc(label)+'" role="img">'+
-      '<img src="'+esc(x.opp.logo)+'" alt="" onerror="this.parentNode.outerHTML=\'<span class=&quot;dot live&quot;></span>\'"></span>';
+    return '<span class="live-pill" title="'+esc(label)+'" aria-label="'+esc(label)+'" role="img">'+
+      '<span class="lp-dot"></span>'+x.me.score+'-'+x.opp.score+
+      (x.opp.logo?'<img src="'+esc(x.opp.logo)+'" alt="" onerror="this.remove()">':'')+'</span>';
   }
 
   function renderStandings(rows){
@@ -400,7 +401,7 @@
       var msg = (!ESPN.isArchive())
         ? esc(I18N.t('dash.notStarted'))+' <a class="souvenir-link" href="tracker.html?season=2025" style="text-decoration:underline">'+esc(I18N.t('dash.seeSouvenir'))+'</a>'
         : esc(I18N.t('common.noMatch')||'—');
-      body.innerHTML='<tr><td colspan="12" class="empty-state">'+msg+'</td></tr>';
+      body.innerHTML='<tr><td colspan="11" class="empty-state">'+msg+'</td></tr>';
       return;
     }
     var nf=ESPN.isLeaguePhaseFormat();
@@ -426,11 +427,10 @@
       }
       return '<tr class="'+zone+(isFav?' is-fav':'')+'">'+
         '<td class="pos">'+(t.rank||t.pos)+pd+'</td>'+
-        '<td class="live-dot">'+liveCell(t,liveMap)+'</td>'+
         '<td class="club"><span class="club-cell">'+
           (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
           (isFav?'<span class="tbl-fav">★</span>':'')+
-          '<span class="nm">'+esc(t.name)+'</span>'+
+          '<span class="nm">'+esc(t.name)+'</span>'+liveCell(t,liveMap)+
           (function(){ var c=ESPN.clubTitlesById(t.teamId); return c?'<span class="tbl-cup" title="'+c.n+' '+esc(I18N.t('pal.titlesN'))+' — LDC">🏆'+c.n+'</span>':''; })()+
           '</span></td>'+
         '<td>'+t.pld+'</td><td>'+t.w+'</td><td>'+t.d+'</td><td>'+t.l+'</td>'+
