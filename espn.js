@@ -329,58 +329,176 @@
   }
 
   /* Scoreboard du jour (ou d'une plage). Renvoie la liste d'events bruts. */
+  /* Requêtes en cours, par URL : deux parties de la page qui demandent la même
+     chose au même moment partagent une seule requête (la saison était
+     téléchargée deux fois au premier chargement du tableau de bord). */
+  var inflight = {};
+
   function fetchScoreboard(dates, opts) {
     opts = opts || {};
     var url = scoreboardURL(dates, opts.limit);
     var cached = getCached(scoreboardCache, url, opts.ttl || SCOREBOARD_TTL);
     if (cached && !opts.force) return Promise.resolve(cached);
+    if (inflight[url]) return inflight[url];
 
-    return fetchJSON(url, opts.timeout).then(function (data) {
+    var p = fetchJSON(url, opts.timeout).then(function (data) {
+      delete inflight[url];
       var events = (data && data.events) ? data.events : [];
       scoreboardCache[url] = { ts: Date.now(), data: events };
       return events;
+    }, function (err) { delete inflight[url]; throw err; });
+    inflight[url] = p;
+    return p;
+  }
+
+  /* =======================================================================
+     SAISON : chargement par mois, mémoire locale et secours hors ligne
+     -----------------------------------------------------------------------
+     ⚠ Depuis le 16/09/2026, ESPN rejette les plages de dates
+     (dates=AAAAMMJJ-AAAAMMJJ, « 400 Failed to get events endpoint »). Les
+     formats « année » (dates=AAAA) et « mois » (dates=AAAAMM) répondent.
+
+     Saison EN COURS : un appel par mois (septembre → août), chacun traité selon
+     sa nature, ce qui évite de recharger la saison entière chaque minute
+     (168 Ko gzip/min mesurés avec deux requêtes annuelles) :
+       - mois passé  : immuable ; servi depuis le navigateur s'il y a été
+                       enregistré il y a moins de 24 h, sinon rechargé ;
+       - mois actif  : rechargé à l'intervalle demandé (20 s par défaut) quand
+                       un match est en cours ou à moins de 3 h ; toutes les
+                       10 min sinon (entre deux journées rien ne bouge) ;
+       - mois à venir: rechargé toutes les heures (horaires modifiés).
+     Saison PASSÉE : deux appels annuels, gardés 6 h en mémoire.
+
+     Chaque mois chargé est enregistré (version allégée) dans localStorage.
+     Si ESPN ne répond plus, ces copies prennent le relais : la page affiche les
+     dernières données connues avec un bandeau, au lieu de rester vide (la
+     panne de septembre a vidé le site plusieurs jours).
+     ======================================================================= */
+  var DAY_MS = 86400000;
+  var PAST_FRESH = DAY_MS, FUTURE_TTL = 3600000, QUIET_TTL = 10 * 60000, ARCHIVE_TTL = 6 * 3600000, HOT_WINDOW = 3 * 3600000;
+  var PERSIST_PREFIX = 'ldc_sb_v1_';            // + AAAAMM
+  var _seasonSyncAt = null;                      // horodatage des données de saison affichées
+  var _staleSince = null;                        // non nul : données servies depuis la copie locale
+  var _monthHot = {};                            // AAAAMM -> le mois a un match en cours ou proche
+
+  function lastSeasonSync() { return _seasonSyncAt ? new Date(_seasonSyncAt) : null; }
+  function staleSince() { return _staleSince ? new Date(_staleSince) : null; }
+
+  /* Version allégée d'un match : uniquement ce que lit normalizeEvent (et les
+     pages). ~5 fois plus légère que la réponse ESPN. */
+  function slimEvent(e) {
+    var c = (e.competitions && e.competitions[0]) || {};
+    var st = c.status || e.status || {};
+    var status = { type: st.type || {}, displayClock: st.displayClock, period: st.period };
+    return {
+      id: e.id, date: e.date, name: e.name, shortName: e.shortName,
+      season: e.season ? { year: e.season.year, slug: e.season.slug, type: e.season.type } : null,
+      status: status,
+      competitions: [{
+        id: c.id, date: c.date, status: status, notes: c.notes, leg: c.leg, series: c.series,
+        competitors: (c.competitors || []).map(function (x) {
+          var t = x.team || {};
+          return { id: x.id, homeAway: x.homeAway, score: x.score, shootoutScore: x.shootoutScore, winner: x.winner,
+                   team: { id: t.id, displayName: t.displayName, shortDisplayName: t.shortDisplayName, name: t.name,
+                           abbreviation: t.abbreviation, logo: t.logo || (t.logos && t.logos[0] && t.logos[0].href), color: t.color } };
+        })
+      }]
+    };
+  }
+
+  function readPersisted(key) {
+    try {
+      var o = JSON.parse(global.localStorage.getItem(PERSIST_PREFIX + key) || 'null');
+      return (o && Array.isArray(o.events) && o.ts) ? o : null;
+    } catch (e) { return null; }
+  }
+  function persist(key, events, ts) {
+    try {
+      global.localStorage.setItem(PERSIST_PREFIX + key, JSON.stringify({ ts: ts, events: events.map(slimEvent) }));
+      /* Ménage : on ne garde que les 14 derniers mois. */
+      var limit = monthKey(new Date(ts - 425 * DAY_MS));
+      for (var i = global.localStorage.length - 1; i >= 0; i--) {
+        var k = global.localStorage.key(i);
+        if (k && k.indexOf(PERSIST_PREFIX) === 0 && k.slice(PERSIST_PREFIX.length) < limit) global.localStorage.removeItem(k);
+      }
+    } catch (e) {}
+  }
+
+  function monthKey(d) { return '' + d.getUTCFullYear() + pad(d.getUTCMonth() + 1); }
+  function seasonMonths(y) {
+    var out = [];
+    for (var i = 0; i < 12; i++) out.push(monthKey(new Date(Date.UTC(y, 8 + i, 1))));
+    return out;
+  }
+  function monthBounds(key) {
+    var y = +key.slice(0, 4), m = +key.slice(4, 6) - 1;
+    return { start: Date.UTC(y, m, 1), end: Date.UTC(y, m + 1, 1) };
+  }
+  /* passé / actif / à venir, avec deux jours de marge autour de « maintenant »
+     pour les matchs du soir à cheval sur deux mois. */
+  function monthKind(key, now) {
+    var b = monthBounds(key);
+    if (b.end <= now - 2 * DAY_MS) return 'past';
+    if (b.start > now + DAY_MS) return 'future';
+    return 'active';
+  }
+
+  function isHot(events, now) {
+    return (events || []).some(function (e) {
+      var c = (e.competitions && e.competitions[0]) || {}, st = ((c.status || e.status || {}).type || {}).state;
+      if (st === 'in') return true;
+      var t = Date.parse(e.date);
+      return st === 'pre' && t - now < HOT_WINDOW && t - now > -HOT_WINDOW;
     });
   }
 
-  /* Tous les matchs de la saison courante (plage de dates). */
-  /* Horodatage de la dernière réponse RÉSEAU de l'API pour la saison (un
-     service depuis le cache mémoire ne compte pas comme une synchronisation). */
-  var _seasonSyncAt = null;
-  function lastSeasonSync() { return _seasonSyncAt ? new Date(_seasonSyncAt) : null; }
+  /* Un morceau de saison (« AAAA » ou « AAAAMM ») : { events, ts, stale }. */
+  function fetchChunk(key, kind, opts) {
+    var now = Date.now(), saved = (kind !== 'archive') ? readPersisted(key) : null;
+    if (saved && !opts.force && ((kind === 'past' && now - saved.ts < PAST_FRESH) || (kind === 'future' && now - saved.ts < FUTURE_TTL))) {
+      return Promise.resolve({ events: saved.events, ts: saved.ts, stale: false });
+    }
+    var ttl = kind === 'archive' ? ARCHIVE_TTL : kind === 'past' ? PAST_FRESH : kind === 'future' ? FUTURE_TTL
+            : (_monthHot[key] === false ? QUIET_TTL : (opts.ttl || 20000));
+    var url = scoreboardURL(key, 1000);
+    return fetchScoreboard(key, { limit: 1000, ttl: ttl, timeout: opts.timeout, force: opts.force }).then(function (events) {
+      var ts = scoreboardCache[url] ? scoreboardCache[url].ts : now;
+      if (kind === 'active') _monthHot[key] = isHot(events, now);
+      if (kind !== 'archive' && (!saved || saved.ts !== ts)) persist(key, events, ts);
+      return { events: events, ts: ts, stale: false };
+    }, function (err) {
+      if (saved) return { events: saved.events, ts: saved.ts, stale: true };   // secours : dernière copie connue
+      throw err;
+    });
+  }
 
-  /* Tous les matchs d'une saison.
-
-     ⚠ Depuis le 16/09/2026, ESPN rejette le format « plage de dates »
-     (dates=AAAAMMJJ-AAAAMMJJ) avec « 400 Failed to get events endpoint », pour
-     toutes les compétitions et quelle que soit la largeur de la plage. C'est ce
-     qui a vidé tout le site. Les formats « année » (dates=AAAA) et « mois »
-     (dates=AAAAMM) répondent toujours : une saison de septembre à août tient
-     sur deux années civiles, on les demande donc séparément puis on fusionne.
-     Vérifié : 2024-25 reconstituée à l'identique (189 matchs, dont 144 de
-     phase de ligue), archives 2002-03, 2010-11 et 2020-21 complètes.
-
-     opts.year : année de début de saison (défaut : saison affichée). */
+  /* Tous les matchs d'une saison. opts.year : année de début (défaut : saison
+     affichée) ; opts.ttl : fraîcheur voulue pour le mois en cours. */
   function fetchSeasonEvents(opts) {
     opts = opts || {};
     var y = (opts.year != null) ? opts.year : seasonStartYear();
-    var o = Object.assign({ limit: 1000, ttl: 20000 }, opts);
-    var from = y + '-09-01', to = (y + 1) + '-08-31';
-    var urls = [scoreboardURL(String(y), o.limit), scoreboardURL(String(y + 1), o.limit)];
-    return Promise.all([fetchScoreboard(String(y), o), fetchScoreboard(String(y + 1), o)])
-      .then(function (parts) {
-        if (opts.year == null) {
-          var ts = Math.max.apply(null, urls.map(function (u) { return scoreboardCache[u] ? scoreboardCache[u].ts : 0; }));
-          if (ts && ts !== _seasonSyncAt) {
-            _seasonSyncAt = ts;
-            try { console.info('[LDC] Synchronisation API ESPN (saison ' + seasonLabel() + ') : ' + new Date(ts).toISOString()); } catch (e) {}
-          }
+    var now = Date.now(), from = y + '-09-01', to = (y + 1) + '-08-31';
+    var seasonOver = Date.UTC(y + 1, 8, 1) <= now - 2 * DAY_MS;
+    var jobs = seasonOver
+      ? [fetchChunk(String(y), 'archive', opts), fetchChunk(String(y + 1), 'archive', opts)]
+      : seasonMonths(y).map(function (k) { return fetchChunk(k, monthKind(k, now), opts); });
+
+    return Promise.all(jobs).then(function (parts) {
+      if (opts.year == null) {
+        var stale = parts.filter(function (p) { return p.stale; });
+        _staleSince = stale.length ? Math.min.apply(null, stale.map(function (p) { return p.ts; })) : null;
+        var ts = Math.max.apply(null, parts.map(function (p) { return p.ts || 0; }));
+        if (ts && ts !== _seasonSyncAt) {
+          _seasonSyncAt = ts;
+          try { console.info('[LDC] Synchronisation API ESPN (saison ' + seasonLabel() + ') : ' + new Date(ts).toISOString() + (_staleSince ? ' — copie locale, ESPN injoignable' : '')); } catch (e) {}
         }
-        /* Fenêtre 1er septembre -> 31 août : écarte les qualifs de l'été et les
-           matchs de la saison voisine présents dans les mêmes années civiles.
-           Le filtre season.year complète (un match de janvier 2025 appartient
-           à la saison 2024). */
-        var seen = {}, out = [];
-        parts[0].concat(parts[1]).forEach(function (e) {
+        renderStaleBanner();
+      }
+      /* Fenêtre 1er septembre -> 31 août et année de saison ESPN : écarte les
+         qualifs de l'été et la saison voisine. */
+      var seen = {}, out = [];
+      parts.forEach(function (p) {
+        p.events.forEach(function (e) {
           if (!e || seen[e.id]) return;
           var d = String(e.date || '').slice(0, 10);
           if (d && (d < from || d > to)) return;
@@ -388,9 +506,51 @@
           seen[e.id] = true;
           out.push(e);
         });
-        out.sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
-        return out;
       });
+      out.sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+      return out;
+    });
+  }
+
+  /* Matchs d'un jour (dates=AAAAMMJJ). Si ESPN ne répond pas, on les retrouve
+     dans la copie locale du mois. */
+  function fetchDayEvents(ymdKey, opts) {
+    return fetchScoreboard(ymdKey, opts).then(null, function (err) {
+      var saved = readPersisted(ymdKey.slice(0, 6));
+      if (!saved) throw err;
+      var day = ymdKey.slice(0, 4) + '-' + ymdKey.slice(4, 6) + '-' + ymdKey.slice(6, 8);
+      if (!_staleSince || saved.ts < _staleSince) _staleSince = saved.ts;
+      renderStaleBanner();
+      return saved.events.filter(function (e) { var d = parseDate(e.date); return d && (d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())) === day; });
+    });
+  }
+
+  /* Bandeau « données en cache » : affiché tant qu'ESPN est injoignable,
+     retiré dès que des données fraîches reviennent. */
+  function renderStaleBanner() {
+    if (typeof document === 'undefined' || !document.body) return;
+    var el = document.getElementById('ldc-stale');
+    if (!_staleSince) { if (el) el.parentNode.removeChild(el); return; }
+    if (!document.getElementById('ldc-stale-css')) {
+      var css = document.createElement('style');
+      css.id = 'ldc-stale-css';
+      css.textContent = '#ldc-stale{position:relative;z-index:200;box-sizing:border-box;width:100vw;margin-left:calc(50% - 50vw);' +
+        'padding:9px 16px;background:#f5b50a;color:#1a1300;font:700 13px/1.4 "Segoe UI",Roboto,Arial,sans-serif;text-align:center}';
+      document.head.appendChild(css);
+    }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'ldc-stale';
+      el.setAttribute('role', 'status');
+      document.body.insertBefore(el, document.body.firstChild);
+    }
+    var pt = 0; try { pt = parseFloat(getComputedStyle(document.body).paddingTop) || 0; } catch (e) {}
+    el.style.marginTop = pt ? (-pt) + 'px' : '';
+    el.style.marginBottom = pt ? pt + 'px' : '';
+    var en = false; try { en = global.I18N && global.I18N.getLang() === 'en'; } catch (e) {}
+    var when = new Date(_staleSince).toLocaleString(en ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+    el.textContent = en ? '⚠ ESPN is unreachable right now — showing the data from ' + when + '. Updates resume automatically.'
+                        : '⚠ ESPN est momentanément injoignable — données du ' + when + '. Mise à jour automatique dès son retour.';
   }
 
   /* ---- Summary (buteurs, cartons, etc.) --------------------------------- */
@@ -400,10 +560,14 @@
     if (cached && !opts.force) return Promise.resolve(cached);
 
     var url = BASE + '/summary?event=' + encodeURIComponent(eventId);
-    return fetchJSON(url, opts.timeout).then(function (data) {
+    if (inflight[url]) return inflight[url];
+    var p = fetchJSON(url, opts.timeout).then(function (data) {
+      delete inflight[url];
       summaryCache[eventId] = { ts: Date.now(), data: data };
       return data;
-    });
+    }, function (err) { delete inflight[url]; throw err; });
+    inflight[url] = p;
+    return p;
   }
 
   /* =======================================================================
@@ -1300,6 +1464,8 @@
     leagueMatches: leagueMatches,
     rankLeagueMatches: rankLeagueMatches,
     lastSeasonSync: lastSeasonSync,
+    staleSince: staleSince,
+    fetchDayEvents: fetchDayEvents,
     clubTitlesById: clubTitlesById,
     fetchScorerBoard: fetchScorerBoard,
     aggregateMatchScorers: aggregateMatchScorers,
