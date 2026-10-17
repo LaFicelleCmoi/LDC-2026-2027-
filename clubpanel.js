@@ -65,7 +65,7 @@
       var pens = (me.shootout != null && opp.shootout != null) ? { me: me.shootout, opp: opp.shootout } : null;
       return {
         id: m.id, time: timeOf(m), home: home, state: m.state,
-        live: m.state === 'in', clock: m.displayClock || '',
+        live: m.state === 'in', clock: m.displayClock || '', detail: m.statusDetail || '',
         opp: { id: String(opp.teamId || ''), name: opp.name || '', logo: opp.logo || '', abbr: opp.abbr || '' },
         gf: gf, ga: ga, pens: pens,
         result: m.state === 'post' ? (gf > ga ? 'w' : (gf < ga ? 'l' : 'd')) : null,
@@ -89,7 +89,10 @@
     return {
       team: team,
       played: played,
-      last: played.slice(0, 5),
+      /* Le match en cours a sa propre carte ; la liste ne garde que les
+         matchs terminés. */
+      live: played.filter(function (r) { return r.live; })[0] || null,
+      last: played.filter(function (r) { return !r.live; }).slice(0, 5),
       summary: summary,
       next: upcoming[0] || null,
       upcoming: upcoming,
@@ -98,13 +101,52 @@
     };
   }
 
-  var api = { clubData: clubData, matchdayMap: matchdayMap };
+  /* ---- Suivi du direct (même principe que LeagueHub) ------------------
+     Les matchs du jour (scoreboard dates=AAAAMMJJ, relu avec 5 s de cache)
+     priment sur les données de la saison, qui peuvent avoir jusqu'à 20 s de
+     cache en plus du rythme de rechargement de la page. */
+  var LIVE_REFRESH = 30000;            // relecture pendant un match
+  var BEFORE_KICKOFF = 15 * 60000;     // on commence à suivre 15 min avant
+  var AFTER_KICKOFF = 3 * 3600000;     // coup d'envoi passé mais ESPN encore « à venir »
+  var FRESH_TTL = 5000;                // cache de la relecture du jour
+  var FRESH_MAX_AGE = 2 * 60000;       // au-delà, la relecture n'est plus prioritaire
+
+  /* Remplace, par identifiant, les matchs de la saison par leur version la plus
+     fraîche (et ajoute ceux qui manqueraient). L'entrée n'est pas modifiée. */
+  function mergeFresh(matches, fresh) {
+    if (!fresh || !fresh.length) return matches || [];
+    var byId = {};
+    fresh.forEach(function (m) { if (m && m.id != null) byId[String(m.id)] = m; });
+    var seen = {};
+    var out = (matches || []).map(function (m) {
+      var f = m && byId[String(m.id)];
+      if (f) { seen[String(m.id)] = true; return f; }
+      return m;
+    });
+    fresh.forEach(function (m) { if (m && !seen[String(m.id)]) out.push(m); });
+    return out;
+  }
+
+  /* Faut-il continuer à relire ? Oui pendant un match, et dans les 15 minutes
+     qui précèdent le prochain coup d'envoi (ou s'il est passé et qu'ESPN ne
+     l'a pas encore basculé « en cours »). */
+  function followsLive(d, now) {
+    if (!d) return false;
+    if (d.live) return true;
+    if (!d.next) return false;
+    var dt = d.next.time - now;
+    return dt <= BEFORE_KICKOFF && dt > -AFTER_KICKOFF;
+  }
+
+  var api = { clubData: clubData, matchdayMap: matchdayMap, mergeFresh: mergeFresh, followsLive: followsLive,
+              LIVE_REFRESH: LIVE_REFRESH, BEFORE_KICKOFF: BEFORE_KICKOFF };
   if (typeof document === 'undefined') return api;
 
   /* ======================================================================
      2. RENDU ET DIALOGUE
      ====================================================================== */
-  var host = null, panel = null, state = { id: null, ctx: null, lastFocus: null };
+  var host = null, panel = null, body = null, sr = null;
+  var state = { id: null, ctx: null, lastFocus: null, fresh: null, timer: null, paused: false, announced: null, score: null };
 
   function isEn() { try { return window.I18N && I18N.getLang() === 'en'; } catch (e) { return false; } }
   function T(fr, en) { return isEn() ? en : fr; }
@@ -156,8 +198,29 @@
       '<span class="cp-score ' + (r.live ? 'live' : r.result) + '">' + score + '</span></li>';
   }
 
+  /* Carte « En direct » : score du point de vue du club, minute de jeu. */
+  function liveCard(r, team, bump) {
+    var clock = /^(HT|Halftime|Half Time)$/i.test(r.detail) ? T('Mi-temps', 'Half-time') : (r.clock || r.detail || T('En cours', 'In progress'));
+    var num = function (v) { return '<b class="cp-lv-num' + (bump ? ' bump' : '') + '">' + v + '</b>'; };
+    return '<section class="cp-live" aria-label="' + esc(T('Match en cours', 'Live match')) + '">' +
+      '<div class="cp-live-top"><span class="cp-live-pill"><i></i>' + esc(T('En direct', 'Live')) + '</span>' +
+        '<span class="cp-live-clock">' + esc(clock) + '</span></div>' +
+      '<div class="cp-live-score">' +
+        crest(team.logo, 'cp-lv-logo') + '<span class="cp-lv-name">' + esc(team.abbr || team.name) + '</span>' +
+        num(r.gf) + '<span class="cp-lv-sep">–</span>' + num(r.ga) +
+        '<span class="cp-lv-name r">' + esc(r.opp.abbr || r.opp.name) + '</span>' + crest(r.opp.logo, 'cp-lv-logo') +
+      '</div>' +
+      '<div class="cp-live-meta">' + esc(roundLabel(r) + ' · ' + venue(r.home) + ' · ' + prep(r.home) + ' ' + r.opp.name) + '</div>' +
+    '</section>';
+  }
+
+  function currentMatches() {
+    var f = state.fresh;
+    return (f && Date.now() - f.at < FRESH_MAX_AGE) ? mergeFresh(state.ctx.matches, f.matches) : state.ctx.matches;
+  }
+
   function render() {
-    var d = clubData(state.id, state.ctx.matches, state.ctx.standings);
+    var d = clubData(state.id, currentMatches(), state.ctx.standings);
     var team = d.team || { name: '—', logo: '' };
     var fav = null; try { fav = window.ESPN && ESPN.getFav(); } catch (e) {}
     var isFav = fav && String(fav.id) === String(state.id);
@@ -180,6 +243,9 @@
         '</div>' +
         '<button type="button" class="cp-close" data-cp-close aria-label="' + esc(T('Fermer', 'Close')) + '">×</button>' +
       '</header>';
+
+    var scoreKey = d.live ? d.live.id + ':' + d.live.gf + '-' + d.live.ga : null;
+    if (d.live) html += liveCard(d.live, team, state.score !== null && scoreKey !== state.score && state.score.split(':')[0] === String(d.live.id));
 
     html += '<section class="cp-sec"><div class="cp-sec-head"><h3>' + esc(T('Derniers matchs', 'Latest matches')) + '</h3>' +
       '<div class="cp-tally"><div>' + esc(T('Saison', 'Season')) + ' · ' + s.pld + ' ' + esc(T('match', 'match') + (s.pld > 1 ? (isEn() ? 'es' : 's') : '')) + ' · ' +
@@ -245,8 +311,46 @@
     }
 
     var keep = panel.scrollTop;
-    panel.innerHTML = html;
+    body.innerHTML = html;
     panel.scrollTop = keep;
+
+    /* Lecteurs d'écran : annonce quand le score change ou que le match
+       commence (pas à chaque minute). Rien au premier affichage : le dialogue
+       est déjà lu en entier à l'ouverture. */
+    if (scoreKey !== state.announced) {
+      if (state.announced !== undefined) {
+        sr.textContent = d.live ? (team.name + ' ' + d.live.gf + '–' + d.live.ga + ' ' + d.live.opp.name) : '';
+      }
+      state.announced = scoreKey;
+    }
+    state.score = scoreKey;
+    schedulePoll(d);
+  }
+
+  /* ---- Relecture du direct ---------------------------------------------- */
+  function stopPoll() { clearTimeout(state.timer); state.timer = null; }
+
+  function schedulePoll(d) {
+    if (!host || host.hidden || !followsLive(d, Date.now())) { stopPoll(); return; }
+    if (state.timer) return;                     // déjà programmée : on ne la repousse pas
+    state.timer = setTimeout(poll, LIVE_REFRESH);
+  }
+
+  function poll() {
+    state.timer = null;
+    if (!host || host.hidden || !state.id || !window.ESPN || !ESPN.fetchDayEvents) return;
+    if (document.hidden) { state.paused = true; return; }   // reprise au retour sur l'onglet
+    var d = clubData(state.id, currentMatches(), state.ctx.standings);
+    var target = d.live || d.next;
+    if (!target) return;
+    ESPN.fetchDayEvents(ESPN.ymd(new Date(target.time)), { ttl: FRESH_TTL }).then(function (events) {
+      if (!host || host.hidden) return;
+      state.fresh = { at: Date.now(), matches: (events || []).map(ESPN.normalizeEvent).filter(Boolean) };
+      render();
+    }, function () {
+      /* Échec : la fiche déjà affichée reste telle quelle, nouvel essai dans 30 s. */
+      if (host && !host.hidden) schedulePoll(d);
+    });
   }
 
   function ensureHost() {
@@ -254,9 +358,15 @@
     host = document.createElement('div');
     host.className = 'cp-backdrop';
     host.hidden = true;
-    host.innerHTML = '<aside class="cp-panel" role="dialog" aria-modal="true" aria-labelledby="cpTitle" tabindex="-1"></aside>';
+    host.innerHTML = '<aside class="cp-panel" role="dialog" aria-modal="true" aria-labelledby="cpTitle" tabindex="-1">' +
+      '<div class="cp-body"></div><p class="cp-sr" aria-live="polite" aria-atomic="true"></p></aside>';
     document.body.appendChild(host);
     panel = host.firstChild;
+    body = panel.firstChild;
+    sr = panel.lastChild;
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && state.paused && !host.hidden) { state.paused = false; poll(); }
+    });
 
     host.addEventListener('click', function (e) {
       if (e.target === host || (e.target.closest && e.target.closest('[data-cp-close]'))) close();
@@ -281,12 +391,16 @@
     state.id = String(teamId);
     state.ctx = ctx || { matches: [], standings: [] };
     if (!wasOpen) state.lastFocus = document.activeElement;
+    stopPoll();
+    state.fresh = null; state.paused = false; state.announced = undefined; state.score = null; sr.textContent = '';
     panel.scrollTop = 0;
     render();
     host.hidden = false;
     document.documentElement.classList.add('cp-open');
     var c = panel.querySelector('[data-cp-close]');
     if (c) c.focus({ preventScroll: true });
+    /* Match en cours ou imminent : relecture immédiate, sans attendre 30 s. */
+    if (followsLive(clubData(state.id, currentMatches(), state.ctx.standings), Date.now())) { stopPoll(); poll(); }
   }
 
   /* Nouvelles données (rechargement de la saison, score en direct) : la fiche
@@ -300,6 +414,8 @@
   function close() {
     if (!host || host.hidden) return;
     host.hidden = true;
+    stopPoll();
+    state.fresh = null;
     document.documentElement.classList.remove('cp-open');
     var back = state.lastFocus;
     state.id = null;
