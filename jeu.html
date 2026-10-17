@@ -186,7 +186,7 @@
 </footer>
 
 <script src="i18n.js?v=25"></script>
-<script src="espn.js?v=17"></script>
+<script src="espn.js?v=18"></script>
 <script src="schedule.js?v=2"></script>
 <script src="footer.js?v=2"></script>
 <script src="share.js?v=1"></script>
@@ -319,7 +319,7 @@
 
   /* ---- chargement asynchrone (clubs / scores passés) ---- */
   function ensureCrest(cb){ if(crestClubs.length){ cb(crestClubs.length>=4); return; } ESPN.fetchClubList().then(function(list){ crestClubs=(list||[]).filter(function(c){return c.logo;}); cb(crestClubs.length>=4); }).catch(function(){ cb(false); }); }
-  function ensureScore(cb){ if(scoreLoaded){ cb(scoreMatches.length>0); return; } ESPN.fetchScoreboard('20240901-20250831',{limit:500,ttl:600000}).then(function(events){ scoreMatches=(events||[]).map(ESPN.normalizeEvent).filter(function(m){ return m&&m.state==='post'&&m.home.logo&&m.away.logo&&(m.home.score+m.away.score)>=1&&m.home.score<=7&&m.away.score<=7; }); scoreLoaded=true; cb(scoreMatches.length>0); }).catch(function(){ scoreLoaded=true; cb(false); }); }
+  function ensureScore(cb){ if(scoreLoaded){ cb(scoreMatches.length>0); return; } ESPN.fetchSeasonEvents({year:2024, ttl:600000}).then(function(events){ scoreMatches=(events||[]).map(ESPN.normalizeEvent).filter(function(m){ return m&&m.state==='post'&&m.home.logo&&m.away.logo&&(m.home.score+m.away.score)>=1&&m.home.score<=7&&m.away.score<=7; }); scoreLoaded=true; cb(scoreMatches.length>0); }).catch(function(){ scoreLoaded=true; cb(false); }); }
 
   /* ---- rendu d'une question ---- */
   function loadingQ(){ el('quizQ').innerHTML='<div class="qlabel">'+esc(T('Chargement…','Loading…'))+'</div>'; el('quizOpts').innerHTML=''; }
