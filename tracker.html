@@ -186,6 +186,7 @@
   }
 </style>
 <link rel="stylesheet" href="footer.css?v=2">
+<link rel="stylesheet" href="clubpanel.css?v=1">
 </head>
 <body>
 <div id="cl-ball"></div>
@@ -316,6 +317,7 @@
 <script src="coefficients2026.js?v=1"></script>
 <script src="espn.js?v=17"></script>
 <script src="schedule.js?v=2"></script>
+<script src="clubpanel.js?v=1"></script>
 <script src="footer.js?v=2"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
@@ -395,6 +397,22 @@
       (x.opp.logo?'<img src="'+esc(x.opp.logo)+'" alt="" onerror="this.remove()">':'')+'</span>';
   }
 
+  /* ---- Fiche club : clic (ou Entrée / Espace) sur une ligne du classement ---- */
+  function clubPanelCtx(){ return { matches:(lastEvents||[]).map(ESPN.normalizeEvent).filter(Boolean), standings:lastStandings||[] }; }
+  (function bindClubPanel(){
+    var body=el('standingsBody'); if(!body || !window.LDCClubPanel) return;
+    function openFrom(tr){ if(tr) LDCClubPanel.open(tr.getAttribute('data-team'), clubPanelCtx()); }
+    body.addEventListener('click',function(e){
+      if(e.target.closest('a,button,input')) return;
+      openFrom(e.target.closest('tr[data-team]'));
+    });
+    body.addEventListener('keydown',function(e){
+      if(e.key!=='Enter' && e.key!==' ') return;
+      var tr=e.target.closest('tr[data-team]'); if(!tr || e.target!==tr) return;
+      e.preventDefault(); openFrom(tr);
+    });
+  })();
+
   function renderStandings(rows){
     var body=el('standingsBody');
     if(!rows || !rows.length){
@@ -425,7 +443,7 @@
           else if(dlt<0) pd='<span class="pd dn" title="'+esc(pdTitle)+'">▼'+(-dlt)+'</span>';
         }
       }
-      return '<tr class="'+zone+(isFav?' is-fav':'')+'">'+
+      return '<tr class="'+zone+(isFav?' is-fav':'')+' cp-row" data-team="'+esc(t.teamId)+'" tabindex="0" title="'+esc((lang()==='en'?'Open club card: ':'Ouvrir la fiche : ')+t.name)+'">'+
         '<td class="pos">'+(t.rank||t.pos)+pd+'</td>'+
         '<td class="club"><span class="club-cell">'+
           (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
@@ -828,6 +846,7 @@
       lastBracket = ESPN.buildBracket(events);
       (function(){ var lg=(events||[]).map(ESPN.normalizeEvent).filter(function(m){return m&&m.round==='league';}); replayAll=(lg.length>0 && lg.filter(function(m){return m.state==='pre';}).length===0); })();
       renderStandings(predictMode?predictedStandings():lastStandings);
+      if(window.LDCClubPanel) LDCClubPanel.refresh(clubPanelCtx());   // fiche ouverte : scores à jour
       if(predictMode) renderPredictPanel();
       renderBracketCards(lastBracket);
       if(el('btnTree').classList.contains('active')) renderBracketTree(lastBracket);
