@@ -56,6 +56,7 @@
   .tbl-fav{ color:rgb(var(--fav-rgb,245,181,10)); margin-right:5px; }
 
   .legend{ display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--muted); }
+  .thr-note{ margin:10px 0 0; font-size:12.5px; color:var(--muted); }
   .legend span{ display:inline-flex; align-items:center; gap:7px; }
   .legend i{ width:12px; height:12px; border-radius:3px; display:inline-block; }
 
@@ -186,7 +187,7 @@
   }
 </style>
 <link rel="stylesheet" href="footer.css?v=2">
-<link rel="stylesheet" href="clubpanel.css?v=3">
+<link rel="stylesheet" href="clubpanel.css?v=4">
 </head>
 <body>
 <div id="cl-ball"></div>
@@ -263,6 +264,7 @@
         <span><i style="background:var(--zone-po)"></i><span data-i18n="trk.legend.po">9–24 : barrages</span></span>
         <span><i style="background:var(--zone-out)"></i><span data-i18n="trk.legend.out">25–36 : éliminés</span></span>
       </div>
+      <p class="thr-note" id="thrNote"></p>
       <div id="predictPanel" class="predict-panel" style="display:none"></div>
     </div>
   </section>
@@ -317,7 +319,8 @@
 <script src="coefficients2026.js?v=1"></script>
 <script src="espn.js?v=18"></script>
 <script src="schedule.js?v=2"></script>
-<script src="clubpanel.js?v=1"></script>
+<script src="thresholds.js?v=1"></script>
+<script src="clubpanel.js?v=2"></script>
 <script src="footer.js?v=2"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
@@ -412,6 +415,18 @@
       e.preventDefault(); openFrom(tr);
     });
   })();
+
+  /* Repères : seuils réels des phases de ligue précédentes (thresholds.js). */
+  function renderThresholdNote(){
+    var n=el('thrNote'); if(!n) return;
+    if(!window.LDCThresholds || ESPN.isArchive() || !ESPN.isLeaguePhaseFormat()){ n.style.display='none'; return; }
+    n.style.display='';
+    n.textContent = lang()==='en'
+      ? 'For reference: 8th place had 16 pts in both 2024-25 and 2025-26; 24th had 11, then 9. Click a club to see what it still needs.'
+      : 'Repères : le 8e avait 16 pts en 2024-25 comme en 2025-26 ; le 24e en avait 11, puis 9. Clique sur un club pour voir ce qu’il lui manque.';
+  }
+  renderThresholdNote();
+  window.addEventListener('ldc:langchange', renderThresholdNote);
 
   function renderStandings(rows){
     var body=el('standingsBody');
