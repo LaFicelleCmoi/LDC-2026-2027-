@@ -1,10 +1,11 @@
 /* =========================================================================
-   clubpanel.css — Fiche club (panneau latéral, bas d'écran sur mobile)
+   clubpanel.css — Fiche club (popup centrée)
    ========================================================================= */
 .cp-backdrop{
   position:fixed; inset:0; z-index:95;
-  display:flex; justify-content:flex-end;
-  background:rgba(3,6,18,.62);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+  background:rgba(3,6,18,.66);
 }
 .cp-backdrop[hidden]{ display:none !important; }
 html.cp-open{ overflow:hidden; }
@@ -12,15 +13,16 @@ html.cp-open{ overflow:hidden; }
 .cp-panel{
   --cp-bg:#0d1426; --cp-line:rgba(255,255,255,.08); --cp-text:#e6eaf5; --cp-muted:#9aa3c4;
   position:relative; box-sizing:border-box;
-  width:min(470px,100%); height:100%; overflow-y:auto; overscroll-behavior:contain;
+  width:min(480px,100%); max-height:min(88vh,860px); overflow-y:auto; overscroll-behavior:contain;
   background:var(--cp-bg); color:var(--cp-text);
-  border-left:1px solid var(--cp-line); border-top:3px solid #f5b50a;
+  border:1px solid var(--cp-line); border-top:3px solid #f5b50a; border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
   font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif; line-height:1.4;
   animation:cpIn .22s ease-out;
 }
 .cp-panel:focus{ outline:none; }
 .cp-panel *{ box-sizing:border-box; }
-@keyframes cpIn{ from{ transform:translateX(24px); opacity:0; } to{ transform:none; opacity:1; } }
+@keyframes cpIn{ from{ transform:translateY(10px) scale(.97); opacity:0; } to{ transform:none; opacity:1; } }
 
 /* ---------- en-tête ---------- */
 .cp-head{
@@ -107,12 +109,10 @@ html.cp-open{ overflow:hidden; }
 .standings tbody tr.cp-row:hover td{ background:rgba(255,255,255,.035); }
 .standings tbody tr.cp-row:focus-visible{ outline:2px solid #f5b50a; outline-offset:-2px; }
 
-/* ---------- mobile : panneau en bas d'écran ---------- */
+/* ---------- mobile : la popup garde une marge autour d'elle ---------- */
 @media (max-width:640px){
-  .cp-backdrop{ align-items:flex-end; }
-  .cp-panel{ width:100%; height:auto; max-height:92vh; border-left:0; border-radius:18px 18px 0 0;
-    padding-bottom:env(safe-area-inset-bottom,0px); animation-name:cpUp; }
-  @keyframes cpUp{ from{ transform:translateY(30px); opacity:0; } to{ transform:none; opacity:1; } }
+  .cp-backdrop{ padding:12px; }
+  .cp-panel{ max-height:calc(100vh - 24px); border-radius:16px; }
   .cp-head{ padding:18px 16px 16px; }
   .cp-sec{ padding:16px; }
   .cp-name{ font-size:20px; }
