@@ -2,7 +2,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { clubData, matchdayMap } = require('../clubpanel.js');
+const { clubData, matchdayMap, mergeFresh, followsLive, BEFORE_KICKOFF } = require('../clubpanel.js');
 const fx = require('./fixtures/league-phase-2024-25.json');
 
 const PSG = '160';
@@ -51,7 +51,9 @@ test('saison en cours : prochain match, calendrier restant et match en direct', 
   mine.slice(3).forEach(m => { m.state = 'pre'; });
   const d = clubData(PSG, ms, [{ teamId: PSG, name: 'PSG', pos: 9, rank: 9, pts: 4 }]);
   assert.equal(d.summary.pld, 2, 'le match en cours ne compte pas dans le bilan');
-  assert.equal(d.last[0].live, true, 'le match en cours est en tête de liste');
+  assert.equal(d.live.id, mine[2].id, 'le match en cours est mis à part');
+  assert.ok(d.last.every(r => !r.live), 'et absent des 5 derniers matchs');
+  assert.equal(d.last.length, 2);
   assert.equal(d.next.id, mine[3].id);
   assert.equal(d.upcoming.length, 5);
   assert.deepEqual(d.standing, { rank: 9, pos: 9, pts: 4, zone: 'po' });
@@ -62,4 +64,22 @@ test('club inconnu ou sans match : fiche vide sans erreur', () => {
   assert.equal(d.team, null);
   assert.equal(d.played.length, 0);
   assert.equal(d.next, null);
+});
+
+test('le tableau du jour prime sur les données de saison, sans doublon', () => {
+  const base = [{ id: '1', state: 'pre', home: { score: null } }, { id: '2', state: 'post' }];
+  const fresh = [{ id: '1', state: 'in', home: { score: 1 } }, { id: '3', state: 'pre' }];
+  const out = mergeFresh(base, fresh);
+  assert.deepEqual(Array.from(out, m => m.id + ':' + m.state), ['1:in', '2:post', '3:pre']);
+  assert.equal(base[0].state, 'pre', 'les données de saison ne sont pas modifiées');
+});
+
+test('suivi en direct : match en cours ou coup d’envoi dans moins de 15 min', () => {
+  const now = Date.UTC(2026, 9, 21, 19, 0);
+  assert.equal(followsLive({ live: {}, next: null }, now), true);
+  assert.equal(followsLive({ live: null, next: { time: now + BEFORE_KICKOFF } }, now), true);
+  assert.equal(followsLive({ live: null, next: { time: now + BEFORE_KICKOFF + 60000 } }, now), false);
+  assert.equal(followsLive({ live: null, next: { time: now - 60000 } }, now), true, 'coup d’envoi passé, pas encore marqué en cours');
+  assert.equal(followsLive({ live: null, next: null }, now), false);
+  assert.equal(followsLive(null, now), false);
 });
