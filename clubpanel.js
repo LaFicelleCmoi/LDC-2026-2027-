@@ -195,6 +195,34 @@
                           : '<p class="cp-empty">' + esc(T('Aucun match joué pour l’instant.', 'No match played yet.')) + '</p>';
     html += '</section>';
 
+    /* Objectifs : points manquants pour atteindre les seuils RÉELS des phases
+       de ligue précédentes (thresholds.js). Uniquement pendant la phase. */
+    var TH = window.LDCThresholds;
+    var leagueLeft = d.upcoming.filter(function (r) { return r.round === 'league'; }).length;
+    if (TH && st && leagueLeft > 0) {
+      var ob = TH.objectives(st.pts, leagueLeft);
+      var objRow = function (o, label, cls, note) {
+        var pct = Math.min(100, Math.round(o.pts / o.target * 100));
+        var txt;
+        if (o.status === 'reached') txt = T('✓ Seuil atteint.', '✓ Threshold reached.');
+        else if (o.status === 'out') txt = T('Hors de portée : au mieux ' + o.max + ' pts.', 'Out of reach: ' + o.max + ' pts at best.');
+        else txt = T('Il manque ' + o.missing + ' pt' + (o.missing > 1 ? 's' : '') + ', l’équivalent de ' + o.wins + ' victoire' + (o.wins > 1 ? 's' : '') +
+                     ' · ' + leagueLeft + ' match' + (leagueLeft > 1 ? 's' : '') + ' restant' + (leagueLeft > 1 ? 's' : ''),
+                     o.missing + ' pt' + (o.missing > 1 ? 's' : '') + ' short, the equivalent of ' + o.wins + ' win' + (o.wins > 1 ? 's' : '') +
+                     ' · ' + leagueLeft + ' match' + (leagueLeft > 1 ? 'es' : '') + ' left');
+        return '<div class="cp-obj ' + cls + ' is-' + o.status + '">' +
+          '<div class="cp-obj-head"><span>' + esc(label) + '</span><b>' + o.pts + ' / ' + o.target + ' pts</b></div>' +
+          '<div class="cp-bar" role="img" aria-label="' + esc(o.pts + ' / ' + o.target + ' pts') + '"><i style="width:' + pct + '%"></i></div>' +
+          '<p class="cp-obj-txt">' + esc(txt) + (note ? ' <span class="cp-obj-note">' + esc(note) + '</span>' : '') + '</p></div>';
+      };
+      html += '<section class="cp-sec"><h3>' + esc(T('Objectifs', 'Targets')) + '</h3>' +
+        objRow(ob.top8, T('Top 8 · huitièmes directs', 'Top 8 · direct to R16'), 'o-q', '') +
+        objRow(ob.top24, T('Top 24 · barrages', 'Top 24 · play-offs'), 'o-po', T('(9 pts ont suffi en 2025-26)', '(9 pts were enough in 2025-26)')) +
+        '<p class="cp-legend">' + esc(T('Seuils réels des deux dernières phases de ligue : le 8e avait 16 pts en 2024-25 comme en 2025-26, le 24e 11 puis 9 pts. Indicatif : ils varient d’une saison à l’autre.',
+                                        'Actual thresholds of the last two league phases: 8th place had 16 pts in both 2024-25 and 2025-26, 24th had 11 then 9. Indicative: they vary from season to season.')) + '</p>' +
+        '</section>';
+    }
+
     if (d.next) {
       var n = d.next;
       html += '<section class="cp-sec"><h3>' + esc(T('Prochain match', 'Next match')) + '</h3>' +
