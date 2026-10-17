@@ -165,3 +165,110 @@ test('fetchSeasonEvents : jamais de plage de dates (rejetée par ESPN depuis le 
   assert.deepEqual(Array.from(out, e => e.id), ['a', 'b', 'f'], 'qualifs d’août, saison précédente et saison suivante écartées, ordre chronologique');
   assert.ok(sandbox.ESPN.lastSeasonSync(), 'date de synchronisation enregistrée');
 });
+
+/* ======================================================================= */
+/* Chargement de la saison en cours par mois, mémoire locale, secours.     */
+function seasonSandbox({ now, LS, fetchImpl }) {
+  const calls = [];
+  const clock = { now };
+  class FakeDate extends Date {
+    constructor(...a) { if (a.length) super(...a); else super(clock.now); }
+    static now() { return clock.now; }
+  }
+  const sandbox = {
+    location: { search: '' },
+    localStorage: {
+      getItem: k => (k in LS ? LS[k] : null), setItem: (k, v) => { LS[k] = String(v); }, removeItem: k => { delete LS[k]; },
+      key: i => Object.keys(LS)[i], get length() { return Object.keys(LS).length; }
+    },
+    document: undefined, console: { info() {}, warn() {}, log() {} }, setTimeout, clearTimeout, URLSearchParams, Date: FakeDate,
+    fetch: u => { calls.push(String(u)); return fetchImpl(String(u)); }
+  };
+  sandbox.window = sandbox; sandbox.self = sandbox;
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'espn.js'), 'utf8'), sandbox);
+  return { ESPN: sandbox.ESPN, calls, clock };
+}
+const NOW = Date.UTC(2026, 9, 18, 12);                 // 18/10/2026, entre deux journées
+const evt = (id, iso, state) => ({ id, date: iso, season: { year: 2026, slug: 'league-phase' },
+  competitions: [{ status: { type: { state } }, competitors: [
+    { homeAway: 'home', score: '1', team: { id: 'H' + id, displayName: 'H' + id } },
+    { homeAway: 'away', score: '0', team: { id: 'A' + id, displayName: 'A' + id } }] }] });
+const MONTHS = {
+  '202609': [evt('s1', '2026-09-08T19:00Z', 'post')],
+  '202610': [evt('o1', '2026-10-13T19:00Z', 'post'), evt('o2', '2026-10-21T19:00Z', 'pre')],
+  '202611': [evt('n1', '2026-11-03T20:00Z', 'pre')]
+};
+const okFetch = u => {
+  if (/dates=\d{8}-\d{8}/.test(u)) return Promise.resolve({ ok: false, status: 400, json: () => Promise.resolve({}) });
+  const k = (u.match(/dates=(\d{6})(?:&|$)/) || [])[1];
+  return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ events: MONTHS[k] || [] }) });
+};
+
+test('saison en cours : un appel par mois, jamais de plage ni d’appel annuel', async () => {
+  const { ESPN, calls } = seasonSandbox({ now: NOW, LS: {}, fetchImpl: okFetch });
+  const ev = await ESPN.fetchSeasonEvents();
+  assert.deepEqual(Array.from(ev, e => e.id), ['s1', 'o1', 'o2', 'n1']);
+  assert.equal(calls.length, 12);
+  assert.ok(calls.every(u => /dates=\d{6}&/.test(u)), calls.join(' '));
+  assert.equal(ESPN.staleSince(), null);
+});
+
+test('nouvelle visite : les mois passés et à venir viennent de la mémoire locale, seul le mois actif est redemandé', async () => {
+  const LS = {};
+  await seasonSandbox({ now: NOW, LS, fetchImpl: okFetch }).ESPN.fetchSeasonEvents();
+  const second = seasonSandbox({ now: NOW + 60000, LS, fetchImpl: okFetch });
+  const ev = await second.ESPN.fetchSeasonEvents();
+  assert.equal(ev.length, 4);
+  assert.deepEqual(second.calls.map(u => u.match(/dates=(\d+)/)[1]), ['202610']);
+});
+
+test('mois actif sans match proche : rechargé toutes les 10 min, pas toutes les 20 s', async () => {
+  const s = seasonSandbox({ now: NOW, LS: {}, fetchImpl: okFetch });
+  await s.ESPN.fetchSeasonEvents();
+  s.calls.length = 0;
+  s.clock.now += 61000;
+  await s.ESPN.fetchSeasonEvents();
+  assert.equal(s.calls.length, 0, 'aucun match en cours ni proche : pas de rechargement après 1 min');
+  s.clock.now += 10 * 60000;
+  await s.ESPN.fetchSeasonEvents();
+  assert.deepEqual(s.calls.map(u => u.match(/dates=(\d+)/)[1]), ['202610']);
+});
+
+test('mois actif avec un match proche : rechargé à l’intervalle demandé', async () => {
+  const s = seasonSandbox({ now: Date.UTC(2026, 9, 21, 17), LS: {}, fetchImpl: okFetch });   // 2 h avant o2
+  await s.ESPN.fetchSeasonEvents();
+  s.calls.length = 0;
+  s.clock.now += 25000;
+  await s.ESPN.fetchSeasonEvents();
+  assert.deepEqual(s.calls.map(u => u.match(/dates=(\d+)/)[1]), ['202610']);
+});
+
+test('ESPN injoignable : la dernière copie locale prend le relais, avec sa date', async () => {
+  const LS = {};
+  await seasonSandbox({ now: NOW, LS, fetchImpl: okFetch }).ESPN.fetchSeasonEvents();
+  const down = seasonSandbox({ now: NOW + 3 * 86400000, LS, fetchImpl: () => Promise.reject(new Error('réseau coupé')) });
+  const ev = await down.ESPN.fetchSeasonEvents();
+  assert.equal(ev.length, 4, 'la saison reste affichée');
+  assert.equal(down.ESPN.staleSince().getTime(), NOW, 'date des données = dernière synchronisation réussie');
+  assert.equal(down.ESPN.lastSeasonSync().getTime(), NOW);
+  const day = await down.ESPN.fetchDayEvents('20261013');
+  assert.deepEqual(Array.from(day, e => e.id), ['o1'], 'matchs du jour retrouvés dans la copie du mois');
+});
+
+test('ESPN injoignable sans aucune copie : l’erreur remonte (rien n’est inventé)', async () => {
+  const s = seasonSandbox({ now: NOW, LS: {}, fetchImpl: () => Promise.reject(new Error('réseau coupé')) });
+  await assert.rejects(s.ESPN.fetchSeasonEvents());
+});
+
+test('aucune page ni aucun script ne demande de plage de dates (rejetées par ESPN depuis le 16/09/2026)', () => {
+  const root = path.join(__dirname, '..');
+  const files = fs.readdirSync(root).filter(f => /\.(html|js)$/.test(f));
+  const bad = [];
+  files.forEach(f => {
+    const src = fs.readFileSync(path.join(root, f), 'utf8');
+    src.split('\n').forEach((line, i) => {
+      if (/fetchScoreboard\(\s*['"]\d{8}-\d{8}|fetchScoreboard\([^)]*['"]0901-['"]|dates=['"]?\s*\+[^;]*['"]-['"]/.test(line)) bad.push(f + ':' + (i + 1));
+    });
+  });
+  assert.deepEqual(bad, []);
+});
