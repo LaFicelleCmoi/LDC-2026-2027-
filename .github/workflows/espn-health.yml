@@ -1,0 +1,22 @@
+# Surveillance horaire : l'API ESPN répond-elle encore comme le site l'attend ?
+# En cas d'échec, GitHub envoie un e-mail (paramètres de notification Actions).
+name: Surveillance ESPN et site
+
+on:
+  schedule:
+    - cron: '17 * * * *'   # toutes les heures, à h17
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/check-espn.mjs
