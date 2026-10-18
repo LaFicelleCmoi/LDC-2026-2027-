@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-comp="uel">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://a.espncdn.com" />
 <link rel="stylesheet" href="styles.css?v=21" />
 <link rel="stylesheet" href="clubpanel.css?v=5" />
-<link rel="stylesheet" href="europa.css?v=3" />
+<link rel="stylesheet" href="cup.css?v=1" />
 </head>
 <body>
 <header class="site-header">
@@ -21,6 +21,7 @@
   <nav class="nav">
     <a href="europa.html" class="active" data-i18n="nav.dashboard">Accueil</a>
     <a href="europa-classement.html" data-i18n="nav.tracker">Classement</a>
+    <a href="conference.html" class="nav-cup to-uecl"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
     <a href="dashboard.html" class="nav-ucl"><img src="logo.svg?v=4" alt="" width="16" height="16"><span data-i18n="uel.toUcl">← Ligue des Champions</span></a>
   </nav>
   <div class="header-right">
@@ -30,16 +31,16 @@
 </header>
 
 <main class="container">
-  <section class="uel-hero">
-    <img class="uel-hero-logo" src="europa.svg?v=2" alt="" width="72" height="72">
+  <section class="cup-hero">
+    <img class="cup-hero-logo" src="europa.svg?v=2" alt="" width="72" height="72">
     <div>
       <h1>Europa League</h1>
       <p id="heroSub">Scores en direct, journée en cours et classement de la phase de ligue.</p>
       <span class="season-chip" id="seasonChip">2026–27</span>
     </div>
-    <div class="uel-hero-cta">
-      <a class="uel-cta" href="europa-classement.html" id="ctaTable">Classement complet →</a>
-      <a class="uel-cta ghost" href="dashboard.html" id="ctaUcl">← Ligue des Champions</a>
+    <div class="cup-hero-cta">
+      <a class="cup-cta" href="europa-classement.html" id="ctaTable">Classement complet →</a>
+      <a class="cup-cta ghost" href="dashboard.html" id="ctaUcl">← Ligue des Champions</a>
     </div>
   </section>
 
@@ -64,7 +65,7 @@
   </section>
 
   <!-- ====== Classement + chiffres ====== -->
-  <div class="uel-cols">
+  <div class="cup-cols">
     <section class="section" aria-labelledby="topTitle">
       <div class="section-head"><h2 id="topTitle">Top 8</h2><span class="sub" id="topSub"></span></div>
       <div class="card pad">
@@ -79,8 +80,8 @@
     <section class="section" aria-labelledby="statsTitle">
       <div class="section-head"><h2 id="statsTitle">La saison en chiffres</h2></div>
       <div class="card pad">
-        <div class="uel-stats" id="statsBody"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
-        <p class="uel-note" id="statsNote"></p>
+        <div class="cup-stats" id="statsBody"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
+        <p class="cup-note" id="statsNote"></p>
       </div>
     </section>
   </div>
@@ -103,300 +104,12 @@
 </footer>
 
 <script>window.LDC_LEAGUE = 'uefa.europa';</script>
-<script src="i18n.js?v=26"></script>
+<script src="i18n.js?v=27"></script>
 <script src="standings-engine.js?v=1"></script>
-<script src="espn.js?v=20"></script>
+<script src="espn.js?v=21"></script>
 <script src="schedule.js?v=2"></script>
-<script src="thresholds.js?v=2"></script>
+<script src="thresholds.js?v=3"></script>
 <script src="clubpanel.js?v=4"></script>
-<script>
-/* Accueil Europa League : journée en cours (scores en direct), top 8 et
-   chiffres de la saison. Tout vient du calendrier ESPN de la saison ; la
-   fiche club est celle du classement (clubpanel.js). */
-(function(){
-  'use strict';
-  I18N.mountToggle('#langSwitch');
-
-  function el(id){ return document.getElementById(id); }
-  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
-  function en(){ return I18N.getLang()==='en'; }
-  function T(fr,e){ return en()?e:fr; }
-  function loc(){ return en()?'en-GB':'fr-FR'; }
-
-  var DAY=86400000;
-  var events=[], matches=[], standings=[], groups=[], cur=null, picked=false, timer=null;
-
-  /* ---- Groupes : journées de phase de ligue, puis tours à élimination ---- */
-  var ROUND={ po:['Barrages','Play-offs'], r16:['Huitièmes','Round of 16'], qf:['Quarts','Quarter-finals'], sf:['Demies','Semi-finals'], final:['Finale','Final'] };
-  function buildGroups(ms){
-    var out=[];
-    ESPN.clusterMatchdays(ms.filter(function(m){ return m.round==='league'; })).forEach(function(g,i){
-      out.push({ label:[ 'Journée '+(i+1), 'Matchday '+(i+1) ], ms:g });
-    });
-    ESPN.ROUND_ORDER.forEach(function(r){
-      var legs=ESPN.clusterMatchdays(ms.filter(function(m){ return m.round===r; }));
-      legs.forEach(function(g,i){
-        var two=legs.length>1;
-        out.push({ label:[ ROUND[r][0]+(two?(i?' · retour':' · aller'):''), ROUND[r][1]+(two?(i?' · 2nd leg':' · 1st leg'):'') ], ms:g });
-      });
-    });
-    return out;
-  }
-  function t(m){ return m.dateObj?m.dateObj.getTime():0; }
-  /* Journée affichée d'office : celle d'un match en cours ; sinon la
-     dernière jouée pendant 36 h après son dernier match ; sinon la prochaine. */
-  function defaultGroup(){
-    var now=Date.now(), i;
-    for(i=0;i<groups.length;i++) if(groups[i].ms.some(function(m){ return m.state==='in'; })) return i;
-    for(i=0;i<groups.length;i++){
-      var g=groups[i].ms;
-      if(g.some(function(m){ return m.state==='pre'; })){
-        var prev=groups[i-1];
-        if(prev && now-Math.max.apply(null,prev.ms.map(t))<36*3600000 && t(g[0])-now>DAY) return i-1;
-        return i;
-      }
-    }
-    return groups.length-1;
-  }
-
-  /* ---- Rendu de la journée ---- */
-  function dayKey(m){ return m.dateObj?m.dateObj.toDateString():''; }
-  function card(m){
-    var live=m.state==='in', post=m.state==='post', pre=m.state==='pre';
-    var top = live ? '<span class="badge live">'+esc(I18N.t('common.live'))+'</span><span class="um-clock">'+esc(/HT|Half/i.test(m.statusDetail)?T('Mi-temps','Half-time'):(m.displayClock||m.statusDetail))+'</span>'
-            : post ? '<span>'+esc(T('Terminé','Full time'))+'</span><span>'+esc(hour(m))+'</span>'
-            : '<span>'+esc(ESPN.isInterrupted(m)?m.statusDetail:T('À venir','Upcoming'))+'</span><span>'+esc(hour(m))+'</span>';
-    var fid=favId();
-    function side(c,o){
-      var res = post ? (c.score>o.score?' win':(c.score<o.score?' lose':'')) : '', fav=fid && String(c.teamId)===fid;
-      return '<button type="button" class="um-team'+res+(fav?' is-fav':'')+'" data-team="'+esc(c.teamId)+'" aria-label="'+esc(T('Fiche du club : ','Club card: ')+c.name)+'">'+
-        (c.logo?'<img src="'+esc(c.logo)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span></span>')+
-        '<span class="nm">'+(fav?'<span class="uf-star" aria-hidden="true">★</span>':'')+esc(c.name)+'</span><span class="sc">'+(pre?'':c.score)+'</span></button>';
-    }
-    var hasFav = fid && (String(m.home.teamId)===fid || String(m.away.teamId)===fid);
-    return '<article class="um'+(live?' is-live':'')+(hasFav?' has-fav':'')+'"><div class="um-top">'+top+'</div>'+side(m.home,m.away)+side(m.away,m.home)+'</article>';
-  }
-  function hour(m){ return m.dateObj?m.dateObj.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'}):''; }
-  function dayTitle(m){ return m.dateObj?m.dateObj.toLocaleDateString(loc(),{weekday:'long',day:'numeric',month:'long'}):'—'; }
-
-  function renderDay(){
-    var grid=el('mdGrid');
-    if(!groups.length){
-      grid.innerHTML='<div class="empty-state">'+esc(T('Aucun match publié par ESPN pour cette saison.','ESPN has not published any match for this season yet.'))+'</div>';
-      el('mdLabel').textContent='—'; el('mdPrev').disabled=el('mdNext').disabled=true; return;
-    }
-    var g=groups[cur], ms=g.ms.slice().sort(function(a,b){ return t(a)-t(b) || a.home.name.localeCompare(b.home.name); });
-    var first=ms[0], last=ms[ms.length-1];
-    var range=dayKey(first)===dayKey(last) ? dayTitle(first)
-      : first.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'})+' – '+last.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'});
-    el('mdLabel').innerHTML=esc(T(g.label[0],g.label[1]))+'<span class="md-dates">'+esc(range)+'</span>';
-    el('mdPrev').disabled=cur<=0; el('mdNext').disabled=cur>=groups.length-1;
-    var html='', day=null, multi=dayKey(first)!==dayKey(last);
-    ms.forEach(function(m){
-      if(multi && dayKey(m)!==day){ day=dayKey(m); html+='<h3 class="um-day">'+esc(dayTitle(m))+'</h3>'; }
-      html+=card(m);
-    });
-    grid.innerHTML=html;
-  }
-
-  /* ---- Top 8 ---- */
-  function renderTop(){
-    var body=el('topBody');
-    var played=standings.some(function(r){ return r.pld>0; });
-    if(!standings.length || !played){
-      body.innerHTML='<tr><td colspan="5" class="empty-state">'+esc(T('Le classement démarre avec la 1re journée.','The table starts with matchday 1.'))+'</td></tr>';
-    } else {
-      var fid=favId();
-      body.innerHTML=standings.slice(0,8).map(function(r){
-        var gd=(r.gd>0?'+':'')+r.gd, fav=fid && String(r.teamId)===fid;
-        return '<tr data-team="'+esc(r.teamId)+'"'+(fav?' class="is-fav"':'')+' tabindex="0" title="'+esc(T('Ouvrir la fiche : ','Open club card: ')+r.name)+'">'+
-          '<td class="pos">'+(r.rank||r.pos)+'</td>'+
-          '<td class="club"><span class="club-cell">'+(r.logo?'<img class="crest" src="'+esc(r.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'')+'<span class="nm">'+(fav?'<span class="uf-star" aria-hidden="true">★</span>':'')+esc(r.name)+'</span>'+(r.live?' <span class="dot live" title="'+esc(I18N.t('common.live'))+'"></span>':'')+'</span></td>'+
-          '<td>'+r.pld+'</td><td>'+gd+'</td><td class="pts">'+r.pts+'</td></tr>';
-      }).join('');
-    }
-    var TH=window.LDCThresholds;
-    el('topSub').textContent=T('huitièmes de finale directs','straight to the round of 16');
-    el('topNote').textContent=TH ? T('Repère : le 8e avait '+TH.trend('top8')+'.','For reference: 8th place had '+TH.trend('top8',true)+'.') : '';
-    el('topLink').textContent=T('Les 36 clubs →','All 36 clubs →');
-  }
-
-  /* ---- Chiffres de la saison (calculés sur les matchs terminés) ---- */
-  function renderStats(){
-    var done=matches.filter(function(m){ return m.state==='post'; });
-    var host=el('statsBody');
-    if(!done.length){ host.innerHTML='<div class="empty-state">'+esc(T('Pas encore de match terminé.','No finished match yet.'))+'</div>'; el('statsNote').textContent=''; return; }
-    var goals=0, hw=0, dr=0, aw=0, big=null;
-    done.forEach(function(m){
-      var h=m.home.score, a=m.away.score; goals+=h+a;
-      if(h>a) hw++; else if(h<a) aw++; else dr++;
-      var d=Math.abs(h-a);
-      if(!big || d>big.d || (d===big.d && h+a>big.g)) big={ d:d, g:h+a, m:m };
-    });
-    function pct(n){ return Math.round(n*100/done.length)+' %'; }
-    function tile(v,l,cls){ return '<div class="uel-stat'+(cls?' '+cls:'')+'"><b>'+esc(v)+'</b><span>'+esc(l)+'</span></div>'; }
-    var bm=big.m, bw=bm.home.score>=bm.away.score;
-    host.innerHTML=
-      tile(done.length, T('matchs joués','matches played'))+
-      tile(goals, T('buts','goals'))+
-      tile((goals/done.length).toLocaleString(loc(),{maximumFractionDigits:2}), T('buts par match','goals per match'))+
-      tile(pct(hw)+' · '+pct(dr)+' · '+pct(aw), T('domicile · nul · extérieur','home · draw · away'))+
-      tile((bw?bm.home.name:bm.away.name)+' '+Math.max(bm.home.score,bm.away.score)+'–'+Math.min(bm.home.score,bm.away.score)+' '+(bw?bm.away.name:bm.home.name),
-           T('plus large victoire','biggest win')+' · '+bm.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'}), 'wide');
-    el('statsNote').textContent=T('Calculé sur les matchs terminés du calendrier ESPN, toutes phases confondues.','Computed from the finished matches in the ESPN schedule, all rounds included.');
-  }
-
-  function renderStatic(){
-    el('heroSub').textContent=T('Scores en direct, journée en cours et classement de la phase de ligue.','Live scores, current matchday and league phase table.');
-    el('seasonChip').textContent=ESPN.seasonLabel();
-    el('ctaTable').textContent=T('Classement complet →','Full table →');
-    el('ctaUcl').textContent=T('← Ligue des Champions','← Champions League');
-    el('mdTitle').textContent=T('Matchs','Matches');
-    el('statsTitle').textContent=T('La saison en chiffres','The season in numbers');
-    el('mdPrev').setAttribute('aria-label',T('Journée précédente','Previous matchday'));
-    el('mdNext').setAttribute('aria-label',T('Journée suivante','Next matchday'));
-    var sync=ESPN.lastSeasonSync&&ESPN.lastSeasonSync();
-    el('mdSync').textContent=sync?(I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
-  }
-  function renderAll(){ renderStatic(); renderFav(); if(groups.length || matches.length){ renderDay(); renderTop(); renderStats(); } }
-
-  /* ---- Club favori : propre à l'Europa League (clé dédiée dans espn.js) ---- */
-  function favId(){ var f=ESPN.getFav(); return f?String(f.id):null; }
-  function applyFavAccent(){ var a=ESPN.favAccent(), r=document.documentElement; if(a) r.style.setProperty('--fav-rgb',a); else r.style.removeProperty('--fav-rgb'); }
-  /* Match à mettre en avant : en cours, sinon le prochain, sinon le dernier. */
-  function favMatch(id){
-    var mine=matches.filter(function(m){ return String(m.home.teamId)===id || String(m.away.teamId)===id; });
-    var live=mine.filter(function(m){ return m.state==='in'; })[0]; if(live) return live;
-    var next=mine.filter(function(m){ return m.state==='pre'; }).sort(function(a,b){ return t(a)-t(b); })[0]; if(next) return next;
-    return mine.filter(function(m){ return m.state==='post'; }).sort(function(a,b){ return t(b)-t(a); })[0] || null;
-  }
-  function favStatus(id){
-    var m=favMatch(id);
-    if(!m) return '<span class="uf-muted">'+esc(T('Aucun match au calendrier pour l’instant.','No match scheduled yet.'))+'</span>';
-    var home=String(m.home.teamId)===id, me=home?m.home:m.away, opp=home?m.away:m.home;
-    var logo=opp.logo?'<img class="uf-olog" src="'+esc(opp.logo)+'" alt="" onerror="this.remove()">':'';
-    var who=esc(home?T('vs','vs'):T('chez','at'))+' '+logo+esc(opp.name);
-    if(m.state==='in') return '<span class="uf-pill live"><i></i>'+esc(I18N.t('common.live'))+'</span> <b class="uf-score">'+me.score+'–'+opp.score+'</b> '+who+' · '+esc(/HT|Half/i.test(m.statusDetail)?T('Mi-temps','Half-time'):(m.displayClock||m.statusDetail));
-    if(m.state==='pre') return '<span class="uf-pill">'+esc(T('Prochain match','Next match'))+'</span> '+who+' · '+esc(dayTitle(m)+' · '+hour(m));
-    return '<span class="uf-pill post">'+esc(T('Dernier match','Last match'))+'</span> <b class="uf-score">'+me.score+'–'+opp.score+'</b> '+who;
-  }
-  function renderFav(){
-    applyFavAccent();
-    var host=el('favSection'), f=ESPN.getFav();
-    host.setAttribute('aria-label',T('Club favori','Favourite club'));
-    if(!f){
-      host.innerHTML='<div class="uf-card"><span class="uf-bigstar" aria-hidden="true">★</span><div class="uf-txt">'+
-        '<div class="uf-name sm">'+esc(T('Suis ton club en Europa League','Follow your Europa League club'))+'</div>'+
-        '<div class="uf-status">'+esc(T('Ses matchs et sa place mis en avant sur l’accueil et dans le classement.','Its matches and position highlighted on the home page and in the table.'))+'</div></div>'+
-        '<div class="uf-actions"><button type="button" class="uf-btn primary" data-fav="choose">'+esc(I18N.t('fav.choose'))+'</button></div></div>';
-      return;
-    }
-    var id=String(f.id), st=standings.filter(function(r){ return String(r.teamId)===id; })[0];
-    var place=st && st.pld ? ' · '+(st.rank||st.pos)+(en()?((st.rank||st.pos)===1?'st':(st.rank||st.pos)===2?'nd':(st.rank||st.pos)===3?'rd':'th'):((st.rank||st.pos)===1?'er':'e'))+' · '+st.pts+' pt'+(st.pts>1?'s':'') : '';
-    host.innerHTML='<div class="uf-card has-team">'+
-      (f.logo?'<img class="uf-crest" src="'+esc(f.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'<span class="uf-crest"></span>')+
-      '<div class="uf-txt"><div class="uf-label">★ '+esc(I18N.t('fav.myTeam'))+esc(place)+'</div>'+
-      '<div class="uf-name">'+esc(f.name)+'</div><div class="uf-status">'+favStatus(id)+'</div></div>'+
-      '<div class="uf-actions">'+
-        '<button type="button" class="uf-btn primary" data-fav="card">'+esc(T('Voir sa fiche','Club card'))+'</button>'+
-        '<button type="button" class="uf-btn" data-fav="choose">'+esc(I18N.t('fav.change'))+'</button>'+
-        '<button type="button" class="uf-btn" data-fav="remove">'+esc(I18N.t('fav.remove'))+'</button>'+
-      '</div></div>';
-  }
-  el('favSection').addEventListener('click',function(e){
-    var b=e.target.closest('[data-fav]'); if(!b) return;
-    var a=b.getAttribute('data-fav');
-    if(a==='choose') openChooser(b);
-    else if(a==='card') openClub(favId());
-    else if(a==='remove'){ ESPN.clearFav(); renderAll(); el('favSection').querySelector('[data-fav]').focus(); }
-  });
-
-  /* Choix du club : les 36 clubs de la phase de ligue, d'après le calendrier ESPN. */
-  var chooserOpener=null;
-  function openChooser(opener){
-    chooserOpener=opener||null;
-    var clubs=ESPN.leagueClubs(events), fid=favId();
-    el('favModalTitle').textContent='★ '+I18N.t('fav.chooseTitle');
-    el('favModalSub').textContent=T('Les '+clubs.length+' clubs de la phase de ligue 2026-27.','The '+clubs.length+' clubs of the 2026-27 league phase.');
-    el('favModalClose').setAttribute('aria-label',T('Fermer','Close'));
-    var s=el('favSearch'); s.value=''; s.placeholder=I18N.t('fav.search'); s.setAttribute('aria-label',I18N.t('fav.search'));
-    el('favGrid').innerHTML=clubs.length ? clubs.map(function(c){
-      return '<button type="button" class="uf-club'+(c.id===fid?' on':'')+'" data-id="'+esc(c.id)+'" aria-pressed="'+(c.id===fid)+'">'+
-        (c.logo?'<img src="'+esc(c.logo)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="uf-noimg"></span>')+
-        '<span>'+esc(c.name)+'</span></button>';
-    }).join('') : '<p class="uf-muted">'+esc(T('Liste indisponible : ESPN n’a pas encore répondu.','List unavailable: ESPN has not answered yet.'))+'</p>';
-    el('favModal').hidden=false;
-    document.body.style.overflow='hidden';
-    s.focus();
-  }
-  function closeChooser(){
-    el('favModal').hidden=true; document.body.style.overflow='';
-    if(chooserOpener && document.body.contains(chooserOpener)) chooserOpener.focus();
-    else { var b=el('favSection').querySelector('[data-fav]'); if(b) b.focus(); }
-  }
-  el('favGrid').addEventListener('click',function(e){
-    var b=e.target.closest('.uf-club'); if(!b) return;
-    var c=ESPN.leagueClubs(events).filter(function(x){ return x.id===b.getAttribute('data-id'); })[0]; if(!c) return;
-    ESPN.setFav({ id:c.id, name:c.name, abbr:c.abbr, logo:c.logo, color:c.color });
-    renderAll(); chooserOpener=null; closeChooser();      // focus : premier bouton de la nouvelle carte
-  });
-  el('favSearch').addEventListener('input',function(){
-    var q=this.value.trim().toLowerCase();
-    Array.prototype.forEach.call(el('favGrid').querySelectorAll('.uf-club'),function(b){ b.hidden=!!q && b.textContent.toLowerCase().indexOf(q)===-1; });
-  });
-  el('favModalClose').addEventListener('click',closeChooser);
-  el('favModal').addEventListener('click',function(e){ if(e.target===el('favModal')) closeChooser(); });
-  el('favModal').addEventListener('keydown',function(e){
-    if(e.key==='Escape'){ e.preventDefault(); closeChooser(); return; }
-    if(e.key!=='Tab') return;
-    var f=Array.prototype.filter.call(el('favModal').querySelectorAll('button,input'),function(x){ return !x.hidden && x.offsetParent!==null; });
-    if(!f.length) return;
-    if(e.shiftKey && document.activeElement===f[0]){ e.preventDefault(); f[f.length-1].focus(); }
-    else if(!e.shiftKey && document.activeElement===f[f.length-1]){ e.preventDefault(); f[0].focus(); }
-  });
-
-  /* ---- Fiche club ---- */
-  function ctx(){ return { matches:matches, standings:standings }; }
-  function openClub(id){ if(id && window.LDCClubPanel) LDCClubPanel.open(id, ctx()); }
-  el('mdGrid').addEventListener('click',function(e){ var b=e.target.closest('.um-team[data-team]'); if(b) openClub(b.getAttribute('data-team')); });
-  el('topBody').addEventListener('click',function(e){ var tr=e.target.closest('tr[data-team]'); if(tr) openClub(tr.getAttribute('data-team')); });
-  el('topBody').addEventListener('keydown',function(e){
-    if(e.key!=='Enter' && e.key!==' ') return;
-    var tr=e.target.closest('tr[data-team]'); if(!tr || e.target!==tr) return;
-    e.preventDefault(); openClub(tr.getAttribute('data-team'));
-  });
-  el('mdPrev').addEventListener('click',function(){ if(cur>0){ cur--; picked=true; renderDay(); } });
-  el('mdNext').addEventListener('click',function(){ if(cur<groups.length-1){ cur++; picked=true; renderDay(); } });
-
-  /* ---- Chargement : toutes les 20 s s'il y a du direct, sinon chaque minute ---- */
-  function load(){
-    if(document.visibilityState==='hidden'){ schedule(60000); return; }
-    ESPN.fetchSeasonEvents({ ttl:20000 }).then(function(evs){
-      el('offlineNotice').style.display='none';
-      events=evs;
-      matches=evs.map(ESPN.normalizeEvent).filter(Boolean);
-      var seed=ESPN.isArchive()?null:ESPN.leagueClubs(evs);
-      standings=ESPN.computeStandings(evs, seed);
-      groups=buildGroups(matches);
-      if(!picked || cur==null || cur>=groups.length) cur=defaultGroup();
-      var live=matches.some(function(m){ return m.state==='in'; });
-      el('liveFlag').style.display=live?'inline-flex':'none';
-      renderAll();
-      if(window.LDCClubPanel) LDCClubPanel.refresh(ctx());
-      schedule(live?20000:60000);
-    }).catch(function(){
-      el('offlineNotice').style.display='flex';
-      if(!matches.length) el('mdGrid').innerHTML='<div class="empty-state">'+esc(T('ESPN ne répond pas. Nouvel essai dans une minute.','ESPN is not responding. Retrying in a minute.'))+'</div>';
-      schedule(60000);
-    });
-  }
-  function schedule(ms){ clearTimeout(timer); timer=setTimeout(load, ms); }
-  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') load(); });
-  window.addEventListener('ldc:langchange', renderAll);
-  renderStatic();
-  renderFav();
-  load();
-})();
-</script>
+<script src="cup.js?v=1"></script>
 </body>
 </html>
