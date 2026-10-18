@@ -694,48 +694,62 @@ a{ text-decoration:none; color:inherit; }
 .rp-full:hover{ text-decoration:underline; }
 @media (max-width:560px){ .rp-name{ font-size:2em; } .rp-crest{ width:70px; height:70px; } .rp-round{ width:64px; font-size:0.6em; } .rp-opp .nm{ font-size:12px; } }
 
-/* ---- Lanyard (badge du club favori suspendu à une lanière, physique + drag) ---- */
-#lanyard{ position:absolute; top:0; left:0; width:100%; height:620px; z-index:75; pointer-events:none; overflow:hidden; }
-#lanyardCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
-.lanyard-card{
-  position:absolute; top:0; left:0; width:214px; pointer-events:auto;
-  cursor:grab; user-select:none; -webkit-user-select:none; touch-action:none;
-  transform-origin:50% 0; will-change:transform; --club:245,181,10;
-}
+/* ---- Badge « Mon club » : accréditation suspendue à une lanière ----
+   Place RÉSERVÉE dans la colonne droite du bandeau (≥ 960 px) : le badge ne
+   recouvre ni le titre, ni la navigation, ni la carte du favori. La scène
+   (.ly-stage) déborde de la colonne pour laisser la carte se balancer ; elle
+   ne capte pas les clics, seule la carte le fait. Masqué en dessous de
+   960 px, où la carte « Mon équipe » remplit le même rôle. */
+.header.has-badge{ display:grid; grid-template-columns:minmax(0,1fr) 240px; align-items:center; gap:24px;
+  max-width:1200px; margin:0 auto 34px; text-align:left; }
+.header.has-badge h1{ font-size:clamp(3em,6.6vw,6em); }
+#lanyard{ position:relative; height:350px; pointer-events:none; }
+.ly-stage{ position:absolute; top:-44px; bottom:-30px; left:-110px; right:-60px; }
+#lanyardCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 46px); mask-image:linear-gradient(to bottom, transparent 0, #000 46px); }
+.lanyard-card{ position:absolute; top:0; left:0; width:178px; pointer-events:auto; cursor:grab; touch-action:none;
+  user-select:none; -webkit-user-select:none; transform-origin:50% 0; will-change:transform; }
 .lanyard-card.grabbing{ cursor:grabbing; }
-.lanyard-card .lc-inner{
-  position:relative; margin-top:11px; border-radius:16px; overflow:hidden; text-align:center;
-  background:linear-gradient(165deg, rgba(20,38,72,.60), rgba(9,17,42,.70) 72%);
-  -webkit-backdrop-filter:blur(10px) saturate(1.15);
-  backdrop-filter:blur(10px) saturate(1.15);
-  border:1px solid rgba(255,255,255,.16);
-  box-shadow:0 30px 70px rgba(0,0,0,.48), 0 0 58px rgba(var(--club),.22), inset 0 0 0 1px rgba(var(--club),.26);
-  padding:0 0 15px;
+.lanyard-card.is-empty{ cursor:pointer; }
+.lc-inner{ position:relative; border-radius:14px; overflow:hidden; background:#f5f7fb; color:#0b1020;
+  box-shadow:0 22px 46px rgba(0,0,0,.5), 0 2px 0 rgba(255,255,255,.6) inset, 0 0 0 1px rgba(255,255,255,.18); }
+.lc-slot{ position:absolute; top:7px; left:50%; transform:translateX(-50%); width:34px; height:7px; border-radius:4px; z-index:4;
+  background:#070b18; box-shadow:inset 0 1px 2px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.25); }
+.lc-head{ position:relative; height:92px; padding:24px 12px 0; display:flex; justify-content:space-between; align-items:flex-start;
+  background:rgb(var(--club)); color:var(--ink); overflow:hidden; }
+.lc-head::after{ content:''; position:absolute; right:-38px; top:-30px; width:150px; height:150px; opacity:.16;
+  background:url("starball.svg?v=2") center/contain no-repeat; mix-blend-mode:soft-light; }
+.lc-brand{ position:relative; z-index:1; display:flex; align-items:center; gap:6px; font-family:var(--font-d); font-size:12px; line-height:.95; letter-spacing:.08em; text-transform:uppercase; }
+.lc-brand img{ width:20px; height:20px; border-radius:4px; }
+.lc-season{ position:relative; z-index:1; font-family:var(--font-d); font-size:12px; letter-spacing:.08em; padding:2px 6px; border-radius:5px;
+  border:1px solid currentColor; opacity:.9; }
+.lc-crest{ position:relative; z-index:2; width:84px; height:84px; margin:-40px auto 0; border-radius:50%; background:#fff;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 0 4px #f5f7fb, 0 0 0 6px rgb(var(--club)), 0 8px 18px rgba(0,0,0,.25); }
+.lc-crest img{ width:60px; height:60px; object-fit:contain; }
+.lc-body{ padding:10px 14px 13px; text-align:center; }
+.lc-name{ font-family:var(--font-d); font-size:26px; line-height:.98; letter-spacing:.02em; color:#0b1020;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+.lc-role{ display:inline-block; margin-top:7px; padding:3px 10px; border-radius:999px; font-size:9.5px; font-weight:900;
+  letter-spacing:.16em; text-transform:uppercase; background:rgb(var(--club)); color:var(--ink); }
+.lc-foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; padding-top:9px; border-top:1px dashed rgba(11,16,32,.18); }
+.lc-code{ font-family:var(--font-d); font-size:12.5px; letter-spacing:.1em; color:#3a4560; white-space:nowrap; }
+.lc-bar{ display:block; width:64px; height:20px; }
+/* Reflet holographique : glisse avec l'inclinaison de la carte (--tilt). */
+.lc-holo{ position:absolute; inset:0; pointer-events:none; z-index:3; mix-blend-mode:screen; opacity:.5;
+  background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 44%, rgba(160,220,255,.25) 50%, transparent 62%);
+  background-size:260% 100%; background-position:calc(50% + var(--tilt, 0%)) 0; }
+@media (prefers-reduced-motion:reduce){ .lc-holo{ display:none; } }
+@media (max-width:959px){
+  .header.has-badge{ display:block; text-align:center; max-width:none; }
+  .header.has-badge h1{ font-size:clamp(3em,8vw,6em); }
+  #lanyard{ display:none; }
 }
-.lc-hole{ position:absolute; top:4px; left:50%; transform:translateX(-50%); width:48px; height:9px; border-radius:6px;
-  background:#05070f; box-shadow:inset 0 1px 3px rgba(0,0,0,.9); z-index:3; }
-.lc-band{ height:54px; display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(135deg, rgb(var(--club)), rgba(var(--club),.5)); }
-.lc-band span{ font-family:var(--font-d); letter-spacing:3px; font-size:15px; color:#fff; opacity:.94; text-shadow:0 1px 2px rgba(0,0,0,.45); }
-.lc-crest{ width:94px; height:94px; margin:15px auto 8px; border-radius:50%;
-  background:rgba(12,22,49,.55); border:2px solid rgba(var(--club),.55); display:flex; align-items:center; justify-content:center;
-  box-shadow:0 8px 22px rgba(0,0,0,.45), inset 0 0 22px rgba(var(--club),.16); }
-.lc-crest img{ width:66px; height:66px; object-fit:contain; filter:drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
-.lc-name{ font-family:var(--font-d); font-size:27px; line-height:1; padding:0 12px; color:#fff; letter-spacing:.02em; }
-.lc-tag{ margin-top:6px; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
-.lc-foot{ margin:13px 16px 0; padding-top:11px; border-top:1px solid rgba(255,255,255,.08);
-  display:flex; align-items:center; justify-content:center; gap:9px; }
-.lc-foot .lc-logo{ width:18px; height:18px; opacity:.85; }
-.lc-foot .lc-abbr{ font-family:var(--font-d); letter-spacing:2px; font-size:17px; color:rgb(var(--club)); }
+@media (max-width:380px){ .header.has-badge h1{ font-size:clamp(2.4em,13vw,4em); } }
 </style>
 <link rel="stylesheet" href="footer.css?v=2">
 </head>
 <body>
-
-<div id="lanyard" aria-hidden="true">
-  <canvas id="lanyardCanvas"></canvas>
-  <div class="lanyard-card" id="lanyardCard"></div>
-</div>
 
 <div id="cl-ball"></div>
 <canvas id="starfield"></canvas>
@@ -767,10 +781,18 @@ a{ text-decoration:none; color:inherit; }
   </div>
 </div>
 
-<div class="header">
-  <h1 id="hero-title"></h1>
-  <p data-i18n="dash.subtitle2">Scores en direct · Classement · Phase finale</p>
-  <div class="season-chip" id="season-chip">Saison 2026–27</div>
+<div class="header has-badge">
+  <div class="header-txt">
+    <h1 id="hero-title"></h1>
+    <p data-i18n="dash.subtitle2">Scores en direct · Classement · Phase finale</p>
+    <div class="season-chip" id="season-chip">Saison 2026–27</div>
+  </div>
+  <div id="lanyard" aria-hidden="true">
+    <div class="ly-stage">
+      <canvas id="lanyardCanvas"></canvas>
+      <div class="lanyard-card" id="lanyardCard"></div>
+    </div>
+  </div>
 </div>
 
 <section class="fav-section" id="fav-section"></section>
@@ -2328,236 +2350,255 @@ a{ text-decoration:none; color:inherit; }
 <!-- ===================== LANYARD (badge club favori suspendu) ===================== -->
 <script>
 window.LDCLanyard = (function(){
+  /* Badge « Mon club » : accréditation suspendue à une lanière, dans la
+     colonne droite du bandeau (≥ 960 px). Physique de corde (Verlet) : la
+     lanière se balance, la carte se saisit et se lance. Elle ne recouvre
+     jamais le contenu : sa place est réservée dans la mise en page, et elle
+     est masquée sur les petits écrans (la carte « Mon équipe » suffit). */
   var host=document.getElementById('lanyard');
   var canvas=document.getElementById('lanyardCanvas');
   var card=document.getElementById('lanyardCard');
-  if(!host||!canvas||!card) return { refresh:function(){} };
+  var stage=host && host.querySelector('.ly-stage');
+  if(!host||!canvas||!card||!stage) return { refresh:function(){} };
   var ctx=canvas.getContext('2d');
   var reduce=false; try{ reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
 
   var W=0,H=0,dpr=1;
-  var CARDW=214, CLIPW=104, BANDLEN=176, SEG=17, DROP=30;
+  var CARDW=178, CLIPW=40, BANDLEN=124, SEG=12, DROP=18;
   var pts=[], sticks=[], iSplit=0, iL=0, iR=0;
-  var dragging=false, gx=0, gy=0, offL={x:0,y:0}, offR={x:0,y:0}, tt=0, clubCol='245,181,10';
+  var dragging=false, gx=0, gy=0, offL={x:0,y:0}, offR={x:0,y:0}, tt=0, clubCol='245,181,10', ink='#1a1300';
+  var down=null;
 
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function L(){ try{ return (window.I18N&&I18N.getLang&&I18N.getLang())||'fr'; }catch(e){ return 'fr'; } }
   function T(fr,en){ return L()==='en'?en:fr; }
   function mk(x,y){ return {x:x,y:y,ox:x,oy:y,pin:false}; }
+  function visible(){ return getComputedStyle(host).display!=='none'; }
 
-  function sizeFor(){
-    var w=window.innerWidth;
-    if(w<480){ CARDW=166; CLIPW=78; BANDLEN=116; }
-    else if(w<820){ CARDW=188; CLIPW=90; BANDLEN=140; }
-    else { CARDW=214; CLIPW=104; BANDLEN=176; }
-    card.style.width=CARDW+'px';
-  }
   function resize(){
     dpr=Math.min(2,window.devicePixelRatio||1);
-    W=host.clientWidth||window.innerWidth; H=host.clientHeight||620;
+    W=stage.clientWidth; H=stage.clientHeight;
     canvas.width=Math.round(W*dpr); canvas.height=Math.round(H*dpr);
     canvas.style.width=W+'px'; canvas.style.height=H+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  function local(e){ var r=host.getBoundingClientRect(); return { x:e.clientX-r.left, y:e.clientY-r.top }; }
+  function local(e){ var r=stage.getBoundingClientRect(); return { x:e.clientX-r.left, y:e.clientY-r.top }; }
   function build(){
-    sizeFor(); resize();
-    var ax=W/2, ay=4;
+    card.style.width=CARDW+'px';
+    resize();
+    var ax=W/2, ay=0;
     pts=[ {x:ax,y:ay,ox:ax,oy:ay,pin:true} ];
-    var N=Math.max(6,Math.round(BANDLEN/SEG));
+    var N=Math.max(5,Math.round(BANDLEN/SEG));
     for(var i=1;i<=N;i++) pts.push(mk(ax, ay+i*SEG));
     iSplit=pts.length-1;
     var cy=ay+BANDLEN+DROP;
     pts.push(mk(ax-CLIPW/2, cy)); iL=pts.length-1;
     pts.push(mk(ax+CLIPW/2, cy)); iR=pts.length-1;
     sticks=[];
-    for(var s=0;s<iSplit;s++) sticks.push([s,s+1,SEG,1]);
-    var clipLeg=Math.sqrt((CLIPW/2)*(CLIPW/2)+DROP*DROP);   // brin en V faisable (triangle valide)
-    sticks.push([iSplit,iL,clipLeg,1]);
-    sticks.push([iSplit,iR,clipLeg,1]);
-    sticks.push([iL,iR,CLIPW,1]);
+    for(var s=0;s<iSplit;s++) sticks.push([s,s+1,SEG]);
+    var leg=Math.sqrt((CLIPW/2)*(CLIPW/2)+DROP*DROP);
+    sticks.push([iSplit,iL,leg]); sticks.push([iSplit,iR,leg]); sticks.push([iL,iR,CLIPW]);
   }
 
   function solve(st){
     var a=pts[st[0]], b=pts[st[1]], len=st[2];
     var dx=b.x-a.x, dy=b.y-a.y, d=Math.sqrt(dx*dx+dy*dy)||0.0001;
-    var diff=(len-d)/d*0.5*st[3], ox=dx*diff, oy=dy*diff;
+    var diff=(len-d)/d*0.5, ox=dx*diff, oy=dy*diff;
     if(!a.pin){ a.x-=ox; a.y-=oy; } if(!b.pin){ b.x+=ox; b.y+=oy; }
   }
   function clamp(n,min,max){ return Math.max(min,Math.min(max,n)); }
+  /* La carte reste dans la scène (colonne du badge et ses marges). */
   function containClip(){
     var Lp=pts[iL], Rp=pts[iR], midx=(Lp.x+Rp.x)/2, midy=(Lp.y+Rp.y)/2;
-    var minX=CARDW/2+10, maxX=W-CARDW/2-10;
-    if(maxX<minX){ minX=maxX=W/2; }
-    var cardH=card.offsetHeight||280, minY=54, maxY=Math.max(minY,H-cardH-14);
+    var minX=CARDW/2+6, maxX=W-CARDW/2-6; if(maxX<minX){ minX=maxX=W/2; }
+    var cardH=card.offsetHeight||250, minY=40, maxY=Math.max(minY,H-cardH-6);
     var dx=clamp(midx,minX,maxX)-midx, dy=clamp(midy,minY,maxY)-midy;
-    Lp.x+=dx; Lp.y+=dy; Rp.x+=dx; Rp.y+=dy;
-    Lp.ox+=dx; Lp.oy+=dy; Rp.ox+=dx; Rp.oy+=dy;
+    Lp.x+=dx; Lp.y+=dy; Rp.x+=dx; Rp.y+=dy; Lp.ox+=dx; Lp.oy+=dy; Rp.ox+=dx; Rp.oy+=dy;
   }
   function stabilizeClip(){
     var Lp=pts[iL], Rp=pts[iR], cx=(Lp.x+Rp.x)/2, cy=(Lp.y+Rp.y)/2;
-    var ang=clamp(Math.atan2(Rp.y-Lp.y,Rp.x-Lp.x),-1.05,1.05);
+    var ang=clamp(Math.atan2(Rp.y-Lp.y,Rp.x-Lp.x),-0.9,0.9);
     var hx=Math.cos(ang)*CLIPW/2, hy=Math.sin(ang)*CLIPW/2;
     var lx=cx-hx, ly=cy-hy, rx=cx+hx, ry=cy+hy;
     Lp.ox+=lx-Lp.x; Lp.oy+=ly-Lp.y; Rp.ox+=rx-Rp.x; Rp.oy+=ry-Rp.y;
     Lp.x=lx; Lp.y=ly; Rp.x=rx; Rp.y=ry;
   }
   function capVelocity(p,max){
-    var vx=p.x-p.ox, vy=p.y-p.oy, speed=Math.sqrt(vx*vx+vy*vy);
-    if(speed>max){ var k=max/speed; p.ox=p.x-vx*k; p.oy=p.y-vy*k; }
+    var vx=p.x-p.ox, vy=p.y-p.oy, sp=Math.sqrt(vx*vx+vy*vy);
+    if(sp>max){ var k=max/sp; p.ox=p.x-vx*k; p.oy=p.y-vy*k; }
   }
   function setDrag(){
-    pts[iL].x=gx+offL.x; pts[iL].y=gy+offL.y;
-    pts[iR].x=gx+offR.x; pts[iR].y=gy+offR.y;
+    pts[iL].x=gx+offL.x; pts[iL].y=gy+offL.y; pts[iR].x=gx+offR.x; pts[iR].y=gy+offR.y;
     containClip(); stabilizeClip();
   }
   function step(){
-    var g=0.6, damp=0.985;
-    var wind=(dragging||reduce)?0:(Math.sin(tt*0.9)*0.05+Math.sin(tt*0.37)*0.03);
+    var g=0.55, damp=0.982;
+    var wind=(dragging||reduce)?0:(Math.sin(tt*0.8)*0.035+Math.sin(tt*0.31)*0.02);
     for(var i=0;i<pts.length;i++){ var p=pts[i]; if(p.pin) continue;
-      var vx=(p.x-p.ox)*damp, vy=(p.y-p.oy)*damp;
-      p.ox=p.x; p.oy=p.y;
-      p.x+=vx+wind; p.y+=vy+g;
-    }
-    for(var k=0;k<18;k++){
-      pts[0].x=W/2; pts[0].y=4;
-      if(dragging) setDrag();
-      for(var j=0;j<sticks.length;j++) solve(sticks[j]);
-    }
-    pts[0].x=W/2; pts[0].y=4;
-    if(dragging) setDrag();
+      var vx=(p.x-p.ox)*damp, vy=(p.y-p.oy)*damp; p.ox=p.x; p.oy=p.y; p.x+=vx+wind; p.y+=vy+g; }
+    for(var k=0;k<16;k++){ pts[0].x=W/2; pts[0].y=0; if(dragging) setDrag(); for(var j=0;j<sticks.length;j++) solve(sticks[j]); }
+    pts[0].x=W/2; pts[0].y=0; if(dragging) setDrag();
     stabilizeClip(); containClip();
   }
 
-  function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
-  function strapPath(){
-    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
-    for(var i=1;i<=iSplit;i++) ctx.lineTo(pts[i].x,pts[i].y);
-    var mx=(pts[iL].x+pts[iR].x)/2, my=(pts[iL].y+pts[iR].y)/2; ctx.lineTo(mx,my);
-  }
+  /* ---- Dessin : lanière tissée, mousqueton, anneau ---- */
   function centerline(){
-    var P=[]; for(var i=0;i<=iSplit;i++) P.push({x:pts[i].x,y:pts[i].y});
-    P.push({x:(pts[iL].x+pts[iR].x)/2, y:(pts[iL].y+pts[iR].y)/2});
-    return P;
+    var P=[]; for(var i=0;i<=iSplit;i++) P.push({x:pts[i].x,y:pts[i].y}); return P;
   }
-  function ribbonPath(P,hw){
-    var Lt=[],Rt=[],i,pv,nx2,dx,dy,len,nx,ny;
-    for(i=0;i<P.length;i++){
-      pv=P[i>0?i-1:0]; nx2=P[i<P.length-1?i+1:P.length-1];
-      dx=nx2.x-pv.x; dy=nx2.y-pv.y; len=Math.sqrt(dx*dx+dy*dy)||1; nx=-dy/len; ny=dx/len;
-      Lt.push({x:P[i].x+nx*hw, y:P[i].y+ny*hw});
-      Rt.push({x:P[i].x-nx*hw, y:P[i].y-ny*hw});
+  function offsetLine(P,d){
+    var out=[];
+    for(var i=0;i<P.length;i++){
+      var a=P[i>0?i-1:0], b=P[i<P.length-1?i+1:P.length-1], dx=b.x-a.x, dy=b.y-a.y, l=Math.sqrt(dx*dx+dy*dy)||1;
+      out.push({x:P[i].x-dy/l*d, y:P[i].y+dx/l*d});
     }
+    return out;
+  }
+  function ribbon(P,hw){
+    var Lt=offsetLine(P,hw), Rt=offsetLine(P,-hw), i;
     ctx.beginPath(); ctx.moveTo(Lt[0].x,Lt[0].y);
     for(i=1;i<Lt.length;i++) ctx.lineTo(Lt[i].x,Lt[i].y);
     for(i=Rt.length-1;i>=0;i--) ctx.lineTo(Rt[i].x,Rt[i].y);
     ctx.closePath();
   }
-  // texte répété imprimé le long de la sangle (suit la courbe)
-  function drawStrapText(P){
+  function polyline(P){ ctx.beginPath(); ctx.moveTo(P[0].x,P[0].y); for(var i=1;i<P.length;i++) ctx.lineTo(P[i].x,P[i].y); }
+  function strapText(P){
     var seg=[], total=0, i;
     for(i=1;i<P.length;i++){ var dx=P[i].x-P[i-1].x, dy=P[i].y-P[i-1].y, d=Math.sqrt(dx*dx+dy*dy); seg.push({a:P[i-1],b:P[i],len:d,start:total}); total+=d; }
-    if(total<24 || !seg.length) return;
+    if(total<30) return;
     function at(s){
-      for(var i=0;i<seg.length;i++){ var e=seg[i]; if(s<=e.start+e.len || i===seg.length-1){ var t=e.len?(s-e.start)/e.len:0; t=t<0?0:(t>1?1:t);
+      for(var i=0;i<seg.length;i++){ var e=seg[i]; if(s<=e.start+e.len || i===seg.length-1){ var t=e.len?(s-e.start)/e.len:0; t=clamp(t,0,1);
         return {x:e.a.x+(e.b.x-e.a.x)*t, y:e.a.y+(e.b.y-e.a.y)*t, ang:Math.atan2(e.b.y-e.a.y,e.b.x-e.a.x)}; } }
-      var e2=seg[seg.length-1]; return {x:e2.b.x,y:e2.b.y,ang:Math.atan2(e2.b.y-e2.a.y,e2.b.x-e2.a.x)};
     }
     ctx.save();
-    ctx.font='700 12px "Bebas Neue", Impact, sans-serif';
-    ctx.fillStyle='rgba(255,255,255,.92)';
+    ctx.font='400 11px "Bebas Neue", Impact, sans-serif';
+    ctx.fillStyle=ink==='#ffffff'?'rgba(255,255,255,.9)':'rgba(10,14,30,.82)';
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    var unit='LIGUE DES CHAMPIONS ★ ';
-    var s=16, idx=0, guard=0;
-    while(s < total-10 && guard<500){ guard++;
-      var ch=unit.charAt(idx%unit.length);
-      var w=ctx.measureText(ch).width;
-      if(ch!==' '){ var p=at(s+w/2); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.ang); ctx.fillText(ch,0,0); ctx.restore(); }
-      s += (ch===' ')? w*0.6 : (w+1.2);
-      idx++;
+    var unit=T('LIGUE DES CHAMPIONS  ★  ','CHAMPIONS LEAGUE  ★  '), s=26, idx=0, guard=0;
+    while(s<total-6 && guard<400){ guard++;
+      var ch=unit.charAt(idx%unit.length), w=ctx.measureText(ch).width;
+      if(ch!==' '){ var p=at(s+w/2); ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.ang); ctx.fillText(ch,0,0.5); ctx.restore(); }
+      s+=(ch===' ')?w*0.7:(w+1.6); idx++;
     }
     ctx.restore();
   }
+  function metal(x0,y0,x1,y1){
+    var g=ctx.createLinearGradient(x0,y0,x1,y1);
+    g.addColorStop(0,'#f4f7fb'); g.addColorStop(.45,'#b9c1cf'); g.addColorStop(.55,'#8d96a7'); g.addColorStop(1,'#dfe4ec');
+    return g;
+  }
   function render(){
     ctx.clearRect(0,0,W,H);
-    // halo d'ambiance aux couleurs du club, fondu dans le fond sombre (meilleure intégration)
-    var gcx=(pts[iL].x+pts[iR].x)/2, gcy=(pts[iL].y+pts[iR].y)/2+150;
-    var rg=ctx.createRadialGradient(gcx,gcy,8, gcx,gcy,250);
-    rg.addColorStop(0,'rgba('+clubCol+',0.20)');
-    rg.addColorStop(0.55,'rgba('+clubCol+',0.06)');
-    rg.addColorStop(1,'rgba('+clubCol+',0)');
-    ctx.fillStyle=rg; ctx.fillRect(gcx-260,gcy-260,520,520);
+    var P=centerline(), split=pts[iSplit], Lp=pts[iL], Rp=pts[iR];
+    var mx=(Lp.x+Rp.x)/2, my=(Lp.y+Rp.y)/2, ang=Math.atan2(Rp.y-Lp.y,Rp.x-Lp.x);
     ctx.lineCap='round'; ctx.lineJoin='round';
-    var P=centerline();
-    ribbonPath(P,11.5); ctx.fillStyle='rgba(0,0,0,.28)'; ctx.fill();                         // ombre de la sangle
-    ribbonPath(P,9.5);  ctx.fillStyle='rgb('+clubCol+')'; ctx.fill();                          // sangle (couleur club)
-    ribbonPath(P,9.5);  ctx.strokeStyle='rgba(0,0,0,.20)'; ctx.lineWidth=1.4; ctx.stroke();    // liseré
-    ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.lineWidth=2; strapPath(); ctx.stroke();       // brillance centrale
-    drawStrapText(P);                                                                          // « LIGUE DES CHAMPIONS ★ » répété
-    // clip métallique
-    var Lp=pts[iL], Rp=pts[iR], ang=Math.atan2(Rp.y-Lp.y,Rp.x-Lp.x);
-    ctx.save(); ctx.translate((Lp.x+Rp.x)/2,(Lp.y+Rp.y)/2); ctx.rotate(ang);
-    var cw=CLIPW+18, ch=14, grd=ctx.createLinearGradient(0,-ch/2,0,ch/2);
-    grd.addColorStop(0,'#eef2f8'); grd.addColorStop(.5,'#aab3c4'); grd.addColorStop(1,'#79808f');
-    ctx.fillStyle=grd; roundRect(-cw/2,-ch/2,cw,ch,5); ctx.fill();
+    // lanière : ombre portée douce, tissu aux couleurs du club, coutures, texte
+    ctx.save(); ctx.translate(2,3); ribbon(P,8.5); ctx.fillStyle='rgba(0,0,0,.30)'; ctx.fill(); ctx.restore();
+    ribbon(P,8); ctx.fillStyle='rgb('+clubCol+')'; ctx.fill();
+    ribbon(P,8); ctx.save(); ctx.clip();
+    ctx.globalAlpha=.16; for(var k=-1;k<=1;k+=2){ polyline(offsetLine(P,k*3)); ctx.strokeStyle=k<0?'#fff':'#000'; ctx.lineWidth=5; ctx.stroke(); }
     ctx.restore();
-    // position de la carte
-    var midx=(Lp.x+Rp.x)/2, midy=(Lp.y+Rp.y)/2;
-    card.style.transform='translate('+(midx-CARDW/2)+'px,'+midy+'px) rotate('+ang+'rad)';
+    ctx.setLineDash([2.5,2.5]); ctx.lineWidth=.9; ctx.strokeStyle=ink==='#ffffff'?'rgba(255,255,255,.45)':'rgba(0,0,0,.35)';
+    polyline(offsetLine(P,6)); ctx.stroke(); polyline(offsetLine(P,-6)); ctx.stroke(); ctx.setLineDash([]);
+    strapText(P);
+    // embout cousu au bout de la lanière
+    ctx.save(); ctx.translate(split.x,split.y); ctx.rotate(Math.atan2(split.y-P[P.length-2].y,split.x-P[P.length-2].x)-Math.PI/2);
+    ctx.fillStyle=metal(-9,0,9,0); ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-9,-7,18,9,2) : ctx.rect(-9,-7,18,9); ctx.fill();
+    ctx.restore();
+    // anneau pivotant puis mousqueton jusqu'à la fente de la carte
+    ctx.lineWidth=2.6; ctx.strokeStyle=metal(split.x-6,split.y,split.x+6,split.y);
+    ctx.beginPath(); ctx.arc(split.x,split.y+5,4.5,0,Math.PI*2); ctx.stroke();
+    var cx=mx, cy=my+6;
+    ctx.save(); ctx.translate(split.x,split.y+9);
+    var dxc=cx-split.x, dyc=cy-(split.y+9), lc=Math.sqrt(dxc*dxc+dyc*dyc)||1; ctx.rotate(Math.atan2(dyc,dxc)-Math.PI/2);
+    ctx.fillStyle=metal(-5,0,5,0); ctx.beginPath();
+    ctx.moveTo(-2.5,0); ctx.lineTo(2.5,0); ctx.lineTo(5,lc*0.45); ctx.quadraticCurveTo(5,lc,0,lc+2); ctx.quadraticCurveTo(-5,lc,-5,lc*0.45); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='rgba(20,26,40,.55)'; ctx.beginPath(); ctx.ellipse(0,lc*0.62,1.8,lc*0.22,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    // carte : son bord haut passe sous le mousqueton
+    card.style.transform='translate('+(mx-CARDW/2)+'px,'+(my-2)+'px) rotate('+ang+'rad)';
+    card.style.setProperty('--tilt', (ang*40).toFixed(1)+'%');
   }
 
   var raf=null;
   function loop(){
     raf=requestAnimationFrame(loop);
-    if(document.hidden) return;
-    if(getComputedStyle(host).display==='none') return;
+    if(document.hidden || !visible()) return;
     tt+=0.016; step(); render();
   }
 
+  /* ---- Contenu de la carte ---- */
+  function lum(rgb){ var c=rgb.split(',').map(function(v){ v=(+v)/255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); }); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; }
+  /* Code-barres décoratif, propre à chaque club (déterministe). */
+  function barcode(seed){
+    var h=0, s=String(seed||'LDC'); for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0;
+    var x=0, stops=[];
+    for(var b=0;b<30 && x<100;b++){ h=(h*1103515245+12345)>>>0; var w=1+(h>>>16)%3, gap=1+(h>>>8)%2;
+      stops.push('#0b1020 '+x+'px '+(x+w)+'px','transparent '+(x+w)+'px '+(x+w+gap)+'px'); x+=w+gap; }
+    return 'linear-gradient(90deg,'+stops.join(',')+')';
+  }
+  function fitName(){
+    var n=card.querySelector('.lc-name'); if(!n) return;
+    var size=26; n.style.fontSize=size+'px';
+    while((n.scrollWidth>n.clientWidth || n.scrollHeight>size*2.3) && size>15){ size--; n.style.fontSize=size+'px'; }
+  }
   function refresh(){
     var f=(window.ESPN&&ESPN.getFav)?ESPN.getFav():null;
     clubCol=(window.ESPN&&ESPN.favAccent&&ESPN.favAccent())||'245,181,10';
-    card.style.setProperty('--club', clubCol);
-    var crest, name, abbr, tag;
-    if(f){ crest=f.logo||'logo.svg?v=4'; name=f.name||''; abbr=(f.abbr||'LDC').toUpperCase(); tag=T('Supporter','Supporter'); }
-    else { crest='logo.svg?v=4'; name=T('Mon club','My club'); abbr='LDC'; tag=T('Choisis ton équipe','Pick your team'); }
-    card.innerHTML='<div class="lc-inner">'+
-        '<span class="lc-hole"></span>'+
-        '<div class="lc-band"><span>LIGUE DES CHAMPIONS</span></div>'+
+    ink=lum(clubCol)>0.42?'#0b1020':'#ffffff';
+    var season=(window.ESPN&&ESPN.seasonLabel)?ESPN.seasonLabel():'2026–27';
+    var crest=f?(f.logo||'logo.svg?v=4'):'logo.svg?v=4';
+    var name=f?f.name:T('Mon club','My club');
+    var role=f?T('Supporter','Supporter'):T('Choisis ton équipe','Pick your team');
+    var code=(f?(f.abbr||'').toUpperCase():'')||'LDC';
+    card.classList.toggle('is-empty',!f);
+    card.title=f?'':T('Choisir mon équipe','Choose my team');
+    card.innerHTML='<div class="lc-inner" style="--club:'+clubCol+';--ink:'+ink+'">'+
+        '<span class="lc-slot"></span>'+
+        '<div class="lc-head">'+
+          '<span class="lc-brand"><img src="logo.svg?v=4" alt=""><span>'+esc(T('Ligue des','Champions'))+'<br>'+esc(T('Champions','League'))+'</span></span>'+
+          '<span class="lc-season">'+esc(season)+'</span>'+
+        '</div>'+
         '<div class="lc-crest"><img src="'+esc(crest)+'" alt="" onerror="this.onerror=null;this.src=\'logo.svg?v=4\'"></div>'+
-        '<div class="lc-name">'+esc(name)+'</div>'+
-        '<div class="lc-tag">'+esc(tag)+' · 2026-27</div>'+
-        '<div class="lc-foot"><img class="lc-logo" src="logo.svg?v=4" alt=""><span class="lc-abbr">'+esc(abbr)+'</span></div>'+
+        '<div class="lc-body">'+
+          '<div class="lc-name">'+esc(name)+'</div>'+
+          '<div class="lc-role">'+esc(role)+'</div>'+
+          '<div class="lc-foot"><span class="lc-code">'+esc(code)+' · '+esc(season.replace('–','/'))+'</span><span class="lc-bar" style="background:'+barcode(f?f.id:'LDC')+'"></span></div>'+
+        '</div>'+
+        '<span class="lc-holo"></span>'+
       '</div>';
+    fitName();
   }
 
-  // ---- drag ----
+  /* ---- Saisie : glisser pour lancer ; un simple clic sans favori ouvre le choix ---- */
   card.addEventListener('pointerdown', function(e){
     dragging=true; card.classList.add('grabbing');
     try{ card.setPointerCapture(e.pointerId); }catch(_){}
-    var p=local(e); gx=p.x; gy=p.y;
-    offL={x:pts[iL].x-gx, y:pts[iL].y-gy};
-    offR={x:pts[iR].x-gx, y:pts[iR].y-gy};
+    var p=local(e); gx=p.x; gy=p.y; down={x:e.clientX,y:e.clientY,t:Date.now()};
+    offL={x:pts[iL].x-gx, y:pts[iL].y-gy}; offR={x:pts[iR].x-gx, y:pts[iR].y-gy};
     pts[iL].pin=true; pts[iR].pin=true;
     e.preventDefault();
   });
   window.addEventListener('pointermove', function(e){
     if(!dragging) return;
-    pts[iL].ox=pts[iL].x; pts[iL].oy=pts[iL].y;
-    pts[iR].ox=pts[iR].x; pts[iR].oy=pts[iR].y;
+    pts[iL].ox=pts[iL].x; pts[iL].oy=pts[iL].y; pts[iR].ox=pts[iR].x; pts[iR].oy=pts[iR].y;
     var p=local(e); gx=p.x; gy=p.y; setDrag();
   });
-  function endDrag(){
+  function endDrag(e){
     if(!dragging) return;
     dragging=false; card.classList.remove('grabbing');
-    capVelocity(pts[iL],16); capVelocity(pts[iR],16);
+    capVelocity(pts[iL],14); capVelocity(pts[iR],14);
     pts[iL].pin=false; pts[iR].pin=false;
+    if(e && e.type==='pointerup' && down && Math.abs(e.clientX-down.x)<5 && Math.abs(e.clientY-down.y)<5 && Date.now()-down.t<450){
+      var choose=document.getElementById('favChoose'); if(choose && !(window.ESPN&&ESPN.getFav())) choose.click();
+    }
+    down=null;
   }
   window.addEventListener('pointerup', endDrag);
   window.addEventListener('pointercancel', endDrag);
   window.addEventListener('blur', endDrag);
 
   var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt=setTimeout(build, 200); });
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitName);
 
   build(); refresh(); loop();
   return { refresh:refresh, rebuild:build };
