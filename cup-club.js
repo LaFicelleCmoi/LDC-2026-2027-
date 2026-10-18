@@ -69,7 +69,9 @@
       var n=d.next;
       cols+='<div class="mc-box"><div class="mc-box-t">'+esc(T('Prochain match','Next match'))+'</div>'+
         '<div class="mc-next" data-mp-open="'+esc(n.id)+'" tabindex="0" role="button" title="'+esc(T('Fiche du match','Match details'))+'">'+crest(n.opp.logo,'mc-nlogo')+'<div><div class="mc-next-opp">'+esc(where(n.home))+' '+esc(n.opp.name)+'</div>'+
-        '<div class="mc-next-when">'+esc(roundOf(n))+' · '+esc(longDate(n.time))+'</div></div></div></div>';
+        '<div class="mc-next-when">'+esc(roundOf(n))+' · '+esc(longDate(n.time))+'</div></div></div>'+
+        (n.odds && window.LDCMatchPanel && LDCMatchPanel.probBar ? '<div class="mc-probs">'+LDCMatchPanel.probBar(n.odds, n.home?(fav.abbr||fav.name):(n.opp.abbr||n.opp.name), n.home?(n.opp.abbr||n.opp.name):(fav.abbr||fav.name), 'sm')+
+          '<p class="mp-note">'+esc(T('Probabilités du marché (cotes '+(n.odds.provider||'')+' via ESPN, sans marge). Indicatif.','Market probabilities ('+(n.odds.provider||'')+' odds via ESPN, margin removed). Indicative.'))+'</p></div>' : '')+'</div>';
     }
     var TH=window.LDCThresholds, left=d.upcoming.filter(function(r){ return r.round==='league'; }).length;
     if(TH && st && left>0){
