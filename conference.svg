@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="160 46 222 222" role="img" aria-label="Conference League">
+  <!-- Emblème de la Conference League (trophée blanc entre deux arcs verts),
+       redessiné en vectoriel ; fond sombre pour rester visible sur un onglet clair. -->
+  <rect x="160" y="46" width="222" height="222" rx="44" fill="#0b1020"/>
+  <g fill="none" stroke="#19c44f" stroke-width="17">
+    <path d="M214 96 A92 92 0 0 0 214 240"/>
+    <path d="M328 96 A92 92 0 0 1 328 240"/>
+  </g>
+  <g fill="#fff">
+    <path d="M224 62 L319 62 C316 108 301 150 289 180 L254 180 C242 150 227 108 224 62 Z"/>
+    <path d="M259 186 L284 186 C285 212 292 234 304 248 L239 248 C251 234 258 212 259 186 Z"/>
+    <rect x="237" y="252" width="69" height="11" rx="1"/>
+  </g>
+  <g stroke="#0b1020" stroke-width="3.6" stroke-linecap="round">
+    <path d="M246 64 L263 176"/><path d="M262 64 L268 176"/><path d="M281 64 L275 176"/><path d="M297 64 L280 176"/>
+  </g>
+</svg>
