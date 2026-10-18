@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Soirée européenne — Tracker</title>
+<meta name="description" content="Tous les matchs du jour en Ligue des Champions, Europa League et Conference League, en direct. Projet de fan non officiel, données ESPN." />
+<link rel="icon" href="logo.svg?v=4" type="image/svg+xml" />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
+<link rel="stylesheet" href="styles.css?v=21" />
+<link rel="stylesheet" href="clubpanel.css?v=7" />
+<link rel="stylesheet" href="matchpanel.css?v=1" />
+<link rel="stylesheet" href="france.css?v=1" />
+<link rel="stylesheet" href="soiree.css?v=1" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="soiree.html">
+    <span class="sr-logo" aria-hidden="true">🌙</span>
+    <span><span class="t1" id="srBrand">Soirée européenne</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="soiree.html" class="active" id="navSr">Soirée européenne</a>
+    <a href="france.html" id="navFr">Clubs français</a>
+    <a href="dashboard.html" class="nav-comp"><img src="logo.svg?v=4" alt="" width="16" height="16"><span id="navUcl">Ligue des Champions</span></a>
+    <a href="europa.html" class="nav-comp"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
+    <a href="conference.html" class="nav-comp"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+    <a href="comparateur.html" id="navCmp">Comparateur</a>
+  </nav>
+  <div class="header-right">
+    <span id="liveFlag" style="display:none"><span class="dot live"></span></span>
+    <div class="lang-switch" id="langSwitch"></div>
+  </div>
+</header>
+
+<main class="container sr-page">
+  <section class="fr-hero sr-hero">
+    <h1 id="srTitle">Soirée européenne</h1>
+    <p id="srSub">Tous les matchs du jour en Ligue des Champions, Europa League et Conference League.</p>
+  </section>
+
+  <div class="sr-bar">
+    <div class="sr-days">
+      <button class="btn" type="button" id="srPrev" aria-label="Jour de match précédent">‹</button>
+      <div class="sr-day"><b id="srDay">—</b><span id="srSum"></span></div>
+      <button class="btn" type="button" id="srNext" aria-label="Jour de match suivant">›</button>
+    </div>
+    <div class="sr-chips" id="srChips" role="group" aria-label="Filtrer">
+      <button type="button" class="sr-chip on" data-f="all" aria-pressed="true"><span>Toutes</span></button>
+      <button type="button" class="sr-chip" data-f="ucl" aria-pressed="false"><img src="logo.svg?v=4" alt=""><span>LDC</span></button>
+      <button type="button" class="sr-chip" data-f="uel" aria-pressed="false"><img src="europa.svg?v=2" alt=""><span>Europa League</span></button>
+      <button type="button" class="sr-chip" data-f="uecl" aria-pressed="false"><img src="conference.svg?v=1" alt=""><span>Conference League</span></button>
+      <button type="button" class="sr-chip" data-f="fr" aria-pressed="false"><i class="fr-mini" aria-hidden="true"></i><span>Clubs français</span></button>
+    </div>
+  </div>
+
+  <div id="srList" aria-live="polite"><p class="fr-empty" data-i18n="common.loading">Chargement…</p></div>
+</main>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script src="i18n.js?v=27"></script>
+<script src="standings-engine.js?v=1"></script>
+<script src="coefficients2026.js?v=1"></script>
+<script src="espn.js?v=25"></script>
+<script src="cupclubs2026.js?v=1"></script>
+<script src="matchpanel.js?v=1"></script>
+<script src="goalalert.js?v=1"></script>
+<script src="soiree.js?v=1"></script>
+</body>
+</html>
