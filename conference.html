@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr" data-comp="uecl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Accueil — Conference League</title>
+<meta name="description" content="Conference League 2026-27 : scores en direct, journée en cours, classement de la phase de ligue et fiche de chaque club. Projet de fan non officiel, données ESPN." />
+<link rel="icon" href="conference.svg?v=1" type="image/svg+xml" />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link rel="stylesheet" href="styles.css?v=21" />
+<link rel="stylesheet" href="clubpanel.css?v=5" />
+<link rel="stylesheet" href="cup.css?v=1" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="conference.html">
+    <span class="star">★</span>
+    <span><span class="t1" data-i18n="uecl.title">Tracker Conference League</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="conference.html" class="active" data-i18n="nav.dashboard">Accueil</a>
+    <a href="conference-classement.html" data-i18n="nav.tracker">Classement</a>
+    <a href="europa.html" class="nav-cup to-uel"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
+    <a href="dashboard.html" class="nav-ucl"><img src="logo.svg?v=4" alt="" width="16" height="16"><span data-i18n="uel.toUcl">← Ligue des Champions</span></a>
+  </nav>
+  <div class="header-right">
+    <span id="liveFlag" style="display:none"><span class="dot live"></span></span>
+    <div class="lang-switch" id="langSwitch"></div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="cup-hero">
+    <img class="cup-hero-logo" src="conference.svg?v=1" alt="" width="72" height="72">
+    <div>
+      <h1>Conference League</h1>
+      <p id="heroSub">Scores en direct, journée en cours et classement de la phase de ligue.</p>
+      <span class="season-chip" id="seasonChip">2026–27</span>
+    </div>
+    <div class="cup-hero-cta">
+      <a class="cup-cta" href="conference-classement.html" id="ctaTable">Classement complet →</a>
+      <a class="cup-cta ghost" href="dashboard.html" id="ctaUcl">← Ligue des Champions</a>
+    </div>
+  </section>
+
+  <section class="uf" id="favSection" aria-label="Club favori"></section>
+
+  <div id="offlineNotice" class="notice" style="display:none;">
+    <span>⚠️</span><span data-i18n="common.offline">Données indisponibles — dernier affichage conservé</span>
+  </div>
+
+  <!-- ====== Journée ====== -->
+  <section class="section" aria-labelledby="mdTitle">
+    <div class="section-head">
+      <h2 id="mdTitle">Matchs</h2>
+      <span class="sub" id="mdSync"></span>
+      <div class="md-nav">
+        <button class="btn" type="button" id="mdPrev" aria-label="Journée précédente">‹</button>
+        <span class="md-label" id="mdLabel" aria-live="polite">—</span>
+        <button class="btn" type="button" id="mdNext" aria-label="Journée suivante">›</button>
+      </div>
+    </div>
+    <div class="um-grid" id="mdGrid"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
+  </section>
+
+  <!-- ====== Classement + chiffres ====== -->
+  <div class="cup-cols">
+    <section class="section" aria-labelledby="topTitle">
+      <div class="section-head"><h2 id="topTitle">Top 8</h2><span class="sub" id="topSub"></span></div>
+      <div class="card pad">
+        <table class="mini-table">
+          <thead><tr><th>#</th><th style="text-align:left" data-i18n="trk.col.club">Club</th><th data-i18n="trk.col.pld">J</th><th data-i18n="trk.col.gd">Diff</th><th data-i18n="trk.col.pts">Pts</th></tr></thead>
+          <tbody id="topBody"><tr><td colspan="5" class="empty-state" data-i18n="common.loading">Chargement…</td></tr></tbody>
+        </table>
+        <div class="mini-foot"><span id="topNote"></span><a href="conference-classement.html" id="topLink">Les 36 clubs →</a></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="statsTitle">
+      <div class="section-head"><h2 id="statsTitle">La saison en chiffres</h2></div>
+      <div class="card pad">
+        <div class="cup-stats" id="statsBody"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
+        <p class="cup-note" id="statsNote"></p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="uf-backdrop" id="favModal" hidden>
+  <div class="uf-modal" role="dialog" aria-modal="true" aria-labelledby="favModalTitle">
+    <button type="button" class="uf-x" id="favModalClose" aria-label="Fermer">×</button>
+    <h2 class="uf-mtitle" id="favModalTitle">★ Choisis ton club favori</h2>
+    <p class="uf-msub" id="favModalSub"></p>
+    <input class="uf-search" id="favSearch" type="search" autocomplete="off" spellcheck="false">
+    <div class="uf-grid" id="favGrid"></div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="dashboard.html" data-i18n="uel.toUcl">← Ligue des Champions</a>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script>window.LDC_LEAGUE = 'uefa.europa.conf';</script>
+<script src="i18n.js?v=27"></script>
+<script src="standings-engine.js?v=1"></script>
+<script src="espn.js?v=21"></script>
+<script src="schedule.js?v=2"></script>
+<script src="thresholds.js?v=3"></script>
+<script src="clubpanel.js?v=4"></script>
+<script src="cup.js?v=1"></script>
+</body>
+</html>
