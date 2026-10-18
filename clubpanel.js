@@ -228,6 +228,16 @@
     '</section>';
   }
 
+  /* Chances estimées (chances.js), calculées sur les matchs de la fiche. */
+  function chancesLine() {
+    if (!window.LDCChances || !state.ctx || !state.ctx.standings) return '';
+    var ch = LDCChances.cached(currentMatches(), state.ctx.standings.map(function (r) { return { id: r.teamId }; }));
+    var c = ch && ch[String(state.id)]; if (!c) return '';
+    return '<p class="cp-chances"><span>' + esc(T('Chances estimées', 'Estimated chances')) + '</span>' +
+      '<b>' + esc(T('Top 8 : ', 'Top 8: ') + LDCChances.pct(c.top8)) + '</b><b>' + esc(T('Top 24 : ', 'Top 24: ') + LDCChances.pct(c.top24)) + '</b>' +
+      '<small>' + esc(T('3 000 simulations des matchs restants, à titre indicatif', '3,000 simulations of the remaining matches, indicative only')) + '</small></p>';
+  }
+
   function currentMatches() {
     var f = state.fresh;
     return (f && Date.now() - f.at < FRESH_MAX_AGE) ? mergeFresh(state.ctx.matches, f.matches) : state.ctx.matches;
@@ -300,6 +310,7 @@
       html += '<section class="cp-sec"><h3>' + esc(T('Objectifs', 'Targets')) + '</h3>' +
         objRow(ob.top8, T('Top 8 · huitièmes directs', 'Top 8 · direct to R16'), 'o-q', TH.lastNote('top8', isEn())) +
         objRow(ob.top24, T('Top 24 · barrages', 'Top 24 · play-offs'), 'o-po', TH.lastNote('top24', isEn())) +
+        chancesLine() +
         '<p class="cp-legend">' + esc(T('Seuils réels des deux dernières phases de ligue : le 8e avait ' + TH.trend('top8') + ', le 24e ' + TH.trend('top24') + '. Indicatif : ils varient d’une saison à l’autre.',
                                         'Actual thresholds of the last two league phases: 8th place had ' + TH.trend('top8', true) + ', 24th had ' + TH.trend('top24', true) + '. Indicative: they vary from season to season.')) + '</p>' +
         '</section>';
