@@ -59,8 +59,6 @@
   .cal-score .cal-vs{ color:var(--muted-2); font-weight:700; }
   .cal-score .pen{ display:block; font-size:9px; color:var(--accent); font-weight:700; }
   .cal-score .cal-agg{ display:block; margin-top:2px; font-size:9px; font-weight:800; letter-spacing:.02em; color:var(--upcoming); white-space:nowrap; }
-  .cal-probs{ grid-column:2 / 5; }
-  @media (max-width:560px){ .cal-probs{ grid-column:1 / -1; } }
   .cal-status{ font-size:10px; text-align:center; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
   .cal-status .live{ color:var(--live); font-weight:800; }
   .cal-status .ft{ color:var(--finished); font-weight:800; }
@@ -273,7 +271,6 @@
       '<button type="button" class="cal-score" data-mp-open="'+esc(m.id)+'" title="'+esc(I18N.getLang()==='en'?'Match details':'Fiche du match')+'">'+score+aggLine+'</button>'+
       side(m.away,'away')+
       '<div class="cal-status">'+status+'</div>'+
-      (window.LDCMatchPanel&&LDCMatchPanel.probBar&&m.state==='pre'&&m.odds?'<div class="cal-probs">'+LDCMatchPanel.probBar(m.odds, m.home.abbr||m.home.name, m.away.abbr||m.away.name, 'sm')+'</div>':'')+
     '</div>';
   }
 
