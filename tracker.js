@@ -146,7 +146,7 @@
           (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
           (isFav?'<span class="tbl-fav">★</span>':'')+
           '<span class="nm">'+esc(t.name)+'</span>'+liveCell(t,liveMap)+
-          (function(){ var c=ESPN.clubTitlesById(t.teamId); return c?'<span class="tbl-cup" title="'+c.n+' '+esc(I18N.t('pal.titlesN'))+' — LDC">🏆'+c.n+'</span>':''; })()+
+          (function(){ var c=ESPN.clubTitlesById(t.teamId); return c?'<span class="tbl-cup" title="'+c.n+' '+esc(I18N.t('pal.titlesN'))+' — '+esc(lang()==='en'?ESPN.COMP.en:ESPN.COMP.fr)+'">🏆'+c.n+'</span>':''; })()+
           '</span></td>'+
         '<td>'+t.pld+'</td><td>'+t.w+'</td><td>'+t.d+'</td><td>'+t.l+'</td>'+
         '<td>'+t.gf+'</td><td>'+t.ga+'</td>'+
