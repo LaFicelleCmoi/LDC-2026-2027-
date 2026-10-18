@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr" data-comp="uel">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calendrier — Europa League</title>
+<link rel="icon" href="europa.svg?v=2" type="image/svg+xml" />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="styles.css?v=21" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
+<link rel="stylesheet" href="clubpanel.css?v=5">
+<link rel="stylesheet" href="cup.css?v=5" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="europa.html">
+    <span class="star">★</span>
+    <span><span class="t1" data-i18n="uel.title">Tracker Europa League</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="europa.html" data-i18n="nav.dashboard">Accueil</a>
+    <a href="europa-classement.html" data-i18n="nav.tracker">Classement</a>
+    <a href="europa-calendrier.html" class="active" data-i18n="nav.calendar">Calendrier</a>
+    <div id="seasonDD"></div>
+    <a href="europa-monclub.html" data-i18n="nav.myclub">Mon club</a>
+    <a href="conference.html" class="nav-cup to-uecl" data-noseason><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+    <a href="dashboard.html" class="nav-ucl" data-noseason><img src="logo.svg?v=4" alt="" width="16" height="16"><span data-i18n="uel.toUcl">← Ligue des Champions</span></a>
+  </nav>
+  <div class="header-right">
+    <span id="liveFlag" style="display:none;font-size:11px;font-weight:800;color:var(--live);"><span class="dot live"></span></span>
+    <div class="lang-switch" id="langSwitch"></div>
+  </div>
+</header>
+
+<main class="container">
+  <h1 class="page-title"><span class="shiny" data-i18n="cal.title">Calendrier</span><span class="season-chip" id="season-chip"></span></h1>
+  <p class="page-sub" id="calSub">Tous les matchs de la saison, par journée</p>
+
+  <div class="souvenir-banner" id="souvenir-banner">
+    <span class="sb-label" id="souvenir-banner-label">Souvenir</span>
+    <a href="europa-calendrier.html" data-noseason data-i18n="souvenir.back">← Saison actuelle</a>
+  </div>
+
+  <div class="cal-view-switch" id="cal-view-switch" role="group" aria-label="Choisir la vue">
+    <button class="cal-view-btn" id="cal-view-draw" type="button" aria-pressed="false">◆ Adversaires</button>
+    <button class="cal-view-btn" id="cal-view-matches" type="button" aria-pressed="true">📅 Calendrier des rencontres</button>
+  </div>
+
+  <div class="cal-filters cal-wrap">
+    <select class="cal-select" id="cal-team" aria-label="Filtrer par club"><option value="" data-i18n="cal.allClubs">Tous les clubs</option></select>
+    <button class="cal-myteam" id="cal-myteam" type="button" style="display:none">★ <span data-i18n="fav.myTeam">Mon équipe</span></button>
+    <button class="cal-myteam" id="cal-ics" type="button" title="Google Agenda, Apple Calendar, Outlook…">📆 <span id="calIcsLbl">Exporter (.ics)</span></button>
+  </div>
+
+  <button class="cal-next" id="cal-next" type="button" style="display:none">⤓ <span id="calNextLbl">Prochain match</span></button>
+
+  <div class="cal-wrap" id="cal-body">
+    <div class="empty-state" data-i18n="common.loading">Chargement…</div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="dashboard.html" data-noseason data-i18n="uel.toUcl">← Ligue des Champions</a>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script>window.LDC_LEAGUE = 'uefa.europa';</script>
+<script src="i18n.js?v=27"></script>
+<script src="standings-engine.js?v=1"></script>
+<script src="espn.js?v=23"></script>
+<script src="schedule.js?v=2"></script>
+<script src="thresholds.js?v=3"></script>
+<script src="clubpanel.js?v=4"></script>
+<script src="cup-calendar.js?v=1"></script>
+</body>
+</html>
