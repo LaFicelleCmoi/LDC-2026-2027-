@@ -61,6 +61,9 @@ body{ background:var(--bg); }
 .cup-cta.ghost{ background:transparent; color:var(--txt); border-color:var(--line-2); }
 .cup-cta.ghost:hover{ border-color:var(--cup); filter:none; }
 .cup-cta:focus-visible{ outline:2px solid var(--cup); outline-offset:2px; }
+.cup-more{ text-align:center; font-size:12.5px; font-weight:700; color:var(--muted); }
+.cup-more a{ color:var(--txt); text-decoration:underline; text-underline-offset:3px; }
+.cup-more a:hover{ color:var(--cup); }
 
 /* ---- Navigation par journée -------------------------------------------- */
 .md-nav{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-left:auto; }
@@ -187,6 +190,8 @@ body{ background:var(--bg); }
   font:inherit; font-size:12px; font-weight:800; cursor:pointer; }
 .simbar .btn-mini:hover{ color:#fff; border-color:rgb(var(--gold-rgb)); }
 .live-card.can-sim{ cursor:pointer; }
+.live-card.state-in, .live-card.state-post{ cursor:pointer; }
+.lc-foot-l{ display:inline-flex; align-items:center; gap:8px; }
 .live-card.is-simmed{ border-color:rgba(var(--gold-rgb),.75); }
 .sim-editor{ display:flex; align-items:center; justify-content:center; gap:7px; }
 .sim-editor input{ width:44px; padding:5px 0; border:1px solid rgba(255,255,255,.12); border-radius:8px; background:#0b1329; color:#fff;
@@ -277,6 +282,9 @@ body{ background:var(--bg); }
 .mc-fix li{ display:flex; align-items:center; gap:9px; padding:8px 0; font-size:14px; }
 .mc-fix li + li{ border-top:1px solid var(--line); }
 .mc-fix .cp-badge{ width:26px; height:26px; font-size:12px; }
+.mc-page [data-mp-open]{ cursor:pointer; }
+.mc-page li[data-mp-open]:hover, .mc-next[data-mp-open]:hover{ background:rgba(255,255,255,.04); border-radius:8px; }
+.mc-page [data-mp-open]:focus-visible{ outline:2px solid var(--cup); outline-offset:2px; border-radius:8px; }
 .mc-md{ min-width:36px; font-size:12px; font-weight:800; color:var(--cup); }
 .mc-ologo{ width:22px; height:22px; object-fit:contain; flex:none; }
 .mc-oname{ flex:1; min-width:0; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -355,7 +363,9 @@ body{ background:var(--bg); }
 .cal-side:focus-visible{ outline:2px solid var(--cup); outline-offset:2px; border-radius:6px; }
 .cal-side .nm{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cal-side img, .cal-side .nl{ width:22px; height:22px; object-fit:contain; flex-shrink:0; display:inline-block; }
-.cal-score{ text-align:center; font-weight:900; font-size:16px; font-variant-numeric:tabular-nums; }
+.cal-score{ text-align:center; font-weight:900; font-size:16px; font-variant-numeric:tabular-nums; padding:4px 2px; border:0; border-radius:8px; background:none; color:inherit; font-family:inherit; cursor:pointer; }
+.cal-score:hover{ background:rgba(255,255,255,.06); }
+.cal-score:focus-visible{ outline:2px solid var(--cup); outline-offset:1px; }
 .cal-score .cal-sep{ opacity:.5; margin:0 2px; }
 .cal-score .cal-vs{ color:var(--muted-2); font-weight:700; }
 .cal-score .pen{ display:block; font-size:9px; color:#6f9bff; font-weight:700; }
@@ -433,6 +443,8 @@ body{ background:var(--bg); }
 .uf-btn.primary{ background:var(--cup); color:var(--cup-ink); border-color:transparent; }
 .uf-btn.primary:hover{ filter:brightness(1.08); }
 .uf-btn:focus-visible{ outline:2px solid var(--cup); outline-offset:2px; }
+.uf-btn.on{ border-color:rgba(var(--gold-rgb),.65); background:rgba(var(--gold-rgb),.16); color:#fff; }
+.uf-hint{ flex-basis:100%; margin:2px 0 0; font-size:12px; color:var(--muted); }
 .uf-star{ color:rgb(var(--gold-rgb)); margin-right:5px; }
 
 /* Choix du club */
