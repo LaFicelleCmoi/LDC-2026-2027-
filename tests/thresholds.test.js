@@ -39,3 +39,31 @@ test('objectives : top 8 et top 24 d’un coup', () => {
   assert.equal(o.top24.missing, 5);
   assert.equal(o.top24.wins, 2);
 });
+
+/* ---- Europa League ------------------------------------------------------ */
+const UEL = T.forLeague('uefa.europa');
+const uelFx = require('./fixtures/uel-league-phases.json');
+
+test('Europa League : seuils = points réels du 8e, 9e, 24e et 25e des deux phases de ligue', () => {
+  for (const s of UEL.SEASONS) {
+    const ms = uelFx.seasons[s.season];
+    assert.equal(ms.length, 144, s.season + ' : 144 matchs');
+    const r = E.rankLeaguePhase(ms);
+    assert.deepEqual([r[7].pts, r[8].pts, r[23].pts, r[24].pts], [s.top8, s.ninth, s.top24, s.twentyFifth], s.season);
+  }
+  // recoupement presse 2025-26 : Lyon 1er, Aston Villa 2e (21 pts), Roma 8e (16)
+  const r = E.rankLeaguePhase(uelFx.seasons['2025-26']);
+  assert.deepEqual([r[0].name, r[1].name, r[1].pts, r[7].name, r[7].pts], ['Lyon', 'Aston Villa', 21, 'AS Roma', 16]);
+});
+
+test('Europa League : référence 16 / 10 pts, textes de repère tirés des données', () => {
+  assert.equal(UEL.LEAGUE, 'uefa.europa');
+  assert.equal(UEL.reference('top8'), 16);
+  assert.equal(UEL.reference('top24'), 10);
+  assert.equal(UEL.trend('top8'), '14 pts en 2024-25, puis 16 en 2025-26');
+  assert.equal(UEL.lastNote('top8'), '', 'le dernier seuil est la référence : pas de précision');
+  assert.equal(UEL.lastNote('top24'), '(9 pts ont suffi en 2025-26)');
+  assert.equal(T.trend('top8', true), '16 pts in both 2024-25 and 2025-26');
+  assert.equal(T.LEAGUE, 'uefa.champions', 'Ligue des Champions par défaut');
+  assert.equal(T.forLeague('inconnue').LEAGUE, 'uefa.champions');
+});
