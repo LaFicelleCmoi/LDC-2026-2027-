@@ -339,3 +339,15 @@ test('compétition : Conference League, clés locales et pages propres', () => {
   assert.equal(ESPN.clubTitlesById(86), null);
   assert.equal(ESPN.qualifiedClubs().length, 0);
 });
+
+test('forLeague : une instance par compétition, la compétition de la page inchangée', () => {
+  const ESPN = loadESPN('', {}, 'uefa.europa');
+  const conf = ESPN.forLeague('uefa.europa.conf'), ucl = ESPN.forLeague('uefa.champions');
+  assert.equal(ESPN.LEAGUE_SLUG, 'uefa.europa');
+  assert.match(conf.BASE, /\/uefa\.europa\.conf$/);
+  assert.equal(conf.STORE_NS, 'uecl_');
+  assert.equal(ucl.clubTitlesById(86).n, 15, 'palmarès LDC disponible via son instance');
+  assert.equal(ESPN.forLeague('uefa.europa.conf'), conf, 'instance réutilisée');
+  assert.equal(ESPN.forLeague('uefa.europa'), ESPN, 'la compétition de la page renvoie l’instance principale');
+  assert.equal(conf.forLeague('uefa.europa'), ESPN);
+});
