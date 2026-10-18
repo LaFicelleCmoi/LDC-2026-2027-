@@ -20,16 +20,21 @@
   /* ===== LA constante de compétition ===================================== */
   var COMPETITIONS = {
     'uefa.champions': { key: 'ucl', fr: 'Ligue des Champions', en: 'Champions League', earliest: 2001,
-                        home: 'dashboard.html', standings: 'tracker.html' },
+                        home: 'dashboard.html', standings: 'tracker.html', club: 'monclub.html' },
     /* Europa League et Conference League : seules les phases de ligue à 36
-       (depuis 2024-25) sont proposées ; les phases de groupes antérieures
-       n'ont pas de slug fiable. */
+       (depuis 2024-25) sont proposées au menu des saisons. historyFrom :
+       première saison exploitable pour le parcours d'un club (« Mon club ») ;
+       depuis 2021-22, les slugs ESPN des deux coupes sont propres (avant :
+       seizièmes de finale en Europa League, que l'API confond avec les
+       huitièmes ; la Conference League naît en 2021). */
     'uefa.europa':    { key: 'uel', fr: 'Europa League', en: 'Europa League', earliest: 2024,
-                        home: 'europa.html', standings: 'europa-classement.html' },
+                        home: 'europa.html', standings: 'europa-classement.html', club: 'europa-monclub.html',
+                        historyFrom: 2021 },
     /* Conference League : même format (36 clubs, top 8 / 9-24 / 25-36) mais
        6 journées au lieu de 8. */
     'uefa.europa.conf': { key: 'uecl', fr: 'Conference League', en: 'Conference League', earliest: 2024,
-                        home: 'conference.html', standings: 'conference-classement.html' }
+                        home: 'conference.html', standings: 'conference-classement.html', club: 'conference-monclub.html',
+                        historyFrom: 2021 }
   };
   var LEAGUE_SLUG = (global.LDC_LEAGUE && COMPETITIONS[global.LDC_LEAGUE]) ? global.LDC_LEAGUE : 'uefa.champions';
   var COMP = COMPETITIONS[LEAGUE_SLUG];
