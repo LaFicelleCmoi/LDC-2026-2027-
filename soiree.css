@@ -1,0 +1,31 @@
+/* =========================================================================
+   soiree.css — Page « Soirée européenne » (soiree.html), en complément de
+   france.css (lignes de match, cartouche). Chaque ligne est liserée de la
+   couleur de sa coupe (--c).
+   ========================================================================= */
+.brand .sr-logo{ width:34px; height:34px; flex:none; display:inline-flex; align-items:center; justify-content:center; font-size:22px; border-radius:10px; background:#141c3a; border:1px solid var(--line-2); }
+.sr-hero::before{ background:linear-gradient(180deg,#f5b50a 0 33.3%,#ff7a1a 33.3% 66.6%,#19c44f 66.6%); }
+.sr-bar{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin:0 0 18px; }
+.sr-days{ display:flex; align-items:center; gap:10px; }
+.sr-day{ display:flex; flex-direction:column; min-width:230px; text-align:center; }
+.sr-day b{ font-size:16px; color:#fff; }
+.sr-day span{ font-size:12px; font-weight:700; color:var(--muted); }
+.sr-days .btn[disabled]{ opacity:.4; cursor:default; }
+.sr-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.sr-chip{ display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:999px; border:1px solid var(--line-2); background:var(--card); color:var(--muted);
+  font:inherit; font-size:13px; font-weight:800; cursor:pointer; }
+.sr-chip img{ width:16px; height:16px; object-fit:contain; }
+.sr-chip .fr-mini{ width:18px; height:12px; border-radius:2px; background:linear-gradient(90deg,#1f4fbf 0 33.3%,#fff 33.3% 66.6%,#e3263a 66.6%); }
+.sr-chip:hover{ color:#fff; }
+.sr-chip.on{ color:#fff; border-color:var(--fr-blue); background:rgba(79,143,232,.16); }
+.sr-chip:focus-visible{ outline:2px solid var(--fr-blue); outline-offset:2px; }
+.sr-slot + .sr-slot{ margin-top:22px; }
+.sr-h{ display:flex; align-items:baseline; gap:10px; margin:0 0 10px; font-family:var(--font-d); font-weight:400; font-size:26px; letter-spacing:.03em; color:#fff; }
+.sr-h small{ font-family:system-ui, sans-serif; font-size:12px; font-weight:700; color:var(--muted); letter-spacing:0; }
+.sr-live{ display:inline-flex; align-items:center; gap:8px; color:#ff6b78; }
+.sr-live i{ width:9px; height:9px; border-radius:50%; background:#ff3b46; animation:frPulse 1.4s ease-in-out infinite; }
+.sr-row{ border-left:3px solid var(--c); }
+.sr-goal{ animation:srGoal 1.2s ease-out; }
+@keyframes srGoal{ 0%{ transform:scale(1.5); color:#ffd166; } 100%{ transform:none; } }
+@media (max-width:640px){ .sr-day{ min-width:0; flex:1; } .sr-days{ width:100%; } }
+@media (prefers-reduced-motion:reduce){ .sr-live i, .sr-goal{ animation:none; } }
