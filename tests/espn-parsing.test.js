@@ -318,3 +318,15 @@ test('leagueClubs : clubs de la phase de ligue (matchs à venir compris), sans d
   ]);
   assert.deepEqual(Array.from(clubs, c => c.id + ':' + c.name), ['10:Lyon', '30:Porto', '20:Roma']);
 });
+
+test('favori : un par compétition, sans toucher celui de la LDC ni sa proposition de choix', () => {
+  const LS = { ldc_fav: JSON.stringify({ id: '160', name: 'PSG' }) };
+  const UEL = loadESPN('', LS, 'uefa.europa');
+  assert.equal(UEL.getFav(), null, 'le favori LDC n’est pas repris en Europa League');
+  UEL.setFav({ id: '167', name: 'Lyon' });
+  assert.equal(UEL.getFav().name, 'Lyon');
+  assert.equal(UEL.favSeen(), true);
+  const UCL = loadESPN('', { ldc_fav: LS.ldc_fav });
+  assert.equal(UCL.getFav().id, '160');
+  assert.equal(UCL.favSeen(), false, 'l’accueil LDC propose toujours de choisir');
+});
