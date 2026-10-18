@@ -76,7 +76,7 @@
 
   function renderStatic(){
     var X={ frBrand:['Clubs français en Europe','French clubs in Europe'], frTitle:['Clubs français en Europe','French clubs in Europe'],
-      navFr:['Clubs français','French clubs'], navUcl:['Ligue des Champions','Champions League'], navCmp:['Comparateur','Compare clubs'],
+      navFr:['Clubs français','French clubs'], navSr:['Soirée européenne','European night'], navUcl:['Ligue des Champions','Champions League'], navCmp:['Comparateur','Compare clubs'],
       frClubsT:['Les clubs','The clubs'], frTotT:['La saison des clubs français','The French clubs’ season'],
       frRecT:['Résultats des 7 derniers jours','Results, last 7 days'], frUpT:['Prochaines affiches','Coming up'] };
     Object.keys(X).forEach(function(id){ var n=el(id); if(n) n.textContent=T(X[id][0],X[id][1]); });
