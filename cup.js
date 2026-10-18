@@ -105,7 +105,8 @@
       '<div class="live-shimmer"></div>'+
       '<div class="live-card-status"><span class="live-status-pill state-'+st+'"><span class="live-dot"></span> '+esc(lbl)+'</span>'+clock+'</div>'+
       '<div class="live-card-teams">'+row(m.home)+row(m.away)+'</div>'+
-      '<div class="live-card-footer"><span>'+(pen?'<span class="live-pen">'+esc(I18N.t('common.pen'))+' '+m.home.shootout+'–'+m.away.shootout+'</span>':'')+'</span>'+
+      '<div class="live-card-footer"><span class="lc-foot-l">'+(window.LDCMatchPanel?'<button type="button" class="mp-open-btn" data-mp-open="'+esc(m.id)+'">📋 '+esc(T('Fiche du match','Match details'))+'</button>':'')+
+        (pen?'<span class="live-pen">'+esc(I18N.t('common.pen'))+' '+m.home.shootout+'–'+m.away.shootout+'</span>':'')+'</span>'+
         '<span class="live-kickoff">'+esc(st==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>'+
     '</article>';
   }
@@ -264,6 +265,12 @@
     box.querySelector('.sim-x').addEventListener('click',function(){ delete sims[m.id]; box.remove(); refreshSimulation(); });
     if(!quiet) ins[0].focus();
   }
+  /* Carte d'un match en cours ou terminé : un clic ouvre la fiche du match. */
+  el('mdGrid').addEventListener('click',function(e){
+    var c=e.target.closest('.live-card[data-id]'); if(!c || c.classList.contains('can-sim') || e.target.closest('[data-team]') || !window.LDCMatchPanel) return;
+    var m=matches.filter(function(x){ return String(x.id)===c.getAttribute('data-id'); })[0];
+    LDCMatchPanel.open(c.getAttribute('data-id'), { match:m });
+  });
   el('mdGrid').addEventListener('click',function(e){
     var c=e.target.closest('.live-card.can-sim'); if(!c || e.target.closest('[data-team]') || e.target.closest('.sim-editor')) return;
     var m=matches.filter(function(x){ return String(x.id)===c.getAttribute('data-id'); })[0];
@@ -327,6 +334,8 @@
   }
 
   function renderStatic(){
+    if(el('navFrance')) el('navFrance').textContent=T('Clubs français','French clubs');
+    if(el('navCompare')) el('navCompare').textContent=T('Comparateur','Compare clubs');
     el('heroSub').textContent=T('Scores en direct, journée en cours et classement de la phase de ligue.','Live scores, current matchday and league phase table.');
     el('seasonChip').textContent=ESPN.seasonLabel();
     el('ctaTable').textContent=T('Classement complet →','Full table →');
@@ -435,15 +444,17 @@
       '<div class="uf-name">'+esc(f.name)+'</div><div class="uf-status">'+favStatus(id)+'</div></div>'+
       '<div class="uf-actions">'+
         '<button type="button" class="uf-btn primary" data-fav="card">'+esc(T('Voir sa fiche','Club card'))+'</button>'+
+        (window.LDCGoalAlerts?'<button type="button" class="uf-btn'+(LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)?' on':'')+'" data-fav="alerts" aria-pressed="'+LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)+'" title="'+esc(LDCGoalAlerts.hint(ESPN.LEAGUE_SLUG))+'">'+(LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)?'🔔 ':'🔕 ')+esc(T('Alertes but','Goal alerts'))+'</button>':'')+
         '<button type="button" class="uf-btn" data-fav="choose">'+esc(I18N.t('fav.change'))+'</button>'+
         '<button type="button" class="uf-btn" data-fav="remove">'+esc(I18N.t('fav.remove'))+'</button>'+
-      '</div></div>';
+      '</div>'+(window.LDCGoalAlerts && LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)?'<p class="uf-hint">'+esc(T('Alertes but : ','Goal alerts: ')+LDCGoalAlerts.hint(ESPN.LEAGUE_SLUG)+T(' — tant qu’un onglet du site est ouvert.',' — while a tab of the site is open.'))+'</p>':'')+'</div>';
   }
   el('favSection').addEventListener('click',function(e){
     var b=e.target.closest('[data-fav]'); if(!b) return;
     var a=b.getAttribute('data-fav');
     if(a==='choose') openChooser(b);
     else if(a==='card') openClub(favId());
+    else if(a==='alerts') LDCGoalAlerts.toggle(ESPN.LEAGUE_SLUG).then(function(){ renderFav(); var x=el('favSection').querySelector('[data-fav="alerts"]'); if(x) x.focus(); });
     else if(a==='remove'){ ESPN.clearFav(); renderAll(); el('favSection').querySelector('[data-fav]').focus(); }
   });
 
