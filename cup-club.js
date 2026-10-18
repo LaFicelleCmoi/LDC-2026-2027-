@@ -54,7 +54,7 @@
     var diff=s.gf-s.ga, html='';
     if(d.live){
       var L=d.live;
-      html+='<div class="mc-live" role="status"><span class="mc-live-pill"><i></i>'+esc(I18N.t('common.live'))+'</span>'+
+      html+='<div class="mc-live" role="status" data-mp-open="'+esc(L.id)+'" tabindex="0" title="'+esc(T('Fiche du match','Match details'))+'"><span class="mc-live-pill"><i></i>'+esc(I18N.t('common.live'))+'</span>'+
         '<span class="mc-live-clock">'+esc(/HT|Half/i.test(L.detail)?T('Mi-temps','Half-time'):(L.clock||L.detail))+'</span>'+
         '<div class="mc-live-main">'+crest(fav.logo,'mc-lv-logo')+'<b>'+L.gf+' – '+L.ga+'</b>'+crest(L.opp.logo,'mc-lv-logo')+
         '<span class="mc-live-opp">'+esc(where(L.home))+' '+esc(L.opp.name)+'</span></div></div>';
@@ -68,7 +68,7 @@
     if(d.next){
       var n=d.next;
       cols+='<div class="mc-box"><div class="mc-box-t">'+esc(T('Prochain match','Next match'))+'</div>'+
-        '<div class="mc-next">'+crest(n.opp.logo,'mc-nlogo')+'<div><div class="mc-next-opp">'+esc(where(n.home))+' '+esc(n.opp.name)+'</div>'+
+        '<div class="mc-next" data-mp-open="'+esc(n.id)+'" tabindex="0" role="button" title="'+esc(T('Fiche du match','Match details'))+'">'+crest(n.opp.logo,'mc-nlogo')+'<div><div class="mc-next-opp">'+esc(where(n.home))+' '+esc(n.opp.name)+'</div>'+
         '<div class="mc-next-when">'+esc(roundOf(n))+' · '+esc(longDate(n.time))+'</div></div></div></div>';
     }
     var TH=window.LDCThresholds, left=d.upcoming.filter(function(r){ return r.round==='league'; }).length;
@@ -96,7 +96,7 @@
     }
     if(d.last.length){
       html+='<div class="mc-box"><div class="mc-box-t">'+esc(T('Résultats','Results'))+'</div><ul class="mc-fix">'+
-        d.last.map(function(r){ return '<li><span class="cp-badge '+r.result+'">'+letter(r.result)+'</span>'+
+        d.last.map(function(r){ return '<li data-mp-open="'+esc(r.id)+'" tabindex="0" role="button" title="'+esc(T('Fiche du match','Match details'))+'"><span class="cp-badge '+r.result+'">'+letter(r.result)+'</span>'+
           '<span class="mc-muted">'+esc(where(r.home))+'</span>'+crest(r.opp.logo,'mc-ologo')+'<span class="mc-oname">'+esc(r.opp.name)+'</span>'+
           '<span class="mc-score">'+r.gf+'–'+r.ga+'</span><span class="mc-fdate">'+esc(shortDate(r.time))+'</span></li>'; }).join('')+'</ul></div>';
     }
@@ -205,12 +205,14 @@
           '<div class="mc-name">'+esc(fav.name)+'</div>'+
           '<div class="mc-meta"><span id="mcRank"></span>'+(co?'<span class="mc-chip">'+esc(co)+'</span>':'')+(fav.abbr?'<span class="mc-chip">'+esc(fav.abbr)+'</span>':'')+'</div>'+
           '<div class="mc-acts"><button type="button" class="uf-btn primary" id="mcOpen">'+esc(T('Fiche complète','Full club card'))+'</button>'+
-            '<a class="uf-btn" href="'+COMP.home+'#choisir">'+esc(T('Changer de club','Change club'))+'</a></div>'+
+            '<a class="uf-btn" href="'+COMP.home+'#choisir">'+esc(T('Changer de club','Change club'))+'</a>'+
+            (window.LDCGoalAlerts?'<button type="button" class="uf-btn'+(LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)?' on':'')+'" id="mcAlerts" aria-pressed="'+LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)+'" title="'+esc(LDCGoalAlerts.hint(ESPN.LEAGUE_SLUG))+'">'+(LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)?'🔔 ':'🔕 ')+esc(T('Alertes but','Goal alerts'))+'</button>':'')+'</div>'+
         '</div></div>'+
       '<h2 class="mc-section-title" id="mcSeasonT"></h2><div id="mcSeason"><div class="empty-state">'+esc(I18N.t('common.loading')||'…')+'</div></div>'+
       '<h2 class="mc-section-title">'+esc(T('Parcours en '+compName()+' depuis ','Record in the '+compName()+' since ')+ESPN.seasonLabel(COMP.historyFrom))+'</h2>'+
       '<div id="mcHistTot"></div><div class="mc-camps" id="mcCamps"></div>';
     el('mcOpen').addEventListener('click',function(){ LDCClubPanel.open(fav.id,{ matches:matches, standings:standings }); });
+    var al=el('mcAlerts'); if(al) al.addEventListener('click',function(){ LDCGoalAlerts.toggle(ESPN.LEAGUE_SLUG).then(function(){ render(); var x=el('mcAlerts'); if(x) x.focus(); }); });
     el('mcSeasonT').textContent=T('Saison ','Season ')+ESPN.seasonLabel()+' · '+compName();
     if(matches.length) renderSeason();
     loadSeason();
