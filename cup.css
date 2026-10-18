@@ -192,6 +192,12 @@ body{ background:var(--bg); }
 .live-card.can-sim{ cursor:pointer; }
 .live-card.state-in, .live-card.state-post{ cursor:pointer; }
 .lc-foot-l{ display:inline-flex; align-items:center; gap:8px; }
+.lc-probs{ margin-top:-4px; }
+.live-card.size-small .lc-probs .mp-probs span{ display:none; }
+.cal-probs{ grid-column:2 / 5; }
+.mc-probs{ margin-top:12px; }
+.mc-probs .mp-note{ margin:6px 0 0; font-size:11.5px; color:var(--muted); }
+@media (max-width:560px){ .cal-probs{ grid-column:1 / -1; } }
 .live-card.is-simmed{ border-color:rgba(var(--gold-rgb),.75); }
 .sim-editor{ display:flex; align-items:center; justify-content:center; gap:7px; }
 .sim-editor input{ width:44px; padding:5px 0; border:1px solid rgba(255,255,255,.12); border-radius:8px; background:#0b1329; color:#fff;
