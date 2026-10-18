@@ -15,7 +15,7 @@
   integrity="sha384-wZLzMTN4W9zOTFOu5gz6Crb4vbo45SAkjvrhf5V1AcOTwijXWIDbTJuv+anvjWWl" crossorigin="anonymous" />
 <link rel="stylesheet" href="tracker.css?v=1" />
 <link rel="stylesheet" href="clubpanel.css?v=5">
-<link rel="stylesheet" href="cup.css?v=4" />
+<link rel="stylesheet" href="cup.css?v=5" />
 </head>
 <body>
 <canvas id="starfield"></canvas>
@@ -27,11 +27,11 @@
   <nav class="nav">
     <a href="conference.html" data-i18n="nav.dashboard">Accueil</a>
     <a href="conference-classement.html" class="active" data-i18n="nav.tracker">Classement</a>
+    <a href="conference-calendrier.html" data-i18n="nav.calendar">Calendrier</a>
     <a href="conference-monclub.html" data-i18n="nav.myclub">Mon club</a>
     <div id="seasonDD"></div>
     <a href="europa.html" class="nav-cup to-uel" data-noseason><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
     <a href="dashboard.html" class="nav-ucl" data-noseason><img src="logo.svg?v=4" alt="" width="16" height="16"><span data-i18n="uel.toUcl">← Ligue des Champions</span></a>
-    <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
   </nav>
   <div class="header-right">
     <span id="liveFlag" style="display:none;font-size:11px;font-weight:800;color:var(--live);"><span class="dot live"></span></span>
@@ -142,7 +142,7 @@
 <script>window.LDC_LEAGUE = 'uefa.europa.conf';</script>
 <script src="i18n.js?v=27"></script>
 <script src="standings-engine.js?v=1"></script>
-<script src="espn.js?v=22"></script>
+<script src="espn.js?v=23"></script>
 <script src="schedule.js?v=2"></script>
 <script src="thresholds.js?v=3"></script>
 <script src="clubpanel.js?v=4"></script>
