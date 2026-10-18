@@ -203,7 +203,7 @@
       '<div class="card mc-hero">'+crest(fav.logo,'mc-crest')+
         '<div class="mc-htxt"><div class="mc-eyebrow">★ '+esc(T('Mon club favori','My favourite club'))+' · '+esc(compName())+'</div>'+
           '<div class="mc-name">'+esc(fav.name)+'</div>'+
-          '<div class="mc-meta"><span id="mcRank"></span>'+(co?'<span class="mc-chip">'+esc(co)+'</span>':'')+(fav.abbr?'<span class="mc-chip">'+esc(fav.abbr)+'</span>':'')+'</div>'+
+          '<div class="mc-meta"><span id="mcRank"></span>'+(function(){ var t=ESPN.clubTitlesById(fav.id); return t?'<span class="mc-chip gold">🏆 '+t.n+' '+esc(t.n>1?T('titres','titles'):T('titre','title'))+' · '+esc(t.years.slice().reverse().join(', '))+'</span>':''; })()+(co?'<span class="mc-chip">'+esc(co)+'</span>':'')+(fav.abbr?'<span class="mc-chip">'+esc(fav.abbr)+'</span>':'')+'</div>'+
           '<div class="mc-acts"><button type="button" class="uf-btn primary" id="mcOpen">'+esc(T('Fiche complète','Full club card'))+'</button>'+
             '<a class="uf-btn" href="'+COMP.home+'#choisir">'+esc(T('Changer de club','Change club'))+'</a>'+
             (window.LDCGoalAlerts?'<button type="button" class="uf-btn'+(LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)?' on':'')+'" id="mcAlerts" aria-pressed="'+LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)+'" title="'+esc(LDCGoalAlerts.hint(ESPN.LEAGUE_SLUG))+'">'+(LDCGoalAlerts.isOn(ESPN.LEAGUE_SLUG)?'🔔 ':'🔕 ')+esc(T('Alertes but','Goal alerts'))+'</button>':'')+'</div>'+
