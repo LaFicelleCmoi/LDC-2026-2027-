@@ -105,6 +105,7 @@
       '<div class="live-shimmer"></div>'+
       '<div class="live-card-status"><span class="live-status-pill state-'+st+'"><span class="live-dot"></span> '+esc(lbl)+'</span>'+clock+'</div>'+
       '<div class="live-card-teams">'+row(m.home)+row(m.away)+'</div>'+
+      (window.LDCMatchPanel&&LDCMatchPanel.probBar&&m.state==='pre'&&m.odds?'<div class="lc-probs">'+LDCMatchPanel.probBar(m.odds, m.home.abbr||m.home.name, m.away.abbr||m.away.name, 'sm')+'</div>':'')+
       '<div class="live-card-footer"><span class="lc-foot-l">'+(window.LDCMatchPanel?'<button type="button" class="mp-open-btn" data-mp-open="'+esc(m.id)+'">📋 '+esc(T('Fiche du match','Match details'))+'</button>':'')+
         (pen?'<span class="live-pen">'+esc(I18N.t('common.pen'))+' '+m.home.shootout+'–'+m.away.shootout+'</span>':'')+'</span>'+
         '<span class="live-kickoff">'+esc(st==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>'+
