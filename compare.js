@@ -88,7 +88,8 @@
       row(T('Différence de buts','Goal difference'), sa.gf-sa.ga, sb.gf-sb.ga, { fmt:function(v){ return (v>0?'+':'')+v; }, noBar:true })+
       row(T('Buts par match','Goals per match'), per(sa,'gf'), per(sb,'gf'), { fmt:function(v){ return v.toLocaleString(loc()); } })+
       row(T('Encaissés par match','Conceded per match'), per(sa,'ga'), per(sb,'ga'), { lower:true, fmt:function(v){ return v.toLocaleString(loc()); } })+
-      row(T('Clean sheets','Clean sheets'), a.cs, b.cs);
+      row(T('Clean sheets','Clean sheets'), a.cs, b.cs)+
+      row(T('Titres en ','Titles in the ')+compName(), (E.clubTitlesById(A)||{n:0}).n, (E.clubTitlesById(B)||{n:0}).n, { noBar:true });
     html+='<div class="cmp-row"><div class="cmp-vals cmp-forms"><span class="cmp-form">'+formHTML(a.d)+'</span><span>'+esc(T('Forme','Form'))+'</span><span class="cmp-form r">'+formHTML(b.d)+'</span></div></div>';
     var tt=window.LDCThresholds && LDCThresholds.forLeague(comp().slug);
     function nxt(x){ var n=x.d.live||x.d.next; return n?'<button type="button" class="cmp-next" data-mp-open="'+esc(n.id)+'" data-mp-league="'+comp().slug+'">'+(x.d.live?'<i></i>'+esc(T('En direct ','Live '))+n.gf+'–'+n.ga:esc(T('Prochain','Next')))+' · '+esc((n.home?T('vs ','vs '):T('à ','at '))+n.opp.name)+'</button>':'<span class="cmp-muted">—</span>'; }
