@@ -212,12 +212,63 @@
     { pot: 4, id: 510,   name: 'Viking',              abbr: 'VIK',  color: '000080', co: 'NOR' },
     { pot: 4, id: 21922, name: 'Sabah',               abbr: 'SAB',  color: '000000', co: 'AZE' }
   ];
+  /* Coupe UEFA (1972-2009) puis Europa League : 55 finales 1972-2026,
+     recoupées avec la table RSSSF « Fairs Cup/UEFA Cup/Europa League Finals »
+     (rsssf.org/ec/ec3stats.html) et, pour 2022-2026, avec les finales
+     présentes dans les données ESPN (2026 : Aston Villa 3-0 Fribourg).
+     Identifiants ESPN relevés dans les données de match ou les
+     championnats nationaux (Gladbach 268, Ipswich 373…). */
+  var UEL_PALMARES = [
+    { name: 'Sevilla',                id: 243,  keys: ['sevilla'],                n: 7, years: [2006,2007,2014,2015,2016,2020,2023] },
+    { name: 'Inter Milan',            id: 110,  keys: ['inter','internazionale'], n: 3, years: [1991,1994,1998] },
+    { name: 'Liverpool FC',           id: 364,  keys: ['liverpool'],              n: 3, years: [1973,1976,2001] },
+    { name: 'Juventus',               id: 111,  keys: ['juventus'],               n: 3, years: [1977,1990,1993] },
+    { name: 'Atlético de Madrid',     id: 1068, keys: ['atlético','atletico'],    n: 3, years: [2010,2012,2018] },
+    { name: 'Tottenham Hotspur',      id: 367,  keys: ['tottenham'],              n: 3, years: [1972,1984,2025] },
+    { name: 'Borussia Mönchengladbach', id: 268, keys: ['gladbach'],              n: 2, years: [1975,1979] },
+    { name: 'Feyenoord',              id: 142,  keys: ['feyenoord'],              n: 2, years: [1974,2002] },
+    { name: 'IFK Göteborg',           id: 2556, keys: ['göteborg','goteborg'],    n: 2, years: [1982,1987] },
+    { name: 'Real Madrid',            id: 86,   keys: ['real madrid'],            n: 2, years: [1985,1986] },
+    { name: 'Parma',                  id: 115,  keys: ['parma'],                  n: 2, years: [1995,1999] },
+    { name: 'FC Porto',               id: 437,  keys: ['porto'],                  n: 2, years: [2003,2011] },
+    { name: 'Chelsea FC',             id: 363,  keys: ['chelsea'],                n: 2, years: [2013,2019] },
+    { name: 'Eintracht Frankfurt',    id: 125,  keys: ['eintracht frankfurt'],    n: 2, years: [1980,2022] },
+    { name: 'PSV Eindhoven',          id: 148,  keys: ['psv'],                    n: 1, years: [1978] },
+    { name: 'Ipswich Town',           id: 373,  keys: ['ipswich'],                n: 1, years: [1981] },
+    { name: 'Anderlecht',             id: 441,  keys: ['anderlecht'],             n: 1, years: [1983] },
+    { name: 'Bayer Leverkusen',       id: 131,  keys: ['leverkusen'],             n: 1, years: [1988] },
+    { name: 'Napoli',                 id: 114,  keys: ['napoli'],                 n: 1, years: [1989] },
+    { name: 'Ajax',                   id: 139,  keys: ['ajax'],                   n: 1, years: [1992] },
+    { name: 'Bayern Munich',          id: 132,  keys: ['bayern'],                 n: 1, years: [1996] },
+    { name: 'Schalke 04',             id: 133,  keys: ['schalke'],                n: 1, years: [1997] },
+    { name: 'Galatasaray',            id: 432,  keys: ['galatasaray'],            n: 1, years: [2000] },
+    { name: 'Valencia',               id: 94,   keys: ['valencia'],               n: 1, years: [2004] },
+    { name: 'CSKA Moscou',            id: 1963, keys: ['cska moscow','cska moskva'], n: 1, years: [2005] },
+    { name: 'Zenit Saint-Pétersbourg', id: 2533, keys: ['zenit'],                 n: 1, years: [2008] },
+    { name: 'Shakhtar Donetsk',       id: 493,  keys: ['shakhtar'],               n: 1, years: [2009] },
+    { name: 'Manchester United',      id: 360,  keys: ['manchester united'],      n: 1, years: [2017] },
+    { name: 'Villarreal',             id: 102,  keys: ['villarreal'],             n: 1, years: [2021] },
+    { name: 'Atalanta',               id: 105,  keys: ['atalanta'],               n: 1, years: [2024] },
+    { name: 'Aston Villa',            id: 362,  keys: ['aston villa'],            n: 1, years: [2026] }
+  ];
+  /* Conference League : 5 finales 2022-2026, toutes dans les données ESPN
+     (2026 : Crystal Palace 1-0 Rayo Vallecano). */
+  var UECL_PALMARES = [
+    { name: 'AS Roma',                id: 104,  keys: ['roma'],                   n: 1, years: [2022] },
+    { name: 'West Ham United',        id: 371,  keys: ['west ham'],               n: 1, years: [2023] },
+    { name: 'Olympiacos',             id: 435,  keys: ['olympiacos'],             n: 1, years: [2024] },
+    { name: 'Chelsea FC',             id: 363,  keys: ['chelsea'],                n: 1, years: [2025] },
+    { name: 'Crystal Palace',         id: 384,  keys: ['crystal palace'],         n: 1, years: [2026] }
+  ];
+  /* Palmarès de la compétition de l'instance. */
+  var PALMARES = IS_UCL ? UCL_PALMARES : (LEAGUE_SLUG === 'uefa.europa' ? UEL_PALMARES : UECL_PALMARES);
+
   /* Logo officiel ESPN d'un club du palmarès (par id). */
   function palmaresLogo(id) { return id ? 'https://a.espncdn.com/i/teamlogos/soccer/500/' + id + '.png' : ''; }
 
   /* Classement des clubs par nombre de titres (rang à égalités). Ordre intra-égalité : titre le plus récent d'abord. */
   function palmaresRanking() {
-    var arr = UCL_PALMARES.map(function (e) {
+    var arr = PALMARES.map(function (e) {
       return { name: e.name, id: e.id, logo: palmaresLogo(e.id), n: e.n, years: e.years.slice(), last: Math.max.apply(null, e.years) };
     });
     arr.sort(function (a, b) { return (b.n - a.n) || (b.last - a.last); });
@@ -234,19 +285,18 @@
   function championOfSeason(startYear) {
     if (startYear == null) startYear = seasonStartYear();
     var ty = startYear + 1;
-    if (!IS_UCL) return null;
-    for (var i = 0; i < UCL_PALMARES.length; i++) {
-      if (UCL_PALMARES[i].years.indexOf(ty) !== -1) return { name: UCL_PALMARES[i].name, keys: UCL_PALMARES[i].keys };
+    for (var i = 0; i < PALMARES.length; i++) {
+      if (PALMARES[i].years.indexOf(ty) !== -1) return { name: PALMARES[i].name, keys: PALMARES[i].keys, id: PALMARES[i].id };
     }
     return null;
   }
 
   /* Renvoie { n, years } si le club a gagné la C1/LDC, sinon null. */
   function clubTitles(name) {
-    if (!name || !IS_UCL) return null;
+    if (!name) return null;
     var nm = ('' + name).toLowerCase();
-    for (var i = 0; i < UCL_PALMARES.length; i++) {
-      var e = UCL_PALMARES[i];
+    for (var i = 0; i < PALMARES.length; i++) {
+      var e = PALMARES[i];
       for (var k = 0; k < e.keys.length; k++) {
         if (nm.indexOf(e.keys[k]) !== -1) return { n: e.n, years: e.years };
       }
@@ -258,11 +308,11 @@
      recherche par sous-chaîne attribue à tort des titres à des noms voisins
      (« Real Madrid Castilla » -> 15, « Inter Turku » -> 3, « Benfica B » -> 2).
      Les trophées ne viennent pas de l'API ESPN, qui n'en expose aucun : c'est
-     la table UCL_PALMARES, vérifiée contre les 71 finales 1956-2026. */
+     la table PALMARES de la compétition (LDC : 71 finales 1956-2026 vérifiées). */
   function clubTitlesById(id) {
-    if (id == null || id === '' || !IS_UCL) return null;
-    for (var i = 0; i < UCL_PALMARES.length; i++) {
-      if (String(UCL_PALMARES[i].id) === String(id)) return { n: UCL_PALMARES[i].n, years: UCL_PALMARES[i].years };
+    if (id == null || id === '') return null;
+    for (var i = 0; i < PALMARES.length; i++) {
+      if (String(PALMARES[i].id) === String(id)) return { n: PALMARES[i].n, years: PALMARES[i].years };
     }
     return null;
   }
