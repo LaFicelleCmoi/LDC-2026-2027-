@@ -2,8 +2,11 @@
    espn.js — Couche d'accès aux données ESPN (API publique non officielle)
    Tracker LIGUE DES CHAMPIONS
    -------------------------------------------------------------------------
-   ⚑ LE SEUL paramètre qui change la compétition est le slug ci-dessous.
-     Pour suivre une autre compétition ESPN, change UNIQUEMENT LEAGUE_SLUG.
+   ⚑ La compétition se choisit PAR PAGE : window.LDC_LEAGUE, posé avant le
+     chargement de ce fichier (ex. 'uefa.europa'). Sans lui : Ligue des
+     Champions. Les données propres à la LDC (palmarès, 36 qualifiés,
+     coefficients) ne servent qu'à elle, et chaque autre compétition a ses
+     propres clés localStorage.
    -------------------------------------------------------------------------
    Robustesse :
    - timeout sur CHAQUE fetch (AbortSignal.timeout + fallback AbortController)
@@ -15,7 +18,20 @@
   'use strict';
 
   /* ===== LA constante de compétition ===================================== */
-  var LEAGUE_SLUG = 'uefa.champions';
+  var COMPETITIONS = {
+    'uefa.champions': { key: 'ucl', fr: 'Ligue des Champions', en: 'Champions League', earliest: 2001,
+                        home: 'dashboard.html', standings: 'tracker.html' },
+    /* Europa League : seules les phases de ligue à 36 (depuis 2024-25) sont
+       proposées ; les phases de groupes antérieures n'ont pas de slug fiable. */
+    'uefa.europa':    { key: 'uel', fr: 'Europa League', en: 'Europa League', earliest: 2024,
+                        home: 'europa.html', standings: 'europa-classement.html' }
+  };
+  var LEAGUE_SLUG = (global.LDC_LEAGUE && COMPETITIONS[global.LDC_LEAGUE]) ? global.LDC_LEAGUE : 'uefa.champions';
+  var COMP = COMPETITIONS[LEAGUE_SLUG];
+  var IS_UCL = LEAGUE_SLUG === 'uefa.champions';
+  /* Préfixe des clés localStorage : vide pour la LDC (clés historiques
+     inchangées), « uel_ » pour l'Europa League, etc. */
+  var STORE_NS = IS_UCL ? '' : COMP.key + '_';
   /* ======================================================================= */
 
   var BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/' + LEAGUE_SLUG;
@@ -37,7 +53,7 @@
      Surcharge possible via ?season=YYYY (utilisé pour l'onglet « Souvenir »). */
   var CURRENT_SEASON = 2026;
   // ESPN fournit les saisons depuis 2001-02 (endpoint /seasons). Année de DÉBUT.
-  var EARLIEST_SEASON = 2001;
+  var EARLIEST_SEASON = COMP.earliest;
   // Saisons archivées, de la plus récente à la plus ancienne.
   var ARCHIVE_SEASONS = (function () {
     var a = [];
@@ -197,6 +213,7 @@
   function championOfSeason(startYear) {
     if (startYear == null) startYear = seasonStartYear();
     var ty = startYear + 1;
+    if (!IS_UCL) return null;
     for (var i = 0; i < UCL_PALMARES.length; i++) {
       if (UCL_PALMARES[i].years.indexOf(ty) !== -1) return { name: UCL_PALMARES[i].name, keys: UCL_PALMARES[i].keys };
     }
@@ -205,7 +222,7 @@
 
   /* Renvoie { n, years } si le club a gagné la C1/LDC, sinon null. */
   function clubTitles(name) {
-    if (!name) return null;
+    if (!name || !IS_UCL) return null;
     var nm = ('' + name).toLowerCase();
     for (var i = 0; i < UCL_PALMARES.length; i++) {
       var e = UCL_PALMARES[i];
@@ -222,7 +239,7 @@
      Les trophées ne viennent pas de l'API ESPN, qui n'en expose aucun : c'est
      la table UCL_PALMARES, vérifiée contre les 71 finales 1956-2026. */
   function clubTitlesById(id) {
-    if (id == null || id === '') return null;
+    if (id == null || id === '' || !IS_UCL) return null;
     for (var i = 0; i < UCL_PALMARES.length; i++) {
       if (String(UCL_PALMARES[i].id) === String(id)) return { n: UCL_PALMARES[i].n, years: UCL_PALMARES[i].years };
     }
@@ -376,7 +393,7 @@
      ======================================================================= */
   var DAY_MS = 86400000;
   var PAST_FRESH = DAY_MS, FUTURE_TTL = 3600000, QUIET_TTL = 10 * 60000, ARCHIVE_TTL = 6 * 3600000, HOT_WINDOW = 3 * 3600000;
-  var PERSIST_PREFIX = 'ldc_sb_v1_';            // + AAAAMM
+  var PERSIST_PREFIX = 'ldc_sb_v1_' + STORE_NS;  // + AAAAMM
   var _seasonSyncAt = null;                      // horodatage des données de saison affichées
   var _staleSince = null;                        // non nul : données servies depuis la copie locale
   var _monthHot = {};                            // AAAAMM -> le mois a un match en cours ou proche
@@ -726,7 +743,7 @@
      données annexes disponibles : fair-play depuis le cache des résumés,
      coefficients uniquement pour la saison qu'ils couvrent (2026/27). */
   function rankLeagueMatches(matches, seedClubs) {
-    var coef = (seasonStartYear() === 2026 && global.LDCCoefficients2026) ? global.LDCCoefficients2026 : null;
+    var coef = (IS_UCL && seasonStartYear() === 2026 && global.LDCCoefficients2026) ? global.LDCCoefficients2026 : null;
     return global.LDCStandings.rankLeaguePhase(matches, {
       seed: seedClubs || null,
       disciplinary: disciplinaryFor(matches),
@@ -994,7 +1011,7 @@
   /* =======================================================================
      ÉQUIPE FAVORITE — stockage local + liste des clubs pour le sélecteur
      ======================================================================= */
-  var FAV_KEY = 'ldc_fav', FAV_SEEN_KEY = 'ldc_fav_seen';
+  var FAV_KEY = 'ldc_fav' + (STORE_NS ? '_' + COMP.key : ''), FAV_SEEN_KEY = 'ldc_fav_seen';
 
   function getFav() {
     try { var s = localStorage.getItem(FAV_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
@@ -1031,6 +1048,7 @@
       .sort(function (a, b) { return a.name.localeCompare(b.name); });
   }
   function _officialAndHistoricClubs() {
+    if (!IS_UCL) return [];
     var qualifiedIds = {};
     var official = QUALIFIED_CLUBS_2026.map(function (c) {
       qualifiedIds[String(c.id)] = true;
@@ -1071,12 +1089,29 @@
     if (_clubListCache) return Promise.resolve(_clubListCache);
     var base = _officialAndHistoricClubs();
     return fetchSeasonEvents({ ttl: 300000 }).then(function (ev) {
-      _clubListCache = _mergeLiveClubMetadata(base, ev);
+      /* Hors LDC, pas de liste officielle embarquée : les clubs de la saison. */
+      _clubListCache = IS_UCL ? _mergeLiveClubMetadata(base, ev) : leagueClubs(ev);
       return _clubListCache;
     }).catch(function () {
       _clubListCache = base;
       return _clubListCache;
     });
+  }
+
+  /* Clubs de la phase de ligue d'après le calendrier ESPN (matchs à venir
+     compris), au format de amorçage du classement : { id, name, abbr, logo }.
+     Sert hors LDC, où aucune liste officielle n'est embarquée. */
+  function leagueClubs(events) {
+    var seen = {}, out = [];
+    (events || []).forEach(function (ev) {
+      var m = normalizeEvent(ev); if (!m || m.round !== 'league') return;
+      [m.home, m.away].forEach(function (c) {
+        if (!c.teamId || seen[c.teamId]) return;
+        seen[c.teamId] = true;
+        out.push({ id: String(c.teamId), name: c.name, abbr: c.abbr, logo: c.logo, color: c.color ? c.color.replace('#', '') : '' });
+      });
+    });
+    return out.sort(function (a, b) { return a.name.localeCompare(b.name); });
   }
 
   /* =======================================================================
@@ -1180,7 +1215,7 @@
   var scorerAgg = {};                            // eventId -> { g:{}, a:{}, t:{} }
   /* v2 : chaque entrée porte aussi les points disciplinaires (`c`). Changer de
      clé invalide proprement les entrées v1, qui en sont dépourvues. */
-  var SCORER_LS = 'ldc_match_agg_v2_';
+  var SCORER_LS = 'ldc_match_agg_v2_' + STORE_NS;
 
   function _scorerLSKey() { return SCORER_LS + seasonStartYear(); }
   function _loadScorerCache() {
@@ -1424,6 +1459,9 @@
 
   global.ESPN = {
     LEAGUE_SLUG: LEAGUE_SLUG,
+    COMP: COMP,
+    IS_UCL: IS_UCL,
+    STORE_NS: STORE_NS,
     BASE: BASE,
     DEFAULT_TIMEOUT: DEFAULT_TIMEOUT,
     // dates / saison
@@ -1442,6 +1480,7 @@
     clubTitles: clubTitles,
     championOfSeason: championOfSeason,
     palmaresRanking: palmaresRanking,
+    leagueClubs: leagueClubs,
     qualifiedClubs: function () { return _officialAndHistoricClubs().filter(function (c) { return c.qualified; }); },
     preserveSeasonLinks: preserveSeasonLinks,
     // fetch
