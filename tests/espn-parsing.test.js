@@ -9,9 +9,10 @@ const vm = require('node:vm');
 
 /* espn.js est un script navigateur : on l'exécute dans un contexte isolé
    qui imite le strict nécessaire de `window`. */
-function loadESPN(search, storage) {
+function loadESPN(search, storage, league) {
   const LS = Object.assign({}, storage || {});
   const sandbox = {
+    LDC_LEAGUE: league,
     location: { search: search || '' },
     localStorage: { getItem: k => (k in LS ? LS[k] : null), setItem: (k, v) => { LS[k] = String(v); }, removeItem: k => { delete LS[k]; } },
     document: {}, console, setTimeout, clearTimeout, URLSearchParams
@@ -271,4 +272,49 @@ test('aucune page ni aucun script ne demande de plage de dates (rejetées par ES
     });
   });
   assert.deepEqual(bad, []);
+});
+
+/* ======================================================================= */
+/* Compétition choisie par la page (window.LDC_LEAGUE). */
+function ev(id, home, away, slug, state) {
+  return { id, date: '2026-10-22T19:00Z', season: { year: 2026, slug },
+    competitions: [{ status: { type: { state: state || 'pre' } }, competitors: [
+      { homeAway: 'home', score: '0', team: { id: home[0], displayName: home[1], abbreviation: home[1].slice(0, 3) } },
+      { homeAway: 'away', score: '0', team: { id: away[0], displayName: away[1], abbreviation: away[1].slice(0, 3) } }] }] };
+}
+
+test('compétition : Ligue des Champions par défaut, clés locales historiques inchangées', () => {
+  const ESPN = loadESPN('');
+  assert.equal(ESPN.LEAGUE_SLUG, 'uefa.champions');
+  assert.match(ESPN.BASE, /\/uefa\.champions$/);
+  assert.equal(ESPN.STORE_NS, '');
+  assert.equal(ESPN.COMP.standings, 'tracker.html');
+  assert.equal(ESPN.clubTitlesById(86).n, 15);
+  assert.equal(ESPN.qualifiedClubs().length, 36);
+});
+
+test('compétition : Europa League, sans le palmarès ni les qualifiés de la LDC', () => {
+  const ESPN = loadESPN('', {}, 'uefa.europa');
+  assert.equal(ESPN.LEAGUE_SLUG, 'uefa.europa');
+  assert.match(ESPN.BASE, /\/uefa\.europa$/);
+  assert.equal(ESPN.STORE_NS, 'uel_');
+  assert.deepEqual([ESPN.COMP.home, ESPN.COMP.standings], ['europa.html', 'europa-classement.html']);
+  assert.equal(ESPN.clubTitlesById(86), null, 'pas de titres LDC dans le classement Europa League');
+  assert.equal(ESPN.championOfSeason(2025), null);
+  assert.equal(ESPN.qualifiedClubs().length, 0);
+  assert.equal(ESPN.EARLIEST_SEASON, 2024, 'seules les phases de ligue à 36 sont proposées');
+});
+
+test('compétition : slug inconnu -> Ligue des Champions', () => {
+  assert.equal(loadESPN('', {}, 'uefa.inconnue').LEAGUE_SLUG, 'uefa.champions');
+});
+
+test('leagueClubs : clubs de la phase de ligue (matchs à venir compris), sans doublon ni phase finale', () => {
+  const ESPN = loadESPN('', {}, 'uefa.europa');
+  const clubs = ESPN.leagueClubs([
+    ev('1', ['10', 'Lyon'], ['20', 'Roma'], 'league-phase'),
+    ev('2', ['20', 'Roma'], ['30', 'Porto'], 'league-phase', 'post'),
+    ev('3', ['40', 'Betis'], ['10', 'Lyon'], 'round-of-16')
+  ]);
+  assert.deepEqual(Array.from(clubs, c => c.id + ':' + c.name), ['10:Lyon', '30:Porto', '20:Roma']);
 });
