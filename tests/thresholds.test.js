@@ -67,3 +67,24 @@ test('Europa League : référence 16 / 10 pts, textes de repère tirés des donn
   assert.equal(T.LEAGUE, 'uefa.champions', 'Ligue des Champions par défaut');
   assert.equal(T.forLeague('inconnue').LEAGUE, 'uefa.champions');
 });
+
+/* ---- Conference League -------------------------------------------------- */
+const UECL = T.forLeague('uefa.europa.conf');
+const ueclFx = require('./fixtures/uecl-league-phases.json');
+
+test('Conference League : 6 journées, seuils = points réels des 8e, 9e, 24e et 25e', () => {
+  assert.equal(UECL.MAX_MATCHES, 6);
+  assert.equal(T.MAX_MATCHES, 8);
+  for (const s of UECL.SEASONS) {
+    const ms = ueclFx.seasons[s.season];
+    assert.equal(ms.length, 108, s.season + ' : 108 matchs');
+    const r = E.rankLeaguePhase(ms);
+    assert.ok(r.every(x => x.pld === 6), s.season + ' : 6 matchs par club');
+    assert.deepEqual([r[7].pts, r[8].pts, r[23].pts, r[24].pts], [s.top8, s.ninth, s.top24, s.twentyFifth], s.season);
+  }
+  const r = E.rankLeaguePhase(ueclFx.seasons['2025-26']);
+  assert.deepEqual([r[0].name, r[0].pts, r[0].w, r[0].d], ['Strasbourg', 16, 5, 1], 'leader 2025-26 (TNT Sports)');
+  assert.equal(UECL.reference('top8'), 12);
+  assert.equal(UECL.reference('top24'), 7);
+  assert.equal(UECL.trend('top24'), '7 pts en 2024-25 comme en 2025-26');
+});
