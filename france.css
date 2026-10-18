@@ -84,3 +84,4 @@ body{ background:var(--bg); }
   .fr-grid{ grid-template-columns:1fr; }
 }
 @media (prefers-reduced-motion:reduce){ .fr-pill.live i{ animation:none; } }
+.fr-probs{ grid-column:1 / -1; }
