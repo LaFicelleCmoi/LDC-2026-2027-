@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
 <link rel="stylesheet" href="styles.css?v=21" />
 <link rel="stylesheet" href="clubpanel.css?v=5" />
-<link rel="stylesheet" href="cup.css?v=2" />
+<link rel="stylesheet" href="cup.css?v=3" />
 </head>
 <body>
 <header class="site-header">
@@ -66,6 +66,13 @@
     <div class="live-cards-grid" id="mdGrid"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
   </section>
 
+  <!-- ====== Joueurs ====== -->
+  <section class="section" aria-labelledby="wgTitle">
+    <div class="section-head"><h2 id="wgTitle">Les meilleurs de la saison</h2></div>
+    <div class="wgrid" id="wgrid"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
+    <p class="cup-note" id="wgNote"></p>
+  </section>
+
   <!-- ====== Classement + chiffres ====== -->
   <div class="cup-cols">
     <section class="section" aria-labelledby="topTitle">
@@ -112,6 +119,6 @@
 <script src="schedule.js?v=2"></script>
 <script src="thresholds.js?v=3"></script>
 <script src="clubpanel.js?v=4"></script>
-<script src="cup.js?v=2"></script>
+<script src="cup.js?v=3"></script>
 </body>
 </html>
