@@ -93,6 +93,66 @@ body{ background:var(--bg); }
 .uel-stat.wide b{ font-size:16px; }
 .uel-note{ margin:10px 0 0; font-size:12px; color:var(--muted-2); }
 
+/* ---- Club favori ------------------------------------------------------- */
+/* La couleur du club (--fav-rgb, posée par europa.html) teinte la carte ; sans
+   favori, l'orange de l'Europa League. */
+.uf{ margin:0 0 22px; }
+.uf:empty{ display:none; }
+.uf-card{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:14px 18px; border-radius:var(--radius);
+  background:var(--card); border:1px solid var(--line-2); }
+.uf-card.has-team{ border-color:rgba(var(--gold-rgb),.5); background:linear-gradient(120deg, rgba(var(--gold-rgb),.14), rgba(var(--gold-rgb),.02) 60%), var(--card); }
+.uf-crest{ width:52px; height:52px; object-fit:contain; flex:none; }
+.uf-bigstar{ font-size:28px; color:rgb(var(--gold-rgb)); flex:none; }
+.uf-txt{ flex:1; min-width:220px; }
+.uf-label{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:rgb(var(--gold-rgb)); }
+.uf-name{ font-size:22px; font-weight:900; color:#fff; line-height:1.15; }
+.uf-name.sm{ font-size:16px; }
+.uf-status{ margin-top:5px; font-size:13px; color:var(--muted); display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.uf-olog{ width:18px; height:18px; object-fit:contain; vertical-align:-4px; }
+.uf-score{ color:#fff; font-size:15px; font-variant-numeric:tabular-nums; }
+.uf-pill{ display:inline-flex; align-items:center; gap:6px; padding:2px 9px; border-radius:999px; font-size:11.5px; font-weight:800;
+  background:rgba(var(--gold-rgb),.14); color:rgb(var(--gold-rgb)); border:1px solid rgba(var(--gold-rgb),.35); }
+.uf-pill.live{ background:rgba(255,59,70,.15); color:#ff8a95; border-color:rgba(255,59,70,.45); }
+.uf-pill.live i{ width:6px; height:6px; border-radius:50%; background:#ff3b46; animation:ufPulse 1.4s ease-in-out infinite; }
+.uf-pill.post{ background:rgba(40,199,111,.12); color:#5fdc97; border-color:rgba(40,199,111,.35); }
+@keyframes ufPulse{ 50%{ opacity:.3; } }
+.uf-muted{ color:var(--muted); }
+.uf-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.uf-btn{ font:inherit; font-size:13px; font-weight:800; padding:9px 14px; border-radius:10px; cursor:pointer;
+  background:rgba(255,255,255,.05); color:var(--txt); border:1px solid var(--line-2); transition:.15s; }
+.uf-btn:hover{ border-color:var(--uel); }
+.uf-btn.primary{ background:var(--uel); color:var(--uel-ink); border-color:transparent; }
+.uf-btn.primary:hover{ filter:brightness(1.08); }
+.uf-btn:focus-visible{ outline:2px solid var(--uel); outline-offset:2px; }
+.uf-star{ color:rgb(var(--gold-rgb)); margin-right:5px; }
+.um.has-fav{ border-color:rgba(var(--gold-rgb),.6); }
+.um-team.is-fav .nm{ color:rgb(var(--gold-rgb)); }
+.mini-table tr.is-fav td{ background:rgba(var(--gold-rgb),.10); }
+.mini-table tr.is-fav .nm{ color:rgb(var(--gold-rgb)); font-weight:800; }
+
+/* Choix du club */
+.uf-backdrop{ position:fixed; inset:0; z-index:1200; display:flex; align-items:center; justify-content:center; padding:18px; background:rgba(4,7,16,.86); }
+.uf-backdrop[hidden]{ display:none; }
+.uf-modal{ position:relative; width:600px; max-width:100%; max-height:calc(100vh - 36px); display:flex; flex-direction:column;
+  background:#0d1426; border:1px solid var(--line-2); border-top:3px solid var(--uel); border-radius:18px; padding:20px 20px 0; }
+.uf-x{ position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; border:1px solid var(--line-2);
+  background:#0a1024; color:#fff; font-size:20px; line-height:1; cursor:pointer; }
+.uf-x:hover{ border-color:var(--uel); }
+.uf-x:focus-visible{ outline:2px solid var(--uel); outline-offset:2px; }
+.uf-mtitle{ margin:0 40px 0 0; font-size:20px; font-weight:900; }
+.uf-msub{ margin:4px 0 12px; font-size:13px; color:var(--muted); }
+.uf-search{ width:100%; box-sizing:border-box; padding:10px 14px; border-radius:10px; border:1px solid var(--line-2); background:#0a1430; color:var(--txt); font:inherit; font-size:14px; }
+.uf-search:focus{ outline:none; border-color:var(--uel); }
+.uf-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:10px; padding:14px 0 20px; overflow-y:auto; }
+.uf-club{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 8px; border-radius:12px; cursor:pointer;
+  border:1px solid var(--line-2); background:rgba(255,255,255,.03); color:var(--txt); font:inherit; font-size:12.5px; font-weight:700; text-align:center; line-height:1.2; transition:.15s; }
+.uf-club:hover{ border-color:var(--uel); background:rgba(255,122,26,.08); }
+.uf-club:focus-visible{ outline:2px solid var(--uel); outline-offset:2px; }
+.uf-club.on{ border-color:var(--uel); background:rgba(255,122,26,.14); }
+.uf-club[hidden]{ display:none; }
+.uf-club img, .uf-noimg{ width:40px; height:40px; object-fit:contain; }
+@media (prefers-reduced-motion:reduce){ .uf-pill.live i{ animation:none; } }
+
 /* ---- Fiche club (clubpanel.css) : orange, sans le ballon étoilé LDC ---- */
 .cp-panel{ border-top-color:var(--uel); }
 .cp-head{ background:
@@ -116,6 +176,12 @@ body{ background:var(--bg); }
   .um-grid{ grid-template-columns:1fr; }
   .md-nav{ width:100%; margin-left:0; justify-content:space-between; }
   .md-label{ min-width:0; flex:1; }
+  .uf-card{ padding:14px; gap:12px; }
+  .uf-crest{ width:42px; height:42px; }
+  .uf-name{ font-size:19px; }
+  .uf-actions{ width:100%; }
+  .uf-actions .uf-btn{ flex:1; padding:9px 8px; white-space:nowrap; }
+  .uf-grid{ grid-template-columns:repeat(auto-fill, minmax(96px, 1fr)); gap:8px; }
   .mini-table{ font-size:12.5px; }
   .mini-table th, .mini-table td{ padding:7px 4px; }
 }
