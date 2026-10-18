@@ -98,7 +98,7 @@
     }
     return '<div class="cal-match'+(isFav?' is-fav':'')+(m.state==='in'?' live-row':'')+'">'+
       '<div class="cal-date">'+(m.dateObj?dm(m.dateObj):'—')+leg+'</div>'+
-      side(m.home,'home')+'<div class="cal-score">'+score+aggLine+'</div>'+side(m.away,'away')+
+      side(m.home,'home')+'<button type="button" class="cal-score" data-mp-open="'+esc(m.id)+'" title="'+esc(T('Fiche du match','Match details'))+'">'+score+aggLine+'</button>'+side(m.away,'away')+
       '<div class="cal-status">'+status+'</div></div>';
   }
 
