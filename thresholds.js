@@ -22,6 +22,14 @@
      Haut du tableau recoupé avec la presse (Lyon 1er, Aston Villa 2e à
      21 pts, Roma 8e à 16).
 
+   CONFERENCE LEAGUE — 6 journées ; les 108 matchs ESPN de chaque phase
+   classés par standings-engine.js le 18/10/2026 :
+   - 2024-25 : 8e Cercle Brugge 11 pts, 9e Jagiellonia 11 ; 24e TSC 7,
+     25e Hearts 7 (différence de buts) ;
+   - 2025-26 : 8e AEK Larnaca 12, 9e Lausanne 11 ; 24e Sigma Olomouc 7,
+     25e Craiova 7. Leader Strasbourg à 16 pts (5 V, 1 N), comme au
+     classement publié par TNT Sports.
+
    La compétition suit window.LDC_LEAGUE (voir espn.js) ; forLeague(slug)
    donne les seuils d'une autre.
    API : window.LDCThresholds (et require() dans Node : Ligue des Champions).
@@ -40,15 +48,21 @@
     'uefa.europa': [
       { season: '2024-25', top8: 14, ninth: 14, top24: 10, twentyFifth: 10 },
       { season: '2025-26', top8: 16, ninth: 16, top24: 9, twentyFifth: 9 }
+    ],
+    'uefa.europa.conf': [
+      { season: '2024-25', top8: 11, ninth: 11, top24: 7, twentyFifth: 7 },
+      { season: '2025-26', top8: 12, ninth: 11, top24: 7, twentyFifth: 7 }
     ]
   };
+  /* Matchs de phase de ligue par club. */
+  var MATCHES = { 'uefa.champions': 8, 'uefa.europa': 8, 'uefa.europa.conf': 6 };
 
   return make(DATA[league] ? league : 'uefa.champions');
 
   function make(slug) {
     var SEASONS = DATA[slug];
 
-    var MAX_MATCHES = 8;
+    var MAX_MATCHES = MATCHES[slug];
 
     /* Objectif de référence : le seuil le PLUS ÉLEVÉ des saisons connues, celui
        qui aurait suffi chaque fois. */
