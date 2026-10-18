@@ -1011,7 +1011,10 @@
   /* =======================================================================
      ÉQUIPE FAVORITE — stockage local + liste des clubs pour le sélecteur
      ======================================================================= */
-  var FAV_KEY = 'ldc_fav' + (STORE_NS ? '_' + COMP.key : ''), FAV_SEEN_KEY = 'ldc_fav_seen';
+  /* Un favori par compétition : choisir son club en Europa League ne touche
+     ni le favori LDC ni la proposition de choix affichée sur l'accueil LDC. */
+  var FAV_SUFFIX = STORE_NS ? '_' + COMP.key : '';
+  var FAV_KEY = 'ldc_fav' + FAV_SUFFIX, FAV_SEEN_KEY = 'ldc_fav_seen' + FAV_SUFFIX;
 
   function getFav() {
     try { var s = localStorage.getItem(FAV_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; }
