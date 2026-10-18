@@ -95,6 +95,8 @@ a{ text-decoration:none; color:inherit; }
 .nav-ghost.nav-uel:hover{ color:#fff; background:rgba(255,122,26,.18); border-color:rgba(255,122,26,.7); }
 .nav-ghost.nav-uecl{ display:inline-flex; align-items:center; gap:7px; background:rgba(25,196,79,.10); border-color:rgba(25,196,79,.42); }
 .nav-uecl img{ width:16px; height:16px; flex:none; }
+.nav-ghost.nav-fr{ display:inline-flex; align-items:center; gap:7px; }
+.fr-mini{ width:18px; height:12px; border-radius:2px; flex:none; background:linear-gradient(90deg,#1f4fbf 0 33.3%,#fff 33.3% 66.6%,#e3263a 66.6%); }
 .nav-ghost.nav-uecl:hover{ color:#fff; background:rgba(25,196,79,.18); border-color:rgba(25,196,79,.7); }
 .season-dd{ position:relative; display:inline-block; }
 .season-dd .season-dd-btn{ display:inline-flex; align-items:center; gap:6px; color:var(--white); font-weight:700; font-size:0.72em; letter-spacing:0.04em; text-transform:uppercase; background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:9px 16px; border-radius:10px; cursor:pointer; font-family:inherit; }
@@ -293,6 +295,8 @@ a{ text-decoration:none; color:inherit; }
   background:#111a36; color:var(--muted); font-family:inherit; font-size:0.72em; font-weight:800; cursor:pointer; }
 .simbar .btn-mini:hover{ color:#fff; border-color:var(--gold); }
 .live-card.can-sim{ cursor:pointer; }
+.live-card.state-in, .live-card.state-post{ cursor:pointer; }
+.lc-foot-l{ display:inline-flex; align-items:center; gap:8px; }
 .live-card.is-simmed{ border-color:rgba(var(--gold-rgb,245,181,10),.65)!important; }
 .sim-editor{ display:flex; align-items:center; justify-content:center; gap:7px; margin-top:9px; }
 .sim-editor input{ width:42px; padding:5px 0; border:1px solid var(--border); border-radius:8px; background:#0b1329;
@@ -748,6 +752,7 @@ a{ text-decoration:none; color:inherit; }
 @media (max-width:380px){ .header.has-badge h1{ font-size:clamp(2.4em,13vw,4em); } }
 </style>
 <link rel="stylesheet" href="footer.css?v=2">
+<link rel="stylesheet" href="matchpanel.css?v=1">
 </head>
 <body>
 
@@ -771,6 +776,8 @@ a{ text-decoration:none; color:inherit; }
     <a href="tracker.html" class="nav-forward star-border" data-i18n="dash.toTracker">Classement →</a>
     <a href="europa.html" class="nav-ghost nav-uel" data-noseason title="Europa League : scores, journée en cours et classement" aria-label="Europa League : scores, journée en cours et classement"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
     <a href="conference.html" class="nav-ghost nav-uecl" data-noseason title="Conference League : scores, journée en cours et classement" aria-label="Conference League : scores, journée en cours et classement"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+    <a href="france.html" class="nav-ghost nav-fr" id="navFrance"><span class="fr-mini" aria-hidden="true"></span><span>Clubs français</span></a>
+    <a href="comparateur.html" class="nav-ghost" id="navCompare">⚖ <span>Comparateur</span></a>
     <a href="palmares.html" class="nav-ghost" data-i18n="nav.palmares">Palmarès</a>
     <a href="calendrier.html" class="nav-ghost" data-i18n="nav.calendar">Calendrier</a>
     <a href="jeu.html" class="nav-ghost" data-i18n="nav.game">Jeu</a>
@@ -885,11 +892,13 @@ a{ text-decoration:none; color:inherit; }
 <script src="standings-engine.js?v=1"></script>
 <script src="coefficients2026.js?v=1"></script>
 <script src="schedule.js?v=2"></script>
-<script src="espn.js?v=18"></script>
+<script src="espn.js?v=24"></script>
+<script src="goalalert.js?v=1"></script>
 <script src="footer.js?v=2"></script>
 <script src="simulate.js?v=2"></script>
 <script src="share.js?v=1"></script>
 <script src="ui.js?v=1"></script>
+<script src="matchpanel.js?v=1"></script>
 <script>
 (function(){
   'use strict';
@@ -902,6 +911,9 @@ a{ text-decoration:none; color:inherit; }
 
   /* ---- HERO split text ---- */
   function buildHero(){
+    var nf=el('navFrance'), nc=el('navCompare');
+    if(nf) nf.lastChild.textContent=lang()==='en'?'French clubs':'Clubs français';
+    if(nc) nc.lastChild.textContent=lang()==='en'?'Compare clubs':'Comparateur';
     var target=el('hero-title'); if(!target) return; target.innerHTML='';
     var parts = lang()==='en'
       ? [{t:'CHAMPIONS',c:''},{t:'LEAGUE',c:'gold',gap:true}]
@@ -1023,7 +1035,7 @@ a{ text-decoration:none; color:inherit; }
         '<div class="live-team-row '+(hWin?'winner':'')+'">'+teamLogo(m.home)+'<span class="live-team-name">'+esc(m.home.name)+'</span><span class="live-team-score" data-side="home">'+(state==='pre'?'–':m.home.score)+homePen+'</span></div>'+
         '<div class="live-team-row '+(aWin?'winner':'')+'">'+teamLogo(m.away)+'<span class="live-team-name">'+esc(m.away.name)+'</span><span class="live-team-score" data-side="away">'+(state==='pre'?'–':m.away.score)+awayPen+'</span></div>'+
       '</div>'+
-      '<div class="live-card-footer"><span>'+penFoot+'</span><span class="live-kickoff">'+(state==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>';
+      '<div class="live-card-footer"><span class="lc-foot-l">'+(window.LDCMatchPanel?'<button type="button" class="mp-open-btn" data-mp-open="'+esc(m.id)+'">📋 '+esc(lang()==='en'?'Match details':'Fiche du match')+'</button>':'')+penFoot+'</span><span class="live-kickoff">'+(state==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>';
 
     // détection but -> bump + confettis
     var key=m.home.score+'-'+m.away.score, prev=lastScores[m.id];
@@ -1566,6 +1578,13 @@ a{ text-decoration:none; color:inherit; }
     ins[0].focus();
   }
 
+  /* Clic sur une carte de match en cours ou terminé -> fiche du match. */
+  document.addEventListener('click',function(e){
+    var card=e.target.closest?e.target.closest('.live-card[data-id]'):null;
+    if(!card || card.classList.contains('can-sim') || e.target.closest('[data-team]') || !window.LDCMatchPanel) return;
+    var id=card.dataset.id, m=(todayMatches||[]).concat(seasonMatches||[]).filter(function(x){ return String(x.id)===String(id); })[0];
+    LDCMatchPanel.open(id,{ match:m });
+  });
   /* Clic sur une carte « à venir » -> éditeur. Le clic sur un blason continue
      d'ouvrir la modale club : on ne capture que le reste de la carte. */
   document.addEventListener('click',function(e){
@@ -1972,6 +1991,7 @@ a{ text-decoration:none; color:inherit; }
         '<a class="fav-btn" href="monclub.html" id="favMyClub">📊 '+esc(lang()==='en'?'My club':'Mon club')+'</a>'+
         '<button class="fav-btn primary" id="favShare">📸 '+esc(lang()==='en'?'Share my pass':'Partager mon pass')+'</button>'+
         notifBtnHTML()+
+        (window.LDCGoalAlerts?'<button class="fav-btn notif'+(LDCGoalAlerts.isOn('uefa.champions')?' on':'')+'" id="favGoal" aria-pressed="'+LDCGoalAlerts.isOn('uefa.champions')+'" title="'+esc(LDCGoalAlerts.hint('uefa.champions'))+'">⚽ '+esc(lang()==='en'?'Goal alerts':'Alertes but')+'</button>':'')+
         '<button class="fav-btn" id="favChange">'+esc(I18N.t('fav.change'))+'</button>'+
         '<button class="fav-btn" id="favRemove">'+esc(I18N.t('fav.remove'))+'</button>'+
       '</div>'+notifHintHTML()+'</div>';
@@ -1979,6 +1999,7 @@ a{ text-decoration:none; color:inherit; }
     var ch=el('favChange'); if(ch) ch.addEventListener('click',function(e){ e.stopPropagation(); openFavChooser(); });
     var rm=el('favRemove'); if(rm) rm.addEventListener('click',function(e){ e.stopPropagation(); ESPN.clearFav(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); if(window.LDCLanyard) LDCLanyard.refresh(); });
     var nb=el('favNotif'); if(nb) nb.addEventListener('click', toggleNotif);
+    var gb=el('favGoal'); if(gb) gb.addEventListener('click',function(e){ e.stopPropagation(); LDCGoalAlerts.toggle('uefa.champions').then(function(){ renderFav(); var x=el('favGoal'); if(x) x.focus(); }); });
   }
   function openFavChooser(){
     var modal=el('fav-modal'); if(!modal) return;
