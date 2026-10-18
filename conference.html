@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
 <link rel="stylesheet" href="styles.css?v=21" />
 <link rel="stylesheet" href="clubpanel.css?v=5" />
-<link rel="stylesheet" href="cup.css?v=3" />
+<link rel="stylesheet" href="cup.css?v=4" />
 </head>
 <body>
 <header class="site-header">
@@ -23,6 +23,7 @@
   <nav class="nav">
     <a href="conference.html" class="active" data-i18n="nav.dashboard">Accueil</a>
     <a href="conference-classement.html" data-i18n="nav.tracker">Classement</a>
+    <a href="conference-monclub.html" data-i18n="nav.myclub">Mon club</a>
     <a href="europa.html" class="nav-cup to-uel"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
     <a href="dashboard.html" class="nav-ucl"><img src="logo.svg?v=4" alt="" width="16" height="16"><span data-i18n="uel.toUcl">← Ligue des Champions</span></a>
   </nav>
@@ -66,6 +67,27 @@
     <div class="live-cards-grid" id="mdGrid"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
   </section>
 
+  <!-- ====== Classement par zones (dynamique, comme l'accueil LDC) ====== -->
+  <section class="section zones" aria-labelledby="zonesTitle">
+    <div class="section-head"><h2 id="zonesTitle">Le classement par zone</h2><span class="sub" id="zonesSync"></span>
+      <a class="zones-more" href="conference-classement.html" id="zonesMore">Classement complet →</a></div>
+    <div class="simbar" id="simbar" style="display:none">
+      <span class="simbar-t"></span>
+      <button class="btn-mini" type="button" id="simReset">Réinitialiser</button>
+    </div>
+    <div class="zbar">
+      <div class="zsearch">
+        <span class="zs-ico" aria-hidden="true">🔍</span>
+        <input type="search" id="zq" autocomplete="off" spellcheck="false" placeholder="Rechercher un club…" aria-label="Rechercher un club">
+        <button class="zs-clear" type="button" id="zqClear" style="display:none" aria-label="Effacer">×</button>
+      </div>
+      <select class="zcountry" id="zco" aria-label="Filtrer par pays"></select>
+      <span class="zbar-hits" id="zhits"></span>
+    </div>
+    <div class="zones-grid" id="zonesGrid"><div class="empty-state" style="grid-column:1/-1" data-i18n="common.loading">Chargement…</div></div>
+    <p class="cup-note" id="zonesNote"></p>
+  </section>
+
   <!-- ====== Joueurs ====== -->
   <section class="section" aria-labelledby="wgTitle">
     <div class="section-head"><h2 id="wgTitle">Les meilleurs de la saison</h2></div>
@@ -73,28 +95,21 @@
     <p class="cup-note" id="wgNote"></p>
   </section>
 
-  <!-- ====== Classement + chiffres ====== -->
-  <div class="cup-cols">
-    <section class="section" aria-labelledby="topTitle">
-      <div class="section-head"><h2 id="topTitle">Top 8</h2><span class="sub" id="topSub"></span></div>
-      <div class="card pad">
-        <table class="mini-table">
-          <thead><tr><th>#</th><th style="text-align:left" data-i18n="trk.col.club">Club</th><th data-i18n="trk.col.pld">J</th><th data-i18n="trk.col.gd">Diff</th><th data-i18n="trk.col.pts">Pts</th></tr></thead>
-          <tbody id="topBody"><tr><td colspan="5" class="empty-state" data-i18n="common.loading">Chargement…</td></tr></tbody>
-        </table>
-        <div class="mini-foot"><span id="topNote"></span><a href="conference-classement.html" id="topLink">Les 36 clubs →</a></div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="statsTitle">
-      <div class="section-head"><h2 id="statsTitle">La saison en chiffres</h2></div>
-      <div class="card pad">
-        <div class="cup-stats" id="statsBody"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
-        <p class="cup-note" id="statsNote"></p>
-      </div>
-    </section>
-  </div>
+  <!-- ====== Chiffres ====== -->
+  <section class="section" aria-labelledby="statsTitle">
+    <div class="section-head"><h2 id="statsTitle">La saison en chiffres</h2></div>
+    <div class="card pad">
+      <div class="cup-stats" id="statsBody"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
+      <p class="cup-note" id="statsNote"></p>
+    </div>
+  </section>
 </main>
+
+<!-- ====== Défilé des logos ====== -->
+<section class="loop-section" aria-labelledby="loopLabel">
+  <div class="loop-label" id="loopLabel">⚽ Les clubs · clique sur un logo</div>
+  <div class="loop"><div class="loop-track" id="loopTrack"></div></div>
+</section>
 
 <div class="uf-backdrop" id="favModal" hidden>
   <div class="uf-modal" role="dialog" aria-modal="true" aria-labelledby="favModalTitle">
@@ -115,10 +130,12 @@
 <script>window.LDC_LEAGUE = 'uefa.europa.conf';</script>
 <script src="i18n.js?v=27"></script>
 <script src="standings-engine.js?v=1"></script>
-<script src="espn.js?v=21"></script>
+<script src="espn.js?v=22"></script>
 <script src="schedule.js?v=2"></script>
 <script src="thresholds.js?v=3"></script>
+<script src="simulate.js?v=2"></script>
+<script src="cupclubs2026.js?v=1"></script>
 <script src="clubpanel.js?v=4"></script>
-<script src="cup.js?v=3"></script>
+<script src="cup.js?v=4"></script>
 </body>
 </html>
