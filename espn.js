@@ -484,6 +484,11 @@
       status: status,
       competitions: [{
         id: c.id, date: c.date, status: status, notes: c.notes, leg: c.leg, series: c.series,
+        odds: (c.odds || []).filter(Boolean).slice(0, 1).map(function (o) {
+          function side(x, k) { var ml = mlOf(o, k); return (x || ml != null) ? { value: x && x.value, moneyLine: (x && x.moneyLine != null) ? x.moneyLine : ml } : null; }
+          return { provider: { displayName: o.provider && (o.provider.displayName || o.provider.name) },
+                   homeTeamOdds: side(o.homeTeamOdds, 'home'), awayTeamOdds: side(o.awayTeamOdds, 'away'), drawOdds: side(o.drawOdds, 'draw') };
+        }),
         competitors: (c.competitors || []).map(function (x) {
           var t = x.team || {};
           return { id: x.id, homeAway: x.homeAway, score: x.score, shootoutScore: x.shootoutScore, winner: x.winner,
@@ -641,6 +646,17 @@
                         : '⚠ ESPN est momentanément injoignable — données du ' + when + '. Mise à jour automatique dès son retour.';
   }
 
+  /* Un match déjà chargé (n'importe quel tableau en mémoire), normalisé, ou
+     null : la fiche de match s'en sert en attendant son résumé. */
+  function cachedMatch(eventId) {
+    var keys = Object.keys(scoreboardCache);
+    for (var i = 0; i < keys.length; i++) {
+      var evs = scoreboardCache[keys[i]].data || [];
+      for (var j = 0; j < evs.length; j++) if (evs[j] && String(evs[j].id) === String(eventId)) return normalizeEvent(evs[j]);
+    }
+    return null;
+  }
+
   /* ---- Summary (buteurs, cartons, etc.) --------------------------------- */
   function fetchSummary(eventId, opts) {
     opts = opts || {};
@@ -695,6 +711,7 @@
         seasonSlug: (ev.season && ev.season.slug) ? String(ev.season.slug) : '',
         leg: (comp.leg && comp.leg.value) || null,
         series: comp.series || null,
+        odds: parseOdds(comp),
         home: normalizeCompetitor(home),
         away: normalizeCompetitor(away),
         competition: comp
@@ -702,6 +719,39 @@
     } catch (e) {
       return null;
     }
+  }
+
+  /* Cotes 1/N/2 publiées avec le calendrier (Bet365 sur ESPN) -> probabilités
+     implicites, marge du bookmaker retirée : { home, draw, away, provider },
+     en pourcentages entiers. Cote décimale (value) ou américaine (moneyLine). */
+  function oddsProb(x) {
+    if (!x) return null;
+    var v = parseFloat(x.value);
+    if (v > 1) return 1 / v;
+    var ml = parseFloat(x.moneyLine);
+    if (!ml || isNaN(ml)) return null;
+    return ml > 0 ? 100 / (ml + 100) : -ml / (-ml + 100);
+  }
+  /* Deux formats ESPN : Bet365 (homeTeamOdds.value, décimal) et DraftKings
+     (bloc « moneyline » : home/away/draw .close.odds, américain, en texte). */
+  function mlOf(o, k) {
+    var ml = o && o.moneyline && o.moneyline[k];
+    var v = ml && ((ml.close && ml.close.odds) || (ml.open && ml.open.odds));
+    var n = parseFloat(String(v || '').replace('+', ''));
+    return isNaN(n) ? null : n;
+  }
+  function parseOdds(comp) {
+    var list = (comp && comp.odds || []).filter(Boolean);
+    for (var i = 0; i < list.length; i++) {
+      var o = list[i];
+      var h = oddsProb(o.homeTeamOdds) || oddsProb({ moneyLine: mlOf(o, 'home') });
+      var a = oddsProb(o.awayTeamOdds) || oddsProb({ moneyLine: mlOf(o, 'away') });
+      var d = oddsProb(o.drawOdds) || oddsProb({ moneyLine: mlOf(o, 'draw') });
+      if (!h || !a || !d) continue;
+      var sum = h + a + d, ph = Math.round(h / sum * 100), pa = Math.round(a / sum * 100);
+      return { home: ph, away: pa, draw: 100 - ph - pa, provider: (o.provider && (o.provider.displayName || o.provider.name)) || '' };
+    }
+    return null;
   }
 
   function normalizeCompetitor(c) {
@@ -1580,6 +1630,7 @@
     lastSeasonSync: lastSeasonSync,
     staleSince: staleSince,
     fetchDayEvents: fetchDayEvents,
+    cachedMatch: cachedMatch,
     clubTitlesById: clubTitlesById,
     fetchScorerBoard: fetchScorerBoard,
     aggregateMatchScorers: aggregateMatchScorers,
