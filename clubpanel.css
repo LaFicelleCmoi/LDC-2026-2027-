@@ -181,3 +181,11 @@ html.cp-open{ overflow:hidden; }
   .cp-badge.live i{ animation:none; }
   .cp-live-pill i, .cp-lv-num.bump{ animation:none; }
 }
+/* Matchs de la fiche : ouvrent la fiche de match (matchpanel.js). */
+.cp-panel [data-mp-open]{ cursor:pointer; }
+.cp-panel .cp-match[data-mp-open]:hover{ background:rgba(255,255,255,.04); }
+.cp-panel [data-mp-open]:focus-visible{ outline:2px solid #f5b50a; outline-offset:-2px; border-radius:10px; }
+.cp-cmp{ display:inline-flex; align-items:center; gap:5px; margin-left:6px; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:800;
+  color:#e6eaf5; border:1px solid rgba(255,255,255,.22); background:rgba(0,0,0,.25); vertical-align:middle; }
+.cp-cmp:hover{ border-color:#f5b50a; color:#fff; }
+.cp-cmp:focus-visible{ outline:2px solid #f5b50a; outline-offset:2px; }
