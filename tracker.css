@@ -14,6 +14,11 @@
 .standings .club-cell .nm{ font-weight:700; }
 .standings .tbl-cup{ font-size:11px; font-weight:800; color:var(--upcoming); margin-left:7px; white-space:nowrap; }
 .standings td.pts{ font-weight:900; }
+/* Chances de qualification (chances.js) : pourcentage et barre de fond. */
+.standings th.ch{ cursor:help; }
+.standings td.ch{ font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--muted);
+  background:linear-gradient(90deg, rgba(var(--gold-rgb,245,181,10),.16) var(--p), transparent var(--p)); }
+.standings td.ch.hi{ color:#5fdc97; } .standings td.ch.mid{ color:var(--txt); } .standings td.ch.xlo{ color:var(--muted-2); }
 .standings td.pos{ font-weight:800; position:relative; padding-left:14px; }
 .standings td.pos::before{ content:""; position:absolute; left:0; top:6px; bottom:6px; width:4px; border-radius:3px; background:transparent; }
 tr.z-q td.pos::before{ background:var(--zone-q); }
