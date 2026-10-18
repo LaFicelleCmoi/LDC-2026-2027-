@@ -99,7 +99,7 @@
     return '<div class="cal-match'+(isFav?' is-fav':'')+(m.state==='in'?' live-row':'')+'">'+
       '<div class="cal-date">'+(m.dateObj?dm(m.dateObj):'—')+leg+'</div>'+
       side(m.home,'home')+'<button type="button" class="cal-score" data-mp-open="'+esc(m.id)+'" title="'+esc(T('Fiche du match','Match details'))+'">'+score+aggLine+'</button>'+side(m.away,'away')+
-      '<div class="cal-status">'+status+'</div>'+(window.LDCMatchPanel&&LDCMatchPanel.probBar&&m.state==='pre'&&m.odds?'<div class="cal-probs">'+LDCMatchPanel.probBar(m.odds, m.home.abbr||m.home.name, m.away.abbr||m.away.name, 'sm')+'</div>':'')+'</div>';
+      '<div class="cal-status">'+status+'</div></div>';
   }
 
   /* ---- Adversaires de phase de ligue (d'après le calendrier) ---- */
