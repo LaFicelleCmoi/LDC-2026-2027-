@@ -270,6 +270,10 @@
     'uel.title':        { fr: 'Tracker Europa League',   en: 'Europa League Tracker' },
     'uel.toUcl':        { fr: '← Ligue des Champions',   en: '← Champions League' },
     'uel.champion':     { fr: 'Vainqueur de l’Europa League', en: 'Europa League winner' },
+    /* --- Conference League (conference.html, conference-classement.html) --- */
+    'nav.uecl':         { fr: 'Conference League',       en: 'Conference League' },
+    'uecl.title':       { fr: 'Tracker Conference League', en: 'Conference League Tracker' },
+    'uecl.champion':    { fr: 'Vainqueur de la Conference League', en: 'Conference League winner' },
     'trk.col.form':     { fr: 'Forme',                   en: 'Form' },
     'cal.title':        { fr: 'Calendrier',              en: 'Schedule' },
     'cal.sub':          { fr: 'Tous les matchs de la saison, par journée', en: 'All season matches, by matchday' },
