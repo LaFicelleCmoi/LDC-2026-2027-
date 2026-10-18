@@ -49,7 +49,7 @@
     else score='<b class="fr-sc'+(st==='in'?' live':'')+'">'+m.home.score+' – '+m.away.score+'</b>'+(st==='in'?'<span class="fr-min">'+esc(/HT|Half/i.test(m.statusDetail)?T('MT','HT'):(m.displayClock||''))+'</span>':(withDate?'<span class="fr-min">'+esc(m.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'}))+'</span>':''));
     function side(x,cls){ return '<span class="fr-side '+cls+(isFr(c,x.teamId)?' fr':'')+'">'+(cls==='h'?'<span class="nm">'+esc(x.name)+'</span>'+crest(x.logo,'fr-mlogo'):crest(x.logo,'fr-mlogo')+'<span class="nm">'+esc(x.name)+'</span>')+'</span>'; }
     return '<button type="button" class="fr-match'+(st==='in'?' is-live':'')+'" data-mp-open="'+esc(m.id)+'" data-mp-league="'+c.slug+'" title="'+esc(T('Fiche du match','Match details'))+'">'+
-      '<img class="fr-comp" src="'+c.icon+'" alt="'+esc(compName(c))+'" title="'+esc(compName(c))+'">'+side(m.home,'h')+'<span class="fr-mid">'+score+'</span>'+side(m.away,'a')+'</button>';
+      '<img class="fr-comp" src="'+c.icon+'" alt="'+esc(compName(c))+'" title="'+esc(compName(c))+'">'+side(m.home,'h')+'<span class="fr-mid">'+score+'</span>'+side(m.away,'a')+(window.LDCMatchPanel&&LDCMatchPanel.probBar&&m.state==='pre'&&m.odds?'<div class="fr-probs">'+LDCMatchPanel.probBar(m.odds, m.home.abbr||m.home.name, m.away.abbr||m.away.name, 'sm')+'</div>':'')+'</button>';
   }
 
   /* ---- Carte d'un club ---- */
