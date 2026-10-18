@@ -297,8 +297,6 @@ a{ text-decoration:none; color:inherit; }
 .live-card.can-sim{ cursor:pointer; }
 .live-card.state-in, .live-card.state-post{ cursor:pointer; }
 .lc-foot-l{ display:inline-flex; align-items:center; gap:8px; }
-.lc-probs{ margin-top:-4px; }
-.live-card.size-small .lc-probs .mp-probs span{ display:none; }
 .live-card.is-simmed{ border-color:rgba(var(--gold-rgb,245,181,10),.65)!important; }
 .sim-editor{ display:flex; align-items:center; justify-content:center; gap:7px; margin-top:9px; }
 .sim-editor input{ width:42px; padding:5px 0; border:1px solid var(--border); border-radius:8px; background:#0b1329;
@@ -1039,7 +1037,6 @@ a{ text-decoration:none; color:inherit; }
         '<div class="live-team-row '+(hWin?'winner':'')+'">'+teamLogo(m.home)+'<span class="live-team-name">'+esc(m.home.name)+'</span><span class="live-team-score" data-side="home">'+(state==='pre'?'–':m.home.score)+homePen+'</span></div>'+
         '<div class="live-team-row '+(aWin?'winner':'')+'">'+teamLogo(m.away)+'<span class="live-team-name">'+esc(m.away.name)+'</span><span class="live-team-score" data-side="away">'+(state==='pre'?'–':m.away.score)+awayPen+'</span></div>'+
       '</div>'+
-      (window.LDCMatchPanel&&LDCMatchPanel.probBar&&m.state==='pre'&&m.odds?'<div class="lc-probs">'+LDCMatchPanel.probBar(m.odds, m.home.abbr||m.home.name, m.away.abbr||m.away.name, 'sm')+'</div>':'')+
       '<div class="live-card-footer"><span class="lc-foot-l">'+(window.LDCMatchPanel?'<button type="button" class="mp-open-btn" data-mp-open="'+esc(m.id)+'">📋 '+esc(lang()==='en'?'Match details':'Fiche du match')+'</button>':'')+penFoot+'</span><span class="live-kickoff">'+(state==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>';
 
     // détection but -> bump + confettis
