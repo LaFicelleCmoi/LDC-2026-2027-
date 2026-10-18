@@ -299,8 +299,8 @@ test('compétition : Europa League, sans le palmarès ni les qualifiés de la LD
   assert.match(ESPN.BASE, /\/uefa\.europa$/);
   assert.equal(ESPN.STORE_NS, 'uel_');
   assert.deepEqual([ESPN.COMP.home, ESPN.COMP.standings], ['europa.html', 'europa-classement.html']);
-  assert.equal(ESPN.clubTitlesById(86), null, 'pas de titres LDC dans le classement Europa League');
-  assert.equal(ESPN.championOfSeason(2025), null);
+  assert.deepEqual(Array.from(ESPN.clubTitlesById(86).years), [1985, 1986], 'titres Coupe UEFA du Real, pas ses 15 LDC');
+  assert.equal(ESPN.championOfSeason(2025).name, 'Aston Villa');
   assert.equal(ESPN.qualifiedClubs().length, 0);
   assert.equal(ESPN.EARLIEST_SEASON, 2024, 'seules les phases de ligue à 36 sont proposées');
 });
@@ -350,4 +350,23 @@ test('forLeague : une instance par compétition, la compétition de la page inch
   assert.equal(ESPN.forLeague('uefa.europa.conf'), conf, 'instance réutilisée');
   assert.equal(ESPN.forLeague('uefa.europa'), ESPN, 'la compétition de la page renvoie l’instance principale');
   assert.equal(conf.forLeague('uefa.europa'), ESPN);
+});
+
+test('palmarès Europa League : 55 finales 1972-2026, une par an, Séville 7 titres', () => {
+  const ESPN = loadESPN('', {}, 'uefa.europa');
+  const r = ESPN.palmaresRanking();
+  const years = [].concat(...r.map(x => Array.from(x.years))).sort((a, b) => a - b);
+  assert.equal(years.length, 55);
+  for (let y = 1972; y <= 2026; y++) assert.ok(years.includes(y), 'finale ' + y);
+  assert.equal(new Set(years).size, 55, 'pas deux vainqueurs la même année');
+  assert.deepEqual([r[0].name, r[0].n], ['Sevilla', 7]);
+  r.forEach(x => assert.equal(x.n, x.years.length, x.name));
+  assert.equal(ESPN.championOfSeason(1971).name, 'Tottenham Hotspur', '1re édition 1971-72');
+});
+
+test('palmarès Conference League : 5 vainqueurs 2022-2026', () => {
+  const C = loadESPN('', {}, 'uefa.europa.conf');
+  assert.deepEqual(Array.from(C.palmaresRanking(), x => x.years[0] + ' ' + x.name).sort(),
+    ['2022 AS Roma', '2023 West Ham United', '2024 Olympiacos', '2025 Chelsea FC', '2026 Crystal Palace']);
+  assert.equal(C.clubTitlesById(86), null);
 });
