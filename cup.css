@@ -320,6 +320,79 @@ body{ background:var(--bg); }
 }
 @media (prefers-reduced-motion:reduce){ .mc-live-pill i, .mc-camp.skel .mc-res{ animation:none; } }
 
+/* ---- Calendrier (cup-calendar.js), repris de calendrier.html ----------- */
+.cal-wrap{ max-width:920px; }
+.cal-view-switch{ display:inline-grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; margin:0 0 18px; padding:4px; border:1px solid var(--line-2); border-radius:13px; background:rgba(7,14,35,.7); }
+.cal-view-btn{ min-width:190px; padding:10px 16px; border:0; border-radius:9px; background:transparent; color:var(--muted); font:inherit; font-size:12.5px; font-weight:900; cursor:pointer; transition:background .18s ease, color .18s ease; }
+.cal-view-btn:hover{ color:var(--txt); }
+.cal-view-btn:focus-visible{ outline:2px solid var(--cup); outline-offset:2px; }
+.cal-view-btn.active{ color:var(--cup-ink); background:var(--cup); }
+.cal-filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:20px; }
+.cal-next{ position:fixed; right:16px; bottom:16px; z-index:60; display:inline-flex; align-items:center; gap:7px; padding:11px 16px; border:none; border-radius:999px; cursor:pointer;
+  font:inherit; font-weight:800; font-size:13px; background:var(--cup); color:var(--cup-ink); box-shadow:0 10px 26px rgba(0,0,0,.45); }
+.cal-next:hover{ filter:brightness(1.06); }
+.cal-next:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+.cal-select{ flex:1 1 200px; max-width:280px; padding:9px 12px; border-radius:10px; border:1px solid var(--line-2); background:var(--card); color:var(--txt); font:inherit; font-size:13px; cursor:pointer; }
+.cal-select:focus{ outline:none; border-color:var(--cup); }
+.cal-myteam{ display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border-radius:10px; border:1px solid rgba(var(--gold-rgb),.5); background:rgba(var(--gold-rgb),.12);
+  color:rgb(var(--gold-rgb)); font:inherit; font-weight:800; font-size:12px; cursor:pointer; transition:.15s; }
+.cal-myteam.active{ background:rgb(var(--gold-rgb)); color:#13203f; border-color:transparent; }
+.cal-myteam:hover{ filter:brightness(1.06); }
+.cal-group{ margin-bottom:24px; }
+.cal-group-head{ display:flex; align-items:center; gap:10px; margin:0 0 11px; font-family:var(--font-d); font-size:22px; letter-spacing:.04em; color:var(--cup); }
+.cal-count{ font-family:inherit; font-size:11px; font-weight:800; color:var(--muted); background:var(--card); border:1px solid var(--line); border-radius:20px; padding:2px 9px; letter-spacing:0; }
+.cal-match{ display:grid; grid-template-columns:52px 1fr 64px 1fr 58px; align-items:center; gap:10px; padding:9px 12px; border:1px solid var(--line); border-radius:11px; background:var(--card); }
+.cal-match + .cal-match{ margin-top:8px; }
+.cal-match.is-fav{ border-color:rgba(var(--gold-rgb),.6); background:rgba(var(--gold-rgb),.09); }
+.cal-match.live-row{ border-color:rgba(255,93,108,.55); }
+.cal-date{ font-size:11px; color:var(--muted); text-align:center; line-height:1.3; }
+.cal-leg{ display:block; margin-top:3px; font-size:9px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:1px 2px; border-radius:5px; }
+.cal-leg.a{ color:#9fd0ff; background:rgba(59,123,255,.18); }
+.cal-leg.r{ color:var(--cup); background:rgba(var(--cup-rgb),.18); }
+.cal-side{ display:flex; align-items:center; gap:8px; min-width:0; padding:0; border:0; background:none; color:inherit; font:inherit; cursor:pointer; text-align:left; }
+.cal-side.home{ flex-direction:row-reverse; text-align:right; }
+.cal-side:hover .nm{ text-decoration:underline; text-underline-offset:3px; }
+.cal-side:focus-visible{ outline:2px solid var(--cup); outline-offset:2px; border-radius:6px; }
+.cal-side .nm{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cal-side img, .cal-side .nl{ width:22px; height:22px; object-fit:contain; flex-shrink:0; display:inline-block; }
+.cal-score{ text-align:center; font-weight:900; font-size:16px; font-variant-numeric:tabular-nums; }
+.cal-score .cal-sep{ opacity:.5; margin:0 2px; }
+.cal-score .cal-vs{ color:var(--muted-2); font-weight:700; }
+.cal-score .pen{ display:block; font-size:9px; color:#6f9bff; font-weight:700; }
+.cal-score .cal-agg{ display:block; margin-top:2px; font-size:9px; font-weight:800; letter-spacing:.02em; color:var(--cup); white-space:nowrap; }
+.cal-status{ font-size:10px; text-align:center; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.cal-status .live{ color:var(--live); font-weight:800; }
+.cal-status .ft{ color:var(--finished); font-weight:800; }
+.cal-status .cal-time{ color:var(--cup); font-weight:800; }
+.draw-intro{ display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin-bottom:18px; padding:15px 17px; border:1px solid rgba(var(--cup-rgb),.42); border-radius:13px;
+  background:linear-gradient(135deg, rgba(var(--cup-rgb),.13), rgba(255,255,255,.025)); }
+.draw-intro strong{ display:block; color:var(--txt); font-size:16px; margin-bottom:4px; }
+.draw-intro span{ color:var(--muted); font-size:12.5px; line-height:1.45; }
+.draw-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; margin-bottom:28px; }
+.draw-card{ padding:13px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+.draw-card.is-fav{ border-color:rgba(var(--gold-rgb),.65); background:rgba(var(--gold-rgb),.08); }
+.draw-team{ display:flex; align-items:center; gap:9px; width:100%; margin-bottom:11px; padding:0; border:0; background:none; color:var(--txt); font:inherit; font-weight:900; font-size:14px; cursor:pointer; text-align:left; }
+.draw-team img, .draw-team .nl{ width:25px; height:25px; object-fit:contain; }
+.draw-venues{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.draw-venue{ min-width:0; }
+.draw-venue-title{ margin-bottom:6px; color:var(--cup); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
+.draw-opp{ display:flex; align-items:center; gap:6px; width:100%; min-width:0; padding:5px 0; border:0; background:none; color:var(--txt); font:inherit; font-size:11.5px; font-weight:700; cursor:pointer; text-align:left; }
+.draw-opp:hover span{ text-decoration:underline; }
+.draw-opp img, .draw-opp .nl{ width:18px; height:18px; flex:0 0 auto; object-fit:contain; }
+.draw-opp span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+.draw-res{ font-size:11px; font-variant-numeric:tabular-nums; padding:1px 5px; border-radius:5px; }
+.draw-res.w{ color:#7ff0b0; background:rgba(46,213,115,.14); } .draw-res.d{ color:#cfd8ec; background:rgba(200,210,230,.12); } .draw-res.l{ color:#ff9aa4; background:rgba(255,71,87,.14); }
+.draw-when{ font-size:10.5px; color:var(--muted); font-weight:700; }
+.draw-team:focus-visible, .draw-opp:focus-visible{ outline:2px solid var(--cup); outline-offset:2px; border-radius:6px; }
+@media (max-width:680px){ .draw-grid{ grid-template-columns:1fr; } .draw-intro{ flex-direction:column; gap:8px; } }
+@media (max-width:560px){
+  .cal-view-switch{ display:grid; width:100%; } .cal-view-btn{ min-width:0; padding:10px 8px; font-size:11.5px; }
+  .cal-match{ grid-template-columns:42px 1fr 56px 1fr; gap:7px; padding:8px 9px; }
+  .cal-status{ display:none; }
+  .cal-side .nm{ font-size:12px; }
+  .cal-group-head{ font-size:19px; }
+}
+
 /* ---- Chiffres de la saison --------------------------------------------- */
 .cup-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; }
 .cup-stat{ background:var(--bg-soft); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
