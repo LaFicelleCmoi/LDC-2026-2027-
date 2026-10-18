@@ -160,6 +160,23 @@
   var api = { parseSummary: parseSummary, implied: implied, STATS: STATS };
   if (typeof document === 'undefined') return api;
 
+  /* Barre « probabilités du marché », partagée par toutes les pages (cartes de
+     match, calendriers, fiches) : domicile / nul / extérieur, largeur
+     proportionnelle. p : { home, draw, away, provider } (ESPN.normalizeEvent
+     ou résumé). size 'sm' : version compacte des cartes. */
+  function probBar(p, home, away, size) {
+    if (!p) return '';
+    var t = function (fr, en) { return (window.I18N && I18N.getLang() === 'en') ? en : fr; };
+    var e = function (x) { return String(x == null ? '' : x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var label = t('Probabilités du marché', 'Market probabilities') + ' : ' + home + ' ' + p.home + ' %, ' + t('nul', 'draw') + ' ' + p.draw + ' %, ' + away + ' ' + p.away + ' %' +
+      (p.provider ? ' (' + t('cotes ', 'odds: ') + p.provider + ')' : '');
+    /* Largeur minimale : le pourcentage reste lisible même pour une faible probabilité. */
+    function seg(cls, v, l) { return '<div style="flex:' + Math.max(v, size === 'sm' ? 20 : 12) + '" class="' + cls + '"><b>' + v + ' %</b><span>' + e(l) + '</span></div>'; }
+    return '<div class="mp-probs' + (size === 'sm' ? ' sm' : '') + '" role="img" aria-label="' + e(label) + '" title="' + e(label) + '">' +
+      seg('h', p.home, home) + seg('d', p.draw, t('Nul', 'Draw')) + seg('a', p.away, away) + '</div>';
+  }
+  api.probBar = probBar;
+
   /* ---------------- 2. Fenêtre ---------------- */
   var LIVE_REFRESH = 30000;
   function isEn() { try { return window.I18N && I18N.getLang() === 'en'; } catch (e) { return false; } }
@@ -178,7 +195,7 @@
   function fromMatch(m) {
     function side(c) { return { id: String(c.teamId || ''), name: c.name, abbr: c.abbr, logo: c.logo, score: c.score, shootout: c.shootout, winner: !!c.winner }; }
     return { id: String(m.id), date: m.date, state: m.state, detail: m.statusDetail || '', clock: m.displayClock || '', home: side(m.home), away: side(m.away),
-             goals: { home: [], away: [] }, events: [], lineups: {}, stats: [], form: {}, probs: null, venue: null, attendance: null, round: '' };
+             goals: { home: [], away: [] }, events: [], lineups: {}, stats: [], form: {}, probs: m.odds || null, venue: null, attendance: null, round: '' };
   }
 
   function statusLine(d) {
@@ -258,14 +275,12 @@
     }).join('') + '</div>';
   }
   function tabPre(d) {
-    var html = '';
-    if (d.probs) {
+    var html = '', pr = d.probs || (state.base && state.base.probs);
+    if (pr) {
       html += '<div class="mp-box"><div class="mp-box-t">' + esc(T('Probabilités du marché', 'Market probabilities')) + '</div>' +
-        '<div class="mp-probs"><div style="flex:' + d.probs.home + '" class="h"><b>' + d.probs.home + ' %</b><span>' + esc(d.home.abbr || d.home.name) + '</span></div>' +
-        '<div style="flex:' + d.probs.draw + '" class="d"><b>' + d.probs.draw + ' %</b><span>' + esc(T('Nul', 'Draw')) + '</span></div>' +
-        '<div style="flex:' + d.probs.away + '" class="a"><b>' + d.probs.away + ' %</b><span>' + esc(d.away.abbr || d.away.name) + '</span></div></div>' +
-        '<p class="mp-note">' + esc(T('Déduites des cotes ' + (d.probs.provider || '') + ' publiées par ESPN, marge du bookmaker retirée. Indicatif.',
-                                     'Derived from ' + (d.probs.provider || '') + ' odds published by ESPN, bookmaker margin removed. Indicative.')) + '</p></div>';
+        probBar(pr, d.home.abbr || d.home.name, d.away.abbr || d.away.name) +
+        '<p class="mp-note">' + esc(T('Déduites des cotes ' + (pr.provider || '') + ' publiées par ESPN, marge du bookmaker retirée. Indicatif.',
+                                     'Derived from ' + (pr.provider || '') + ' odds published by ESPN, bookmaker margin removed. Indicative.')) + '</p></div>';
     }
     function formCol(side, t) {
       var f = d.form[side]; if (!f || !f.length) return '';
@@ -313,6 +328,11 @@
     espn.fetchSummary(id, { ttl: 15000 }).then(function (s) {
       if (state.id !== id) return;
       state.data = parseSummary(s); state.err = false;
+      /* Résumé incomplet : on garde les équipes et l'état déjà connus. */
+      if (!state.data.home.id && state.base && state.base.home && state.base.home.id) {
+        state.data.home = state.base.home; state.data.away = state.base.away;
+        if (!state.data.date) state.data.date = state.base.date;
+      }
       render();
       if (state.data.state === 'in' || (state.data.state === 'pre' && state.data.date && Date.parse(state.data.date) - Date.now() < 15 * 60000)) state.timer = setTimeout(load, LIVE_REFRESH);
     }, function () {
@@ -362,7 +382,8 @@
     state.lastFocus = document.activeElement;
     state.id = String(eventId); state.espn = opts.espn || window.ESPN;
     state.data = null; state.err = false; state.tab = opts.tab || null; state.tabChosen = !!opts.tab;
-    state.base = opts.match ? fromMatch(opts.match) : { id: state.id, state: 'pre', home: { name: '…' }, away: { name: '…' }, goals: { home: [], away: [] }, events: [], lineups: {}, stats: [], form: {} };
+    var known = opts.match || (state.espn && state.espn.cachedMatch ? state.espn.cachedMatch(state.id) : null);
+    state.base = known ? fromMatch(known) : { id: state.id, state: 'pre', home: { name: '…' }, away: { name: '…' }, goals: { home: [], away: [] }, events: [], lineups: {}, stats: [], form: {} };
     host.hidden = false;
     document.documentElement.classList.add('mp-open');
     render();
