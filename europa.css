@@ -1,0 +1,121 @@
+/* =========================================================================
+   europa.css — Thème et page d'accueil Europa League
+   Chargé EN DERNIER (après styles.css, tracker.css et clubpanel.css) sur
+   europa.html et europa-classement.html.
+   L'or de la Ligue des Champions devient l'orange de l'Europa League ; le
+   texte posé sur l'orange reste sombre (#1a0b00 sur #ff7a1a : 7,6:1).
+   ========================================================================= */
+:root{
+  --gold-rgb: var(--fav-rgb, 255, 122, 26);
+  --accent:   #ff7a1a;
+  --accent-2: #ffb066;
+  --uel:      #ff7a1a;
+  --uel-ink:  #1a0b00;
+}
+body{ background:var(--bg); }
+
+/* ---- En-tête ------------------------------------------------------------ */
+.brand .star{ background-image:url('europa.svg?v=1'); }
+.nav a.active, .btn.active, .lang-btn.active{ color:var(--uel-ink); }
+.lang-toggle .lt-thumb{ background:var(--uel); }
+.lang-toggle .lt-opt.active{ color:var(--uel-ink); }
+.lang-toggle .lt-opt:focus-visible{ outline-color:var(--uel); }
+.nav a.nav-ucl{ display:inline-flex; align-items:center; gap:6px; margin-left:4px; color:var(--txt);
+  background:rgba(245,181,10,.08); border-color:rgba(245,181,10,.34); }
+.nav a.nav-ucl img{ width:16px; height:16px; flex:none; }
+.nav a.nav-ucl:hover{ background:rgba(245,181,10,.16); border-color:rgba(245,181,10,.6); }
+
+/* ---- Bandeau d'accueil -------------------------------------------------- */
+.uel-hero{ display:flex; align-items:center; gap:20px; margin:8px 0 24px; padding:22px 24px;
+  background:var(--card); border:1px solid var(--line-2); border-left:5px solid var(--uel); border-radius:var(--radius); }
+.uel-hero-logo{ width:72px; height:72px; flex:none; }
+.uel-hero h1{ margin:0; font-size:32px; font-weight:900; letter-spacing:.2px; line-height:1.1; }
+.uel-hero p{ margin:6px 0 0; color:var(--muted); font-size:14px; }
+.uel-hero .season-chip{ margin-left:0; margin-top:10px; }
+.uel-hero-cta{ margin-left:auto; display:flex; flex-direction:column; gap:8px; align-items:stretch; }
+.uel-cta{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 18px; border-radius:11px;
+  font-weight:800; font-size:14px; background:var(--uel); color:var(--uel-ink); border:1px solid transparent; transition:filter .15s; }
+.uel-cta:hover{ filter:brightness(1.08); }
+.uel-cta.ghost{ background:transparent; color:var(--txt); border-color:var(--line-2); }
+.uel-cta.ghost:hover{ border-color:var(--uel); filter:none; }
+.uel-cta:focus-visible{ outline:2px solid var(--uel); outline-offset:2px; }
+
+/* ---- Navigation par journée -------------------------------------------- */
+.md-nav{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-left:auto; }
+.md-nav .btn{ padding:7px 12px; }
+.md-nav .btn[disabled]{ opacity:.4; cursor:default; }
+.md-label{ font-weight:800; font-size:14px; min-width:150px; text-align:center; }
+.md-dates{ display:block; font-size:11.5px; font-weight:600; color:var(--muted); }
+
+/* ---- Cartes de match ---------------------------------------------------- */
+.um-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:12px; }
+.um-day{ grid-column:1 / -1; margin:8px 0 -2px; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.um-day:first-child{ margin-top:0; }
+.um{ background:var(--card); border:1px solid var(--line-2); border-radius:12px; padding:10px 12px 8px; }
+.um.is-live{ border-color:rgba(255,59,70,.55); background:linear-gradient(0deg, rgba(255,59,70,.06), rgba(255,59,70,.06)), var(--card); }
+.um-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;
+  font-size:11.5px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
+.um-clock{ color:#ff8a95; font-weight:800; }
+.um-team{ display:grid; grid-template-columns:24px minmax(0,1fr) auto; align-items:center; gap:10px; width:100%;
+  padding:5px 4px; border:0; border-radius:8px; background:none; color:var(--txt); font:inherit; text-align:left; cursor:pointer; }
+.um-team:hover{ background:rgba(255,255,255,.04); }
+.um-team:focus-visible{ outline:2px solid var(--uel); outline-offset:0; }
+.um-team img{ width:24px; height:24px; object-fit:contain; }
+.um-team .nm{ font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.um-team .sc{ font-weight:900; font-size:18px; font-variant-numeric:tabular-nums; min-width:22px; text-align:right; }
+.um-team.lose{ opacity:.6; }
+.um-team.win .nm{ color:#fff; }
+
+/* ---- Classement résumé -------------------------------------------------- */
+.uel-cols{ display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr); gap:18px; align-items:start; }
+.mini-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+.mini-table th, .mini-table td{ padding:8px 6px; text-align:center; white-space:nowrap; }
+.mini-table thead th{ color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid var(--line-2); }
+.mini-table tbody tr{ border-bottom:1px solid var(--line); cursor:pointer; }
+.mini-table tbody tr:hover{ background:rgba(255,255,255,.03); }
+.mini-table tbody tr:focus-visible{ outline:2px solid var(--uel); outline-offset:-2px; }
+.mini-table td.club{ text-align:left; }
+.mini-table .club-cell{ display:flex; align-items:center; gap:9px; min-width:0; }
+.mini-table .club-cell .nm{ font-weight:700; overflow:hidden; text-overflow:ellipsis; }
+.mini-table td.pos{ font-weight:800; position:relative; padding-left:12px; }
+.mini-table td.pos::before{ content:""; position:absolute; left:0; top:6px; bottom:6px; width:4px; border-radius:3px; background:var(--zone-q); }
+.mini-table td.pts{ font-weight:900; }
+.mini-foot{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px; font-size:12.5px; color:var(--muted); }
+.mini-foot a{ color:var(--uel); font-weight:800; }
+.mini-foot a:hover{ text-decoration:underline; }
+
+/* ---- Chiffres de la saison --------------------------------------------- */
+.uel-stats{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+.uel-stat{ background:var(--bg-soft); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+.uel-stat b{ display:block; font-size:24px; font-weight:900; font-variant-numeric:tabular-nums; color:#fff; line-height:1.15; }
+.uel-stat span{ font-size:12px; color:var(--muted); }
+.uel-stat.wide{ grid-column:1 / -1; }
+.uel-stat.wide b{ font-size:16px; }
+.uel-note{ margin:10px 0 0; font-size:12px; color:var(--muted-2); }
+
+/* ---- Fiche club (clubpanel.css) : orange, sans le ballon étoilé LDC ---- */
+.cp-panel{ border-top-color:var(--uel); }
+.cp-head{ background:
+    radial-gradient(120% 140% at 100% 0%, rgba(255,122,26,.30) 0%, rgba(255,122,26,.08) 45%, transparent 70%),
+    linear-gradient(160deg, #2b1a14 0%, #1a1630 55%, #0d1426 100%); }
+.cp-head::before{ display:none; }
+.cp-fav, .cp-cd{ background:var(--uel); color:var(--uel-ink); }
+.cp-obj.o-q .cp-bar i{ background:var(--uel); }
+.cp-md{ color:var(--uel); }
+.cp-close:focus-visible, .cp-panel a:focus-visible, .standings tbody tr.cp-row:focus-visible{ outline-color:var(--uel); }
+
+@media (max-width:860px){
+  .uel-cols{ grid-template-columns:1fr; }
+}
+@media (max-width:560px){
+  .uel-hero{ flex-wrap:wrap; padding:16px; gap:14px; }
+  .uel-hero-logo{ width:54px; height:54px; }
+  .uel-hero h1{ font-size:25px; }
+  .uel-hero-cta{ margin-left:0; width:100%; }
+  .uel-cta{ padding:10px 12px; font-size:13.5px; }
+  .um-grid{ grid-template-columns:1fr; }
+  .md-nav{ width:100%; margin-left:0; justify-content:space-between; }
+  .md-label{ min-width:0; flex:1; }
+  .mini-table{ font-size:12.5px; }
+  .mini-table th, .mini-table td{ padding:7px 4px; }
+}
