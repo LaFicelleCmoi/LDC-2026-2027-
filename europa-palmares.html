@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr" data-comp="uel">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Palmarès — Europa League</title>
+<link rel="icon" href="europa.svg?v=2" type="image/svg+xml" />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="styles.css?v=21" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
+<link rel="stylesheet" href="palmares.css?v=1" />
+<link rel="stylesheet" href="clubpanel.css?v=6">
+<link rel="stylesheet" href="matchpanel.css?v=1" />
+<link rel="stylesheet" href="cup.css?v=6" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="europa.html">
+    <span class="star">★</span>
+    <span><span class="t1" data-i18n="uel.title">Tracker Europa League</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="europa.html" data-i18n="nav.dashboard">Accueil</a>
+    <a href="europa-classement.html" data-i18n="nav.tracker">Classement</a>
+    <a href="europa-calendrier.html" data-i18n="nav.calendar">Calendrier</a>
+    <a href="europa-palmares.html" class="active" data-i18n="nav.palmares">Palmarès</a>
+    <div id="seasonDD"></div>
+    <a href="europa-monclub.html" data-i18n="nav.myclub">Mon club</a>
+    <a href="conference.html" class="nav-cup to-uecl" data-noseason><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+    <a href="dashboard.html" class="nav-ucl" data-noseason title="Ligue des Champions" aria-label="Ligue des Champions"><img src="logo.svg?v=4" alt="" width="16" height="16"><span>LDC</span></a>
+  </nav>
+  <div class="header-right">
+    <span id="liveFlag" style="display:none;font-size:11px;font-weight:800;color:var(--live);"><span class="dot live"></span></span>
+    <div class="lang-switch" id="langSwitch"></div>
+  </div>
+</header>
+
+<main class="container">
+  <h1 class="page-title"><span class="shiny" id="palTitle">Palmarès</span></h1>
+  <p class="page-sub" id="palSub"></p>
+
+  <div class="view-switch" id="viewSwitch" role="tablist">
+    <span class="vs-thumb" aria-hidden="true"></span>
+    <button class="vs-opt active" type="button" data-view="palmares" id="vsPalmares">Palmarès</button>
+    <button class="vs-opt" type="button" data-view="wall" id="vsWall">Mur des champions</button>
+  </div>
+
+  <div id="viewPalmares">
+    <div class="podium pal-wrap" id="podium"></div>
+    <div class="card pad pal-wrap">
+      <table class="pal-table">
+        <thead>
+          <tr>
+            <th class="c" data-i18n="pal.colRank">Rang</th>
+            <th data-i18n="pal.colClub">Club</th>
+            <th class="c" data-i18n="pal.colTitles">Titres</th>
+            <th class="r" data-i18n="pal.colYears">Années</th>
+          </tr>
+        </thead>
+        <tbody id="palBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="viewWall" style="display:none">
+    <div class="champ-wall pal-wrap" id="champWall"></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="dashboard.html" data-noseason data-i18n="uel.toUcl">← Ligue des Champions</a>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script>window.LDC_LEAGUE = 'uefa.europa';</script>
+<script src="i18n.js?v=27"></script>
+<script src="espn.js?v=25"></script>
+<script src="goalalert.js?v=1"></script>
+<script src="palmares.js?v=1"></script>
+</body>
+</html>
