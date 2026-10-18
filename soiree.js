@@ -60,7 +60,7 @@
     function side(t,cls){ var fr=c.fr.indexOf(String(t.teamId))!==-1;
       return '<span class="fr-side '+cls+(fr?' fr':'')+'">'+(cls==='h'?'<span class="nm">'+esc(t.name)+'</span>'+crest(t.logo,'fr-mlogo'):crest(t.logo,'fr-mlogo')+'<span class="nm">'+esc(t.name)+'</span>')+'</span>'; }
     return '<button type="button" class="fr-match sr-row'+(st==='in'?' is-live':'')+'" style="--c:'+c.color+'" data-mp-open="'+esc(m.id)+'" data-mp-league="'+c.slug+'" title="'+esc(T('Fiche du match','Match details'))+'">'+
-      '<img class="fr-comp" src="'+c.icon+'" alt="'+esc(T(c.E.COMP.fr,c.E.COMP.en))+'" title="'+esc(T(c.E.COMP.fr,c.E.COMP.en))+'">'+side(m.home,'h')+'<span class="fr-mid">'+mid+'</span>'+side(m.away,'a')+(window.LDCMatchPanel&&LDCMatchPanel.probBar&&m.state==='pre'&&m.odds?'<div class="fr-probs">'+LDCMatchPanel.probBar(m.odds, m.home.abbr||m.home.name, m.away.abbr||m.away.name, 'sm')+'</div>':'')+'</button>';
+      '<img class="fr-comp" src="'+c.icon+'" alt="'+esc(T(c.E.COMP.fr,c.E.COMP.en))+'" title="'+esc(T(c.E.COMP.fr,c.E.COMP.en))+'">'+side(m.home,'h')+'<span class="fr-mid">'+mid+'</span>'+side(m.away,'a')+'</button>';
   }
 
   function render(){
