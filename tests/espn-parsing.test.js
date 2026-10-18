@@ -330,3 +330,12 @@ test('favori : un par compétition, sans toucher celui de la LDC ni sa propositi
   assert.equal(UCL.getFav().id, '160');
   assert.equal(UCL.favSeen(), false, 'l’accueil LDC propose toujours de choisir');
 });
+
+test('compétition : Conference League, clés locales et pages propres', () => {
+  const ESPN = loadESPN('', {}, 'uefa.europa.conf');
+  assert.match(ESPN.BASE, /\/uefa\.europa\.conf$/);
+  assert.equal(ESPN.STORE_NS, 'uecl_');
+  assert.deepEqual([ESPN.COMP.home, ESPN.COMP.standings, ESPN.COMP.fr], ['conference.html', 'conference-classement.html', 'Conference League']);
+  assert.equal(ESPN.clubTitlesById(86), null);
+  assert.equal(ESPN.qualifiedClubs().length, 0);
+});
