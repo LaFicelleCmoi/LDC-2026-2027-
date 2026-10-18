@@ -56,20 +56,57 @@
 
   /* ---- Rendu de la journée ---- */
   function dayKey(m){ return m.dateObj?m.dateObj.toDateString():''; }
-  function card(m){
-    var live=m.state==='in', post=m.state==='post', pre=m.state==='pre';
-    var top = live ? '<span class="badge live">'+esc(I18N.t('common.live'))+'</span><span class="um-clock">'+esc(/HT|Half/i.test(m.statusDetail)?T('Mi-temps','Half-time'):(m.displayClock||m.statusDetail))+'</span>'
-            : post ? '<span>'+esc(T('Terminé','Full time'))+'</span><span>'+esc(hour(m))+'</span>'
-            : '<span>'+esc(ESPN.isInterrupted(m)?m.statusDetail:T('À venir','Upcoming'))+'</span><span>'+esc(hour(m))+'</span>';
-    var fid=favId();
-    function side(c,o){
-      var res = post ? (c.score>o.score?' win':(c.score<o.score?' lose':'')) : '', fav=fid && String(c.teamId)===fid;
-      return '<button type="button" class="um-team'+res+(fav?' is-fav':'')+'" data-team="'+esc(c.teamId)+'" aria-label="'+esc(T('Fiche du club : ','Club card: ')+c.name)+'">'+
-        (c.logo?'<img src="'+esc(c.logo)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span></span>')+
-        '<span class="nm">'+(fav?'<span class="uf-star" aria-hidden="true">★</span>':'')+esc(c.name)+'</span><span class="sc">'+(pre?'':c.score)+'</span></button>';
+  /* Carte de match : même dessin que l'accueil LDC (dashboard.html) — pastille
+     d'état et minute ou compte à rebours, domicile EN HAUT, extérieur en bas,
+     scores à droite, heure en pied. Un clic sur un club ouvre sa fiche. */
+  var lastScores={};
+  function pad(n){ return n<10?'0'+n:''+n; }
+  function hm(d){ return d?pad(d.getHours())+':'+pad(d.getMinutes()):''; }
+  function countdown(d){
+    var ms=d.getTime()-Date.now(); if(ms<=0) return "0'";
+    var s=Math.floor(ms/1000), h=Math.floor(s/3600), mm=Math.floor((s%3600)/60);
+    return (h>0?h+':':'')+pad(mm)+':'+pad(s%60);
+  }
+  /* Moins de 7 jours : compte à rebours ; au-delà : date et heure. */
+  function upcomingWhen(d){
+    if(!d) return '—';
+    if(d.getTime()-Date.now()<=7*DAY) return countdown(d);
+    return d.toLocaleDateString(loc(),{day:'numeric',month:'short'})+' · '+hm(d);
+  }
+  function clockHTML(m){
+    if(m.state==='post') return 'FT';
+    if(/HT|Half/i.test(m.statusDetail)) return esc(T('MT','HT'));
+    var dc=m.displayClock||''; if(!dc) return "0'";
+    var i=dc.indexOf('+'); if(i===-1) return esc(dc);
+    return esc(dc.slice(0,i))+'<span class="extra">'+esc(dc.slice(i))+'</span>';
+  }
+  /* Mosaïque de l'accueil LDC : 1 match plein écran, 2 côte à côte, sinon une
+     grande carte, deux larges puis des petites. */
+  function sizeFor(i,n){ if(n===1) return 'size-full'; if(n===2) return 'size-wide'; if(i===0) return 'size-featured'; if(i<3) return 'size-wide'; return 'size-small'; }
+  function card(m,size,i){
+    var st=m.state, lbl=st==='in'?I18N.t('common.live'):(st==='pre'?I18N.t('common.upcoming'):I18N.t('common.finished'));
+    if(ESPN.isInterrupted(m)) lbl='⏸ '+m.statusDetail;
+    var fid=favId(), hasFav=fid && (String(m.home.teamId)===fid || String(m.away.teamId)===fid);
+    var pen=(m.home.shootout!=null && m.away.shootout!=null);
+    var key=m.home.score+'-'+m.away.score, bump=st==='in' && lastScores[m.id] && lastScores[m.id]!==key;
+    lastScores[m.id]=key;
+    function row(c){
+      var win=st==='post' && c.winner, fav=fid && String(c.teamId)===fid;
+      return '<button type="button" class="live-team-row'+(win?' winner':'')+(fav?' is-fav':'')+'" data-team="'+esc(c.teamId)+'" aria-label="'+esc(T('Fiche du club : ','Club card: ')+c.name)+'">'+
+        (c.logo?'<img class="live-team-logo" src="'+esc(c.logo)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="live-team-logo"></span>')+
+        '<span class="live-team-name">'+(fav?'<span class="uf-star" aria-hidden="true">★</span>':'')+esc(c.name)+'</span>'+
+        '<span class="live-team-score'+(bump?' bumped':'')+'">'+(st==='pre'?'–':c.score)+(pen?' <span class="pen-sub">('+c.shootout+')</span>':'')+'</span></button>';
     }
-    var hasFav = fid && (String(m.home.teamId)===fid || String(m.away.teamId)===fid);
-    return '<article class="um'+(live?' is-live':'')+(hasFav?' has-fav':'')+'"><div class="um-top">'+top+'</div>'+side(m.home,m.away)+side(m.away,m.home)+'</article>';
+    var clock = st==='pre'
+      ? '<span class="live-card-clock live-countdown"'+(m.dateObj?' data-kickoff="'+m.dateObj.getTime()+'"':'')+'>'+esc(upcomingWhen(m.dateObj))+'</span>'
+      : '<span class="live-card-clock">'+clockHTML(m)+'</span>';
+    return '<article class="live-card state-'+st+' '+size+(hasFav?' has-fav':'')+'" style="animation-delay:'+(0.03+Math.min(i,12)*0.04).toFixed(2)+'s">'+
+      '<div class="live-shimmer"></div>'+
+      '<div class="live-card-status"><span class="live-status-pill state-'+st+'"><span class="live-dot"></span> '+esc(lbl)+'</span>'+clock+'</div>'+
+      '<div class="live-card-teams">'+row(m.home)+row(m.away)+'</div>'+
+      '<div class="live-card-footer"><span>'+(pen?'<span class="live-pen">'+esc(I18N.t('common.pen'))+' '+m.home.shootout+'–'+m.away.shootout+'</span>':'')+'</span>'+
+        '<span class="live-kickoff">'+esc(st==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>'+
+    '</article>';
   }
   function hour(m){ return m.dateObj?m.dateObj.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'}):''; }
   function dayTitle(m){ return m.dateObj?m.dateObj.toLocaleDateString(loc(),{weekday:'long',day:'numeric',month:'long'}):'—'; }
@@ -86,11 +123,20 @@
       : first.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'})+' – '+last.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'});
     el('mdLabel').innerHTML=esc(T(g.label[0],g.label[1]))+'<span class="md-dates">'+esc(range)+'</span>';
     el('mdPrev').disabled=cur<=0; el('mdNext').disabled=cur>=groups.length-1;
-    var html='', day=null, multi=dayKey(first)!==dayKey(last);
-    ms.forEach(function(m){
-      if(multi && dayKey(m)!==day){ day=dayKey(m); html+='<h3 class="um-day">'+esc(dayTitle(m))+'</h3>'; }
-      html+=card(m);
+    /* Un bloc par jour ; dans chaque jour, les matchs en cours d'abord (la
+       grande carte), puis l'ordre des coups d'envoi. */
+    var days=[], byDay={};
+    ms.forEach(function(m){ var k=dayKey(m); if(!byDay[k]){ byDay[k]=[]; days.push(k); } byDay[k].push(m); });
+    var html='', multi=days.length>1;
+    days.forEach(function(k){
+      var list=byDay[k].slice().sort(function(a,b){ return (b.state==='in')-(a.state==='in') || t(a)-t(b) || a.home.name.localeCompare(b.home.name); });
+      if(multi) html+='<h3 class="lc-day">'+esc(dayTitle(list[0]))+'</h3>';
+      list.forEach(function(m,i){ html+=card(m, sizeFor(i,list.length), i); });
     });
+    /* Animation d'entrée au changement de journée seulement, pas à chaque
+       rafraîchissement des scores. */
+    grid.classList.toggle('no-anim', grid.getAttribute('data-md')===String(cur));
+    grid.setAttribute('data-md', String(cur));
     grid.innerHTML=html;
   }
 
@@ -253,7 +299,11 @@
   /* ---- Fiche club ---- */
   function ctx(){ return { matches:matches, standings:standings }; }
   function openClub(id){ if(id && window.LDCClubPanel) LDCClubPanel.open(id, ctx()); }
-  el('mdGrid').addEventListener('click',function(e){ var b=e.target.closest('.um-team[data-team]'); if(b) openClub(b.getAttribute('data-team')); });
+  el('mdGrid').addEventListener('click',function(e){ var b=e.target.closest('.live-team-row[data-team]'); if(b) openClub(b.getAttribute('data-team')); });
+  /* Comptes à rebours : mis à jour chaque seconde, sans tout redessiner. */
+  setInterval(function(){
+    Array.prototype.forEach.call(document.querySelectorAll('.live-countdown[data-kickoff]'),function(x){ x.textContent=upcomingWhen(new Date(+x.getAttribute('data-kickoff'))); });
+  },1000);
   el('topBody').addEventListener('click',function(e){ var tr=e.target.closest('tr[data-team]'); if(tr) openClub(tr.getAttribute('data-team')); });
   el('topBody').addEventListener('keydown',function(e){
     if(e.key!=='Enter' && e.key!==' ') return;
