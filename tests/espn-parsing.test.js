@@ -370,3 +370,23 @@ test('palmarès Conference League : 5 vainqueurs 2022-2026', () => {
     ['2022 AS Roma', '2023 West Ham United', '2024 Olympiacos', '2025 Chelsea FC', '2026 Crystal Palace']);
   assert.equal(C.clubTitlesById(86), null);
 });
+
+test('cotes du calendrier -> probabilités sans marge (décimales ou américaines)', () => {
+  const ESPN = loadESPN('');
+  const base = ev('1', ['10', 'Lyon'], ['20', 'Roma'], 'league-phase');
+  base.competitions[0].odds = [null, { provider: { displayName: 'Bet 365' }, homeTeamOdds: { value: 5.5 }, awayTeamOdds: { value: 1.5 }, drawOdds: { value: 4.2 } }];
+  const p = ESPN.normalizeEvent(base).odds;
+  assert.deepEqual([p.home, p.draw, p.away, p.provider], [17, 22, 61, 'Bet 365']);
+  assert.equal(p.home + p.draw + p.away, 100);
+  base.competitions[0].odds = [{ homeTeamOdds: { moneyLine: -120 }, awayTeamOdds: { moneyLine: 320 }, drawOdds: { moneyLine: 285 } }];
+  const q = ESPN.normalizeEvent(base).odds;
+  assert.equal(q.home + q.draw + q.away, 100);
+  assert.ok(q.home > q.draw && q.home > q.away);
+  /* format DraftKings : cotes 1/N/2 dans le bloc « moneyline » (texte américain) */
+  base.competitions[0].odds = [{ provider: { name: 'DraftKings' }, drawOdds: { moneyLine: 285 },
+    moneyline: { home: { close: { odds: '+390' } }, away: { close: { odds: '-145' } }, draw: { close: { odds: '+285' } } } }];
+  const dk = ESPN.normalizeEvent(base).odds;
+  assert.deepEqual([dk.home, dk.draw, dk.away, dk.provider], [19, 25, 56, 'DraftKings']);   // Kairat - Panathinaïkos
+  base.competitions[0].odds = [null];
+  assert.equal(ESPN.normalizeEvent(base).odds, null);
+});
