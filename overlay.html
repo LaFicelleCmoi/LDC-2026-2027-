@@ -13,6 +13,7 @@
 
   PARAMÈTRES D'URL (tous optionnels — sans aucun paramètre, suit les matchs en direct) :
     ── Cible ──────────────────────────────────────────────────────────────
+    c=ucl|uel|uecl      compétition : Ligue des Champions (défaut), Europa League, Conference League
     team=PSG            épingle un club (abréviation 3 lettres OU nom anglais)
     team=fav            suit le club favori choisi sur le site (localStorage)
     team=all|live       force l'affichage de TOUS les matchs en direct (ignore le favori)
@@ -320,10 +321,19 @@
 (function(){
   'use strict';
 
-  /* ===== LA constante de compétition ===== */
-  var LEAGUE_SLUG = 'uefa.champions';
+  /* ===== Compétition : ?c=ucl (défaut), ?c=uel (Europa League), ?c=uecl
+     (Conference League). Change l'API, le logo, la couleur par défaut et le
+     club favori lu (celui de la compétition). ===== */
+  var COMPS = {
+    ucl:  { slug:'uefa.champions',   logo:'logo.svg?v=4',       espn:2,     rgb:'245,181,10', fav:'ldc_fav',      fr:'Ligue des Champions', en:'Champions League' },
+    uel:  { slug:'uefa.europa',      logo:'europa.svg?v=2',     espn:2310,  rgb:'255,122,26', fav:'ldc_fav_uel',  fr:'Europa League',       en:'Europa League' },
+    uecl: { slug:'uefa.europa.conf', logo:'conference.svg?v=1', espn:20296, rgb:'25,196,79',  fav:'ldc_fav_uecl', fr:'Conference League',   en:'Conference League' }
+  };
+  var COMP = COMPS[(new URLSearchParams(location.search).get('c')||'').toLowerCase()] || COMPS.ucl;
+  var LEAGUE_SLUG = COMP.slug;
   var BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/' + LEAGUE_SLUG;
-  var FALLBACK_COMP_LOGO = 'https://a.espncdn.com/i/leaguelogos/soccer/500/2.png';
+  var FALLBACK_COMP_LOGO = 'https://a.espncdn.com/i/leaguelogos/soccer/500/' + COMP.espn + '.png';
+  document.title = 'Overlay OBS — ' + COMP.fr;
 
   /* ---- mini i18n (clé localStorage partagée ldc_lang) ---- */
   var STR = {
@@ -388,7 +398,7 @@
     var s=Math.max(hsl[1],0.5), l=Math.min(Math.max(hsl[2],0.52),0.70);
     var out=_hslToRgb(hsl[0],s,l); return out[0]+','+out[1]+','+out[2];
   }
-  function getFav(){ try{ var f=JSON.parse(localStorage.getItem('ldc_fav')||'null'); return (f&&f.id)?f:null; }catch(e){ return null; } }
+  function getFav(){ try{ var f=JSON.parse(localStorage.getItem(COMP.fav)||'null'); return (f&&f.id)?f:null; }catch(e){ return null; } }
 
   /* ---- params URL ---- */
   var P = new URLSearchParams(location.search);
@@ -444,6 +454,7 @@
     var acc=(P.get('accent')||'').replace(/^%23/i,'').replace(/^#/,'');
     var rgb = acc? _legibleRGB(acc) : null;
     if(!rgb){ var f=getFav(); if(f&&f.color) rgb=_legibleRGB(f.color); }
+    if(!rgb && COMP!==COMPS.ucl) rgb=COMP.rgb;              // couleur de la coupe
     if(rgb) document.documentElement.style.setProperty('--fav-rgb', rgb);
   })();
 
@@ -813,7 +824,7 @@
       var dots = rotation.length>1
         ? '<span class="dots">'+rotation.map(function(_,i){return '<i class="'+(i===rotIndex?'on':'')+'"></i>';}).join('')+'</span>'
         : '';
-      var brand = SHOW_BRAND? '<img class="brand-mark" src="logo.svg?v=4" alt="" onerror="this.remove()">' : '';
+      var brand = SHOW_BRAND? '<img class="brand-mark" src="'+COMP.logo+'" alt="" onerror="this.remove()">' : '';
       var fresh = '<span class="fresh" title=""></span>';
       metaHTML='<div class="meta">'+metaLeft+'<span class="meta-right">'+dots+fresh+brand+'</span></div>';
     }
