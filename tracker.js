@@ -121,6 +121,11 @@
     }
     var nf=ESPN.isLeaguePhaseFormat();
     var fav=ESPN.getFav(), fid=fav?fav.id:null;
+    /* Chances de qualification (chances.js) : saison en cours, phase de ligue
+       entamée et pas finie, hors mode prédiction. */
+    var ch=(!predictMode && nf && !ESPN.isArchive() && window.LDCChances && lastEvents)
+      ? LDCChances.cached(lastEvents.map(ESPN.normalizeEvent).filter(Boolean), (lastStandings||rows).map(function(r){ return { id:r.teamId }; })) : null;
+    chancesHeader(!!ch);
     /* base de comparaison : classement réel en mode prédiction, dernière visite sinon */
     var baseMap=null;
     if(predictMode && lastStandings){ baseMap={}; lastStandings.forEach(function(x){ baseMap[x.teamId||x.name]=x.pos; }); }
@@ -152,6 +157,7 @@
         '<td>'+t.gf+'</td><td>'+t.ga+'</td>'+
         '<td class="gd '+gdCls+'">'+gd+'</td>'+
         '<td class="pts">'+t.pts+'</td>'+
+        (ch?chCell(ch[String(t.teamId)],'top8')+chCell(ch[String(t.teamId)],'top24'):'')+
         '<td class="form">'+formPills(t.form)+'</td>'+
       '</tr>';
     }).join('');
@@ -163,6 +169,32 @@
       ? (I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleString(lang()==='en'?'en-GB':'fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})
       : (I18N.t('common.updated')||'')+' '+hm();
     if(sync) el('standingsUpdated').title = sync.toISOString();
+  }
+
+  /* Colonnes « Top 8 » / « Top 24 » : ajoutées à l'en-tête quand le calcul
+     est disponible, retirées sinon ; note explicative sous le tableau. */
+  function chancesHeader(on){
+    var tbl=document.querySelector('.standings'); if(!tbl) return;
+    var row=tbl.querySelector('thead tr'), has=row.querySelector('th.ch');
+    if(on && !has){
+      var f=row.querySelector('th.form');
+      ['top8','top24'].forEach(function(k){ var th=document.createElement('th'); th.className='ch'; th.setAttribute('data-k',k); row.insertBefore(th,f); });
+    } else if(!on && has){ Array.prototype.forEach.call(row.querySelectorAll('th.ch'),function(x){ x.remove(); }); }
+    Array.prototype.forEach.call(row.querySelectorAll('th.ch'),function(x){
+      var k=x.getAttribute('data-k');
+      x.textContent=k==='top8'?'Top 8':'Top 24';
+      x.title=lang()==='en'?'Estimated chance of finishing '+(k==='top8'?'1st–8th':'1st–24th'):'Chance estimée de finir '+(k==='top8'?'1er–8e':'1er–24e');
+    });
+    var n=el('chNote');
+    if(!n){ n=document.createElement('p'); n.id='chNote'; n.className='thr-note'; var t=el('thrNote'); if(t) t.parentNode.insertBefore(n,t.nextSibling); }
+    n.style.display=on?'':'none';
+    n.textContent=lang()==='en'
+      ? 'Top 8 / Top 24: estimated chances, from 3,000 simulations of the remaining matches (goals scored and conceded so far, home advantage). Checked on the 2024-2026 league phases. Indicative only.'
+      : 'Top 8 / Top 24 : chances estimées par 3 000 simulations des matchs restants (buts marqués et encaissés jusqu’ici, avantage du terrain). Modèle vérifié sur les phases de ligue 2024-2026. À titre indicatif.';
+  }
+  function chCell(c,k){
+    var p=c?c[k]:null, lvl=p==null?'':(p>=0.9?'hi':(p>=0.5?'mid':(p>=0.1?'lo':'xlo')));
+    return '<td class="ch '+lvl+'" style="--p:'+(p==null?0:Math.round(p*100))+'%">'+esc(LDCChances.pct(p))+'</td>';
   }
 
   /* ================= PHASE FINALE (cartes) ================= */
