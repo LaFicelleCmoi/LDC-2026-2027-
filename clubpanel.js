@@ -151,8 +151,17 @@
   function isEn() { try { return window.I18N && I18N.getLang() === 'en'; } catch (e) { return false; } }
   function T(fr, en) { return isEn() ? en : fr; }
   /* Compétition de la page (espn.js) ; Ligue des Champions par défaut. */
+  /* Compétition de la fiche : ctx.espn (instance ESPN.forLeague) quand la page
+     en mélange plusieurs (clubs français, comparateur), sinon celle de la page. */
+  function E() { return (state.ctx && state.ctx.espn) || window.ESPN; }
+  function mpAttrs(id) {
+    if (!id || !window.LDCMatchPanel) return '';
+    var e = E();
+    return ' data-mp-open="' + esc(id) + '"' + (e && e !== window.ESPN ? ' data-mp-league="' + esc(e.LEAGUE_SLUG) + '"' : '') +
+      ' tabindex="0" role="button" title="' + esc(T('Fiche du match', 'Match details')) + '"';
+  }
   function compName() {
-    var c = window.ESPN && ESPN.COMP;
+    var c = E() && E().COMP;
     return c ? T(c.fr, c.en) : T('Ligue des Champions', 'Champions League');
   }
   function locale() { return isEn() ? 'en-GB' : 'fr-FR'; }
@@ -196,7 +205,7 @@
     if (r.pens) meta.push(T('tab ', 'pens ') + r.pens.me + '–' + r.pens.opp);
     var badge = r.live ? '<span class="cp-badge live" aria-label="' + esc(T('En direct', 'Live')) + '"><i></i></span>'
                        : '<span class="cp-badge ' + r.result + '">' + letter(r.result) + '</span>';
-    return '<li class="cp-match' + (r.live ? ' is-live' : '') + '">' + badge +
+    return '<li class="cp-match' + (r.live ? ' is-live' : '') + '"' + mpAttrs(r.id) + '>' + badge +
       '<div class="cp-mid"><div class="cp-opp"><span class="cp-prep">' + esc(prep(r.home)) + '</span>' +
         crest(r.opp.logo, 'cp-ologo') + '<span class="cp-oname">' + esc(r.opp.name) + '</span></div>' +
         '<div class="cp-meta">' + meta.map(esc).join(' · ') + '</div></div>' +
@@ -207,7 +216,7 @@
   function liveCard(r, team, bump) {
     var clock = /^(HT|Halftime|Half Time)$/i.test(r.detail) ? T('Mi-temps', 'Half-time') : (r.clock || r.detail || T('En cours', 'In progress'));
     var num = function (v) { return '<b class="cp-lv-num' + (bump ? ' bump' : '') + '">' + v + '</b>'; };
-    return '<section class="cp-live" aria-label="' + esc(T('Match en cours', 'Live match')) + '">' +
+    return '<section class="cp-live" aria-label="' + esc(T('Match en cours', 'Live match')) + '"' + mpAttrs(r.id) + '>' +
       '<div class="cp-live-top"><span class="cp-live-pill"><i></i>' + esc(T('En direct', 'Live')) + '</span>' +
         '<span class="cp-live-clock">' + esc(clock) + '</span></div>' +
       '<div class="cp-live-score">' +
@@ -227,7 +236,7 @@
   function render() {
     var d = clubData(state.id, currentMatches(), state.ctx.standings);
     var team = d.team || { name: '—', logo: '' };
-    var fav = null; try { fav = window.ESPN && ESPN.getFav(); } catch (e) {}
+    var fav = null; try { fav = E() && E().getFav(); } catch (e) {}
     var isFav = fav && String(fav.id) === String(state.id);
     var s = d.summary, st = d.standing;
 
@@ -245,6 +254,7 @@
           '<h2 class="cp-name" id="cpTitle">' + esc(team.name) + '</h2>' +
           '<div class="cp-sub">' + esc(sub) + '</div>' +
           (st ? '<span class="cp-zone z-' + st.zone + '">' + esc(zoneTxt) + '</span>' : '') +
+          (E() && E().COMP ? ' <a class="cp-cmp" href="comparateur.html?c=' + E().COMP.key + '&amp;a=' + encodeURIComponent(state.id) + '">⚖ ' + esc(T('Comparer', 'Compare')) + '</a>' : '') +
         '</div>' +
         '<button type="button" class="cp-close" data-cp-close aria-label="' + esc(T('Fermer', 'Close')) + '">×</button>' +
       '</header>';
@@ -269,6 +279,7 @@
     /* Objectifs : points manquants pour atteindre les seuils RÉELS des phases
        de ligue précédentes (thresholds.js). Uniquement pendant la phase. */
     var TH = window.LDCThresholds;
+    if (state.ctx && state.ctx.thresholds) TH = state.ctx.thresholds;
     var leagueLeft = d.upcoming.filter(function (r) { return r.round === 'league'; }).length;
     if (TH && st && leagueLeft > 0) {
       var ob = TH.objectives(st.pts, leagueLeft);
@@ -297,7 +308,7 @@
     if (d.next) {
       var n = d.next;
       html += '<section class="cp-sec"><h3>' + esc(T('Prochain match', 'Next match')) + '</h3>' +
-        '<div class="cp-next">' +
+        '<div class="cp-next"' + mpAttrs(n.id) + '>' +
           '<div class="cp-next-top"><span>★ ' + esc(compName()) + ' · ' + esc(roundLabel(n)) + '</span>' +
             '<span class="cp-cd">' + esc(countdown(n.time)) + '</span></div>' +
           '<div class="cp-next-main">' + crest(n.opp.logo, 'cp-nlogo') +
@@ -343,14 +354,15 @@
 
   function poll() {
     state.timer = null;
-    if (!host || host.hidden || !state.id || !window.ESPN || !ESPN.fetchDayEvents) return;
+    var ES = E();
+    if (!host || host.hidden || !state.id || !ES || !ES.fetchDayEvents) return;
     if (document.hidden) { state.paused = true; return; }   // reprise au retour sur l'onglet
     var d = clubData(state.id, currentMatches(), state.ctx.standings);
     var target = d.live || d.next;
     if (!target) return;
-    ESPN.fetchDayEvents(ESPN.ymd(new Date(target.time)), { ttl: FRESH_TTL }).then(function (events) {
+    ES.fetchDayEvents(ES.ymd(new Date(target.time)), { ttl: FRESH_TTL }).then(function (events) {
       if (!host || host.hidden) return;
-      state.fresh = { at: Date.now(), matches: (events || []).map(ESPN.normalizeEvent).filter(Boolean) };
+      state.fresh = { at: Date.now(), matches: (events || []).map(ES.normalizeEvent).filter(Boolean) };
       render();
     }, function () {
       /* Échec : la fiche déjà affichée reste telle quelle, nouvel essai dans 30 s. */
