@@ -35,7 +35,7 @@
     ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=2; rr(ctx,36,36,W-72,H-72,34); ctx.stroke();
   }
   function brandTop(ctx, rgb){ ctx.save(); starPath(ctx,96,102,22); ctx.fillStyle='rgb('+rgb+')'; ctx.fill(); ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='400 34px '+DISP; ctx.textBaseline='middle'; ctx.textAlign='left'; ctx.fillText('LIGUE DES CHAMPIONS', 134, 104); ctx.restore(); }
-  function brandBottom(ctx){ ctx.save(); ctx.textAlign='center'; ctx.textBaseline='alphabetic'; ctx.fillStyle='rgba(255,255,255,.42)'; ctx.font='600 26px '+BODY; ctx.fillText(T('Tracker Ligue des Champions · non officiel','Champions League Tracker · unofficial'), W/2, H-66); ctx.restore(); }
+  function brandBottom(ctx){ ctx.save(); ctx.textAlign='center'; ctx.textBaseline='alphabetic'; ctx.fillStyle='rgba(255,255,255,.42)'; ctx.font='600 26px '+BODY; var c=window.ESPN&&ESPN.COMP; ctx.fillText(c&&!ESPN.IS_UCL?T('Tracker '+c.fr+' · non officiel',c.en+' Tracker · unofficial'):T('Tracker Ligue des Champions · non officiel','Champions League Tracker · unofficial'), W/2, H-66); ctx.restore(); }
 
   function finish(cv, filename){
     try{
