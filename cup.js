@@ -2,9 +2,10 @@
    cup.js — Accueil des coupes européennes (Europa League, Conference League)
    UN SEUL script pour les deux pages (europa.html, conference.html) : la
    compétition vient de espn.js (window.LDC_LEAGUE). Journée en cours avec
-   scores en direct, top 8, chiffres de la saison, club favori. Tout vient du
-   calendrier ESPN de la saison ; la fiche club est celle du classement
-   (clubpanel.js).
+   scores en direct, classement par zones dynamique (recherche, pays,
+   simulateur de scores), meilleurs joueurs, chiffres de la saison, défilé
+   des logos, club favori. Tout vient du calendrier ESPN de la saison ; la
+   fiche club est celle du classement (clubpanel.js).
    ========================================================================= */
 (function(){
   'use strict';
@@ -100,7 +101,7 @@
     var clock = st==='pre'
       ? '<span class="live-card-clock live-countdown"'+(m.dateObj?' data-kickoff="'+m.dateObj.getTime()+'"':'')+'>'+esc(upcomingWhen(m.dateObj))+'</span>'
       : '<span class="live-card-clock">'+clockHTML(m)+'</span>';
-    return '<article class="live-card state-'+st+' '+size+(hasFav?' has-fav':'')+'" style="animation-delay:'+(0.03+Math.min(i,12)*0.04).toFixed(2)+'s">'+
+    return '<article class="live-card state-'+st+' '+size+(hasFav?' has-fav':'')+(st==='pre'?' can-sim':'')+(sims[m.id]?' is-simmed':'')+'" data-id="'+esc(m.id)+'" style="animation-delay:'+(0.03+Math.min(i,12)*0.04).toFixed(2)+'s">'+
       '<div class="live-shimmer"></div>'+
       '<div class="live-card-status"><span class="live-status-pill state-'+st+'"><span class="live-dot"></span> '+esc(lbl)+'</span>'+clock+'</div>'+
       '<div class="live-card-teams">'+row(m.home)+row(m.away)+'</div>'+
@@ -138,29 +139,167 @@
     grid.classList.toggle('no-anim', grid.getAttribute('data-md')===String(cur));
     grid.setAttribute('data-md', String(cur));
     grid.innerHTML=html;
+    /* Les scores simulés survivent au rafraîchissement : on rouvre leurs éditeurs. */
+    Object.keys(sims).forEach(function(id){
+      var c=grid.querySelector('.live-card[data-id="'+id+'"]'); if(c) openSimEditor(c, sims[id].match, true);
+    });
   }
 
-  /* ---- Top 8 ---- */
-  function renderTop(){
-    var body=el('topBody');
-    var played=standings.some(function(r){ return r.pld>0; });
-    if(!standings.length || !played){
-      body.innerHTML='<tr><td colspan="5" class="empty-state">'+esc(T('Le classement démarre avec la 1re journée.','The table starts with matchday 1.'))+'</td></tr>';
-    } else {
-      var fid=favId();
-      body.innerHTML=standings.slice(0,8).map(function(r){
-        var gd=(r.gd>0?'+':'')+r.gd, fav=fid && String(r.teamId)===fid;
-        return '<tr data-team="'+esc(r.teamId)+'"'+(fav?' class="is-fav"':'')+' tabindex="0" title="'+esc(T('Ouvrir la fiche : ','Open club card: ')+r.name)+'">'+
-          '<td class="pos">'+(r.rank||r.pos)+'</td>'+
-          '<td class="club"><span class="club-cell">'+(r.logo?'<img class="crest" src="'+esc(r.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'">':'')+'<span class="nm">'+(fav?'<span class="uf-star" aria-hidden="true">★</span>':'')+esc(r.name)+'</span>'+(r.live?' <span class="dot live" title="'+esc(I18N.t('common.live'))+'"></span>':'')+'</span></td>'+
-          '<td>'+r.pld+'</td><td>'+gd+'</td><td class="pts">'+r.pts+'</td></tr>';
-      }).join('');
-    }
-    var TH=window.LDCThresholds;
-    el('topSub').textContent=T('huitièmes de finale directs','straight to the round of 16');
-    el('topNote').textContent=TH ? T('Repère : le 8e avait '+TH.trend('top8')+'.','For reference: 8th place had '+TH.trend('top8',true)+'.') : '';
-    el('topLink').textContent=T('Les 36 clubs →','All 36 clubs →');
+  /* ---- Classement par zones : même bloc que l'accueil LDC ----
+     Trois colonnes (1-8 huitièmes, 9-24 barrages, 25-36 éliminés), recherche
+     et filtre par pays sans re-rendu, simulateur « et si ? » : un score saisi
+     sur un match à venir recalcule le classement avec le moteur
+     réglementaire (simulate.js) et montre les places gagnées ou perdues.
+     Pas de filtre par chapeau : ESPN ne publie pas ceux de cette coupe. */
+  var CO={ ALB:['Albanie','Albania'], AND:['Andorre','Andorra'], ARM:['Arménie','Armenia'], AUT:['Autriche','Austria'], AZE:['Azerbaïdjan','Azerbaijan'],
+    BEL:['Belgique','Belgium'], BIH:['Bosnie-Herzégovine','Bosnia and Herzegovina'], BUL:['Bulgarie','Bulgaria'], CRO:['Croatie','Croatia'], CYP:['Chypre','Cyprus'],
+    CZE:['Tchéquie','Czechia'], DEN:['Danemark','Denmark'], ENG:['Angleterre','England'], ESP:['Espagne','Spain'], FIN:['Finlande','Finland'], FRA:['France','France'],
+    GEO:['Géorgie','Georgia'], GER:['Allemagne','Germany'], GIB:['Gibraltar','Gibraltar'], GRE:['Grèce','Greece'], HUN:['Hongrie','Hungary'], ISR:['Israël','Israel'],
+    ITA:['Italie','Italy'], KAZ:['Kazakhstan','Kazakhstan'], LTU:['Lituanie','Lithuania'], LVA:['Lettonie','Latvia'], NED:['Pays-Bas','Netherlands'], NOR:['Norvège','Norway'],
+    POL:['Pologne','Poland'], POR:['Portugal','Portugal'], ROU:['Roumanie','Romania'], SCO:['Écosse','Scotland'], SRB:['Serbie','Serbia'], SUI:['Suisse','Switzerland'],
+    SVN:['Slovénie','Slovenia'], SWE:['Suède','Sweden'], TUR:['Turquie','Türkiye'], UKR:['Ukraine','Ukraine'] };
+  function coName(c){ var e=CO[c]; return e?T(e[0],e[1]):(c||''); }
+  function countryOf(id){ var m=window.LDCCupClubs2026 && LDCCupClubs2026[ESPN.LEAGUE_SLUG]; return (m && m[String(id)])||''; }
+  function fold(x){ return String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+  var zFilter={ q:'', co:'' }, sims={}, viewById={};
+
+  function simCount(){ return Object.keys(sims).length; }
+  function displayStandings(){
+    if(!simCount() || !window.LDCSim) return standings;
+    var seed=ESPN.isArchive()?null:ESPN.leagueClubs(events);
+    return LDCSim.simulateStandings(standings, Object.keys(sims).map(function(k){ return sims[k]; }), {
+      matches: ESPN.leagueMatches(events),
+      rank: function(ms){ return ESPN.rankLeagueMatches(ms, seed); }
+    });
   }
+  function matchesFilter(row){
+    if(zFilter.co && countryOf(row.teamId)!==zFilter.co) return false;
+    if(zFilter.q){
+      var hay=fold(row.name)+' '+fold(row.abbr)+' '+fold(row.shortName)+' '+fold(coName(countryOf(row.teamId)));
+      if(hay.indexOf(fold(zFilter.q))===-1) return false;
+    }
+    return true;
+  }
+  /* Applique le filtre sans re-rendre : seules les classes des lignes changent. */
+  function applyZoneFilter(){
+    var rows=document.querySelectorAll('#zonesGrid .zone-team[data-team]'), hits=0, active=!!(zFilter.q||zFilter.co);
+    for(var i=0;i<rows.length;i++){
+      var row=viewById[rows[i].getAttribute('data-team')], ok=!active || (row && matchesFilter(row));
+      rows[i].classList.toggle('zt-dim', active && !ok);
+      rows[i].classList.toggle('zt-hit', active && ok);
+      if(active && ok) hits++;
+    }
+    el('zhits').textContent=active?(hits+' / '+rows.length):'';
+    el('zqClear').style.display=zFilter.q?'block':'none';
+  }
+  function buildCountrySelect(){
+    var sel=el('zco'), codes={};
+    standings.forEach(function(r){ var c=countryOf(r.teamId); if(c) codes[c]=1; });
+    var list=Object.keys(codes).sort(function(a,b){ return coName(a).localeCompare(coName(b)); });
+    sel.innerHTML='<option value="">'+esc(I18N.t('zbar.allCountries'))+'</option>'+
+      list.map(function(c){ return '<option value="'+c+'"'+(zFilter.co===c?' selected':'')+'>'+esc(coName(c))+'</option>'; }).join('');
+    sel.style.display=list.length?'':'none';
+  }
+  function renderSimBar(){
+    var bar=el('simbar'), n=simCount();
+    bar.style.display=n?'flex':'none';
+    if(n) bar.querySelector('.simbar-t').innerHTML='🔮 '+esc(T('Simulation en cours — ','Simulation active — '))+'<b>'+n+'</b> '+
+      esc(n>1?T('matchs simulés','matches simulated'):T('match simulé','match simulated'));
+    el('simReset').textContent=I18N.t('sim.reset');
+  }
+  function renderZones(){
+    var grid=el('zonesGrid'), fid=favId(), view=displayStandings(), simOn=simCount()>0;
+    viewById={}; view.forEach(function(r){ viewById[String(r.teamId)]=r; });
+    var sync=ESPN.lastSeasonSync&&ESPN.lastSeasonSync();
+    el('zonesSync').textContent=sync?(I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleString(loc(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+    el('zonesTitle').textContent=I18N.t('dash.zonesTitle2');
+    el('zq').placeholder=I18N.t('zbar.search');
+    if(!view.length){ grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">'+esc(T('Le classement démarre avec la 1re journée.','The table starts with matchday 1.'))+'</div>'; return; }
+    var defs=[{cls:'z-q',key:'dash.zoneQ',from:0,to:8},{cls:'z-po',key:'dash.zonePO',from:8,to:24},{cls:'z-out',key:'dash.zoneOut',from:24,to:36}];
+    grid.innerHTML=defs.map(function(d){
+      var rows=view.slice(d.from,d.to).map(function(r){
+        var isFav=fid && String(r.teamId)===fid, mv='', mvCls='';
+        /* Mouvement chiffré pour toute équipe qui bouge ; surlignage réservé à
+           l'équipe du match simulé ou à celle qui change de zone. */
+        if(simOn && r.delta!=null){
+          var notable=r.simulated || LDCSim.changedZone(r);
+          if(r.delta>0){ mv='<span class="zt-delta up">📈 +'+r.delta+'</span>'; if(notable) mvCls=' sim-up'; }
+          else if(r.delta<0){ mv='<span class="zt-delta down">📉 '+r.delta+'</span>'; if(notable) mvCls=' sim-down'; }
+          else mv='<span class="zt-delta flat">–</span>';
+        }
+        var live=!simOn && r.live ? '<span class="dot live" title="'+esc(I18N.t('common.live'))+'"></span>' : '';
+        return '<div class="zone-team'+(isFav?' is-fav':'')+mvCls+'" data-team="'+esc(r.teamId)+'" tabindex="0" role="button" aria-label="'+esc(T('Fiche du club : ','Club card: ')+r.name)+'">'+
+          '<span class="rk">'+(r.rank||r.pos)+'</span>'+
+          (r.logo?'<img src="'+esc(r.logo)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span style="width:22px"></span>')+
+          '<span class="nm">'+(isFav?'<span class="uf-star" aria-hidden="true">★</span>':'')+esc(r.name)+'</span>'+live+mv+'<span class="pts">'+r.pts+'</span></div>';
+      }).join('') || '<div class="zone-team"><span class="nm muted">—</span></div>';
+      return '<div class="zone-card '+d.cls+'"><div class="zone-head">'+esc(I18N.t(d.key))+'</div><div class="zone-list">'+rows+'</div></div>';
+    }).join('');
+    var TH=window.LDCThresholds;
+    el('zonesNote').textContent=TH ? T('Repères : le 8e avait '+TH.trend('top8')+' ; le 24e '+TH.trend('top24')+'. Clique sur un match à venir pour simuler son score.',
+                                       'For reference: 8th place had '+TH.trend('top8',true)+'; 24th had '+TH.trend('top24',true)+'. Click an upcoming match to simulate its score.') : '';
+    applyZoneFilter();
+  }
+  function refreshSimulation(){
+    renderSimBar(); renderZones();
+    Array.prototype.forEach.call(document.querySelectorAll('.live-card[data-id]'),function(c){ c.classList.toggle('is-simmed', !!sims[c.getAttribute('data-id')]); });
+  }
+  function debounce(fn,ms){ var tm; return function(){ var a=arguments, th=this; clearTimeout(tm); tm=setTimeout(function(){ fn.apply(th,a); },ms); }; }
+  function setSim(m,hg,ag){
+    if(hg===''||ag===''||hg==null||ag==null) delete sims[m.id]; else sims[m.id]={ match:m, hg:hg, ag:ag };
+    refreshSimulation();
+  }
+  /* Éditeur de score injecté dans la carte du match à venir. */
+  function openSimEditor(card, m, quiet){
+    if(card.querySelector('.sim-editor')) return;
+    var curS=sims[m.id], box=document.createElement('div');
+    box.className='sim-editor';
+    box.innerHTML='<input type="number" min="0" max="99" inputmode="numeric" value="'+(curS?curS.hg:'')+'" aria-label="'+esc(m.home.name)+'">'+
+      '<span class="sim-sep">-</span>'+
+      '<input type="number" min="0" max="99" inputmode="numeric" value="'+(curS?curS.ag:'')+'" aria-label="'+esc(m.away.name)+'">'+
+      '<button class="sim-x" type="button" title="'+esc(I18N.t('sim.clear'))+'" aria-label="'+esc(I18N.t('sim.clear'))+'">×</button>';
+    card.appendChild(box);
+    var ins=box.querySelectorAll('input'), push=debounce(function(){ setSim(m, ins[0].value, ins[1].value); },180);
+    ins[0].addEventListener('input',push); ins[1].addEventListener('input',push);
+    box.querySelector('.sim-x').addEventListener('click',function(){ delete sims[m.id]; box.remove(); refreshSimulation(); });
+    if(!quiet) ins[0].focus();
+  }
+  el('mdGrid').addEventListener('click',function(e){
+    var c=e.target.closest('.live-card.can-sim'); if(!c || e.target.closest('[data-team]') || e.target.closest('.sim-editor')) return;
+    var m=matches.filter(function(x){ return String(x.id)===c.getAttribute('data-id'); })[0];
+    if(m && m.state==='pre') openSimEditor(c,m);
+  });
+  el('simReset').addEventListener('click',function(){
+    sims={}; Array.prototype.forEach.call(document.querySelectorAll('.sim-editor'),function(b){ b.remove(); }); refreshSimulation();
+  });
+  (function bindZoneBar(){
+    var input=el('zq'), run=debounce(function(){ zFilter.q=input.value.trim(); applyZoneFilter(); },220);
+    input.addEventListener('input',run);
+    input.addEventListener('keydown',function(e){ if(e.key==='Escape'){ input.value=''; zFilter.q=''; applyZoneFilter(); } });
+    el('zqClear').addEventListener('click',function(){ input.value=''; zFilter.q=''; applyZoneFilter(); input.focus(); });
+    el('zco').addEventListener('change',function(){ zFilter.co=this.value; applyZoneFilter(); });
+    el('zonesGrid').addEventListener('click',function(e){ var r=e.target.closest('.zone-team[data-team]'); if(r) openClub(r.getAttribute('data-team')); });
+    el('zonesGrid').addEventListener('keydown',function(e){
+      if(e.key!=='Enter' && e.key!==' ') return;
+      var r=e.target.closest('.zone-team[data-team]'); if(!r || e.target!==r) return;
+      e.preventDefault(); openClub(r.getAttribute('data-team'));
+    });
+  })();
+
+  /* ---- Défilé des logos (comme l'accueil LDC) : les 36 clubs, clic -> fiche ---- */
+  var marqueeKey='';
+  function renderMarquee(){
+    var clubs=ESPN.leagueClubs(events), fid=favId();
+    var key=clubs.map(function(c){ return c.id; }).join(',')+'|'+fid+'|'+(en()?'en':'fr');
+    el('loopLabel').textContent=I18N.t('dash.marqueeLabel');
+    if(!clubs.length || key===marqueeKey) return;          // pas de re-rendu : le défilé ne saute pas
+    marqueeKey=key;
+    var chip=function(c, hidden){ return '<button type="button" class="crest-chip'+(fid && c.id===fid?' is-fav':'')+'" data-team="'+esc(c.id)+'"'+
+      (hidden?' tabindex="-1" aria-hidden="true"':' aria-label="'+esc(T('Fiche du club : ','Club card: ')+c.name)+'"')+'>'+
+      (c.logo?'<img src="'+esc(c.logo)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')+'<span>'+esc(c.abbr||c.name)+'</span></button>'; };
+    el('loopTrack').innerHTML=clubs.map(function(c){ return chip(c,false); }).join('')+clubs.map(function(c){ return chip(c,true); }).join('');   // doublé : boucle infinie
+  }
+  el('loopTrack').addEventListener('click',function(e){ var b=e.target.closest('[data-team]'); if(b) openClub(b.getAttribute('data-team')); });
 
   /* ---- Chiffres de la saison (calculés sur les matchs terminés) ---- */
   function renderStats(){
@@ -199,7 +338,7 @@
     var sync=ESPN.lastSeasonSync&&ESPN.lastSeasonSync();
     el('mdSync').textContent=sync?(I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
   }
-  function renderAll(){ renderStatic(); renderFav(); if(groups.length || matches.length){ renderDay(); renderTop(); renderStats(); renderPlayers(); } }
+  function renderAll(){ renderStatic(); renderFav(); if(groups.length || matches.length){ renderDay(); buildCountrySelect(); renderSimBar(); renderZones(); renderStats(); renderPlayers(); renderMarquee(); } }
 
   /* ---- Top buteurs, passeurs et murailles (comme l'accueil LDC) ----
      Buteurs et passeurs : agrégés depuis les résumés des matchs terminés
@@ -360,12 +499,6 @@
   setInterval(function(){
     Array.prototype.forEach.call(document.querySelectorAll('.live-countdown[data-kickoff]'),function(x){ x.textContent=upcomingWhen(new Date(+x.getAttribute('data-kickoff'))); });
   },1000);
-  el('topBody').addEventListener('click',function(e){ var tr=e.target.closest('tr[data-team]'); if(tr) openClub(tr.getAttribute('data-team')); });
-  el('topBody').addEventListener('keydown',function(e){
-    if(e.key!=='Enter' && e.key!==' ') return;
-    var tr=e.target.closest('tr[data-team]'); if(!tr || e.target!==tr) return;
-    e.preventDefault(); openClub(tr.getAttribute('data-team'));
-  });
   el('mdPrev').addEventListener('click',function(){ if(cur>0){ cur--; picked=true; renderDay(); } });
   el('mdNext').addEventListener('click',function(){ if(cur<groups.length-1){ cur++; picked=true; renderDay(); } });
 
@@ -385,6 +518,7 @@
       renderAll();
       if(window.LDCClubPanel) LDCClubPanel.refresh(ctx());
       loadPlayers();
+      if(wantChooser){ wantChooser=false; openChooser(null); }
       schedule(live?20000:60000);
     }).catch(function(){
       el('offlineNotice').style.display='flex';
@@ -398,4 +532,5 @@
   renderStatic();
   renderFav();
   load();
+  var wantChooser=location.hash==='#choisir';
 })();
