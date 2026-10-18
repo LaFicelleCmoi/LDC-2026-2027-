@@ -84,6 +84,8 @@
       };
       cols+='<div class="mc-box"><div class="mc-box-t">'+esc(T('Objectifs','Targets'))+' <span class="mc-muted">· '+left+' '+esc(T('match'+(left>1?'s':'')+' restant'+(left>1?'s':''),'match'+(left>1?'es':'')+' left'))+'</span></div>'+
         row(ob.top8,T('Top 8 · huitièmes directs','Top 8 · direct to R16'),'o-q')+row(ob.top24,T('Top 24 · barrages','Top 24 · play-offs'),'o-po')+
+        (function(){ var ch=window.LDCChances&&LDCChances.cached(matches, standings.map(function(r){ return { id:r.teamId }; })), c=ch&&ch[String(fav.id)];
+          return c?'<p class="cp-chances"><span>'+esc(T('Chances estimées','Estimated chances'))+'</span><b>'+esc('Top 8 : '+LDCChances.pct(c.top8))+'</b><b>'+esc('Top 24 : '+LDCChances.pct(c.top24))+'</b><small>'+esc(T('3 000 simulations des matchs restants, à titre indicatif','3,000 simulations of the remaining matches, indicative only'))+'</small></p>':''; })()+
         '<p class="mc-muted mc-small">'+esc(T('Seuils réels : le 8e avait '+TH.trend('top8')+', le 24e '+TH.trend('top24')+'.','Actual thresholds: 8th had '+TH.trend('top8',true)+', 24th had '+TH.trend('top24',true)+'.'))+'</p></div>';
     }
     if(cols) html+='<div class="mc-cols">'+cols+'</div>';
