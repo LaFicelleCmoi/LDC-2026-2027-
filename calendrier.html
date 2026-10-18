@@ -59,6 +59,8 @@
   .cal-score .cal-vs{ color:var(--muted-2); font-weight:700; }
   .cal-score .pen{ display:block; font-size:9px; color:var(--accent); font-weight:700; }
   .cal-score .cal-agg{ display:block; margin-top:2px; font-size:9px; font-weight:800; letter-spacing:.02em; color:var(--upcoming); white-space:nowrap; }
+  .cal-probs{ grid-column:2 / 5; }
+  @media (max-width:560px){ .cal-probs{ grid-column:1 / -1; } }
   .cal-status{ font-size:10px; text-align:center; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
   .cal-status .live{ color:var(--live); font-weight:800; }
   .cal-status .ft{ color:var(--finished); font-weight:800; }
@@ -100,7 +102,7 @@
   @media (max-width:560px){ .cal-view-switch{ display:grid; width:100%; } .cal-view-btn{ min-width:0; padding:10px 8px; font-size:11.5px; } .sch-row{ flex-direction:column; align-items:flex-start; gap:3px; padding:9px 11px; } .sch-d{ font-size:12px; } }
 </style>
 <link rel="stylesheet" href="footer.css?v=2">
-<link rel="stylesheet" href="matchpanel.css?v=1">
+<link rel="stylesheet" href="matchpanel.css?v=3">
 </head>
 <body>
 <div id="cl-ball"></div>
@@ -160,13 +162,13 @@
 </footer>
 
 <script src="i18n.js?v=25"></script>
-<script src="espn.js?v=25"></script>
+<script src="espn.js?v=28"></script>
 <script src="goalalert.js?v=1"></script>
 <script src="schedule.js?v=2"></script>
 <script src="footer.js?v=2"></script>
 <script src="draw2026.js?v=1"></script>
 <script src="ui.js?v=1"></script>
-<script src="matchpanel.js?v=1"></script>
+<script src="matchpanel.js?v=4"></script>
 <script>
 (function(){
   'use strict';
@@ -271,6 +273,7 @@
       '<button type="button" class="cal-score" data-mp-open="'+esc(m.id)+'" title="'+esc(I18N.getLang()==='en'?'Match details':'Fiche du match')+'">'+score+aggLine+'</button>'+
       side(m.away,'away')+
       '<div class="cal-status">'+status+'</div>'+
+      (window.LDCMatchPanel&&LDCMatchPanel.probBar&&m.state==='pre'&&m.odds?'<div class="cal-probs">'+LDCMatchPanel.probBar(m.odds, m.home.abbr||m.home.name, m.away.abbr||m.away.name, 'sm')+'</div>':'')+
     '</div>';
   }
 
