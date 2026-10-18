@@ -1,0 +1,588 @@
+/* =========================================================================
+   tracker.js — Page « Classement & phase finale »
+   Partagée par la Ligue des Champions (tracker.html) et l'Europa League
+   (europa-classement.html) : la compétition vient de espn.js
+   (window.LDC_LEAGUE), y compris l'adresse de la page et les clés locales.
+   Dépend de : i18n.js, standings-engine.js, espn.js, thresholds.js,
+   clubpanel.js, share.js ; brackets-viewer (CDN) pour la vue arbre.
+   ========================================================================= */
+(function(){
+  'use strict';
+  I18N.mountToggle('#langSwitch');
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function el(id){ return document.getElementById(id); }
+
+  var lastStandings=null, lastBracket=null, lastChampion=null, lastEvents=null;
+  /* Prédicteur de classement */
+  var predictMode=false, replayAll=false, predictions={};
+  var PRED_YEAR=(function(){ try{ return new URLSearchParams(location.search).get('season')||String(ESPN.CURRENT_SEASON); }catch(e){ return String(ESPN.CURRENT_SEASON); } })();
+  var PAGE=ESPN.COMP.standings;                     // tracker.html ou europa-classement.html
+  var NS=ESPN.STORE_NS;                             // '' pour la LDC, 'uel_' pour l'Europa League
+  var PREV_SEASON=ESPN.CURRENT_SEASON-1;
+  var PRED_KEY='ldc_pred_'+NS+PRED_YEAR;
+  try{ predictions=JSON.parse(localStorage.getItem(PRED_KEY)||'{}')||{}; }catch(e){ predictions={}; }
+  if(typeof predictions!=='object'||!predictions) predictions={};
+  function savePred(){ try{ localStorage.setItem(PRED_KEY, JSON.stringify(predictions)); }catch(e){} }
+  /* Évolution des positions : instantané de la dernière visite (par saison) */
+  var POS_KEY='ldc_pos_'+NS+PRED_YEAR;
+  var posBase=(function(){ try{ var o=JSON.parse(localStorage.getItem(POS_KEY)||'null'); return (o&&typeof o==='object')?o:null; }catch(e){ return null; } })();
+  function savePosSnapshot(rows){ try{ var o={}; rows.forEach(function(t){ o[t.teamId||t.name]=t.pos; }); localStorage.setItem(POS_KEY, JSON.stringify(o)); }catch(e){} }
+
+  /* ---- Starfield (ReactBits Particles) ---- */
+  (function starfield(){
+    var c=el('starfield'); if(!c) return; var ctx=c.getContext('2d'); var stars=[], W=0, H=0;
+    function resize(){ var dpr=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight; c.width=W*dpr; c.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); build(); }
+    function build(){ stars=[]; var n=Math.min(140,Math.floor(W*H/12000)); for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+0.3,vy:0.05+Math.random()*0.2,tw:Math.random()*6.28,gold:Math.random()<0.16}); }
+    function loop(){ if(document.visibilityState==='hidden'){ setTimeout(function(){requestAnimationFrame(loop);},600); return; } ctx.clearRect(0,0,W,H); for(var i=0;i<stars.length;i++){ var s=stars[i]; s.y+=s.vy; s.tw+=0.03; if(s.y>H+2){ s.y=-2; s.x=Math.random()*W; } var a=0.16+0.28*Math.sin(s.tw); if(a<0)a=0; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28); ctx.fillStyle='rgba(150,170,210,'+a.toFixed(2)+')'; ctx.fill(); } requestAnimationFrame(loop); }
+    window.addEventListener('resize',resize); resize(); if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)) requestAnimationFrame(loop);
+  })();
+
+  /* ---- Saison / Souvenir ---- */
+  function applySeasonUI(){
+    applyFavAccent();
+    var label=ESPN.seasonLabel();
+    var chip=el('season-chip'), banner=el('souvenir-banner');
+    if(ESPN.isArchive()){
+      if(chip) chip.textContent=label;
+      if(banner){ banner.classList.add('show'); el('souvenir-banner-label').textContent=I18N.t('souvenir.badge')+' '+label; }
+    } else {
+      if(chip) chip.textContent=label;
+      if(banner) banner.classList.remove('show');
+    }
+    var nf=ESPN.isLeaguePhaseFormat();
+    var subEl=el('leagueSub'); if(subEl){ var sk=nf?'trk.leaguePhaseSub':'trk.groupSub'; subEl.setAttribute('data-i18n',sk); subEl.textContent=I18N.t(sk); }
+    var lhEl=el('leagueHead'); if(lhEl){ var hk=nf?'trk.leaguePhase':'trk.round.league'; lhEl.setAttribute('data-i18n',hk); lhEl.textContent=I18N.t(hk); }
+    var lg=document.querySelector('.legend'); if(lg) lg.style.display=nf?'flex':'none';
+    ESPN.mountSeasonMenu('#seasonDD',PAGE);
+    ESPN.preserveSeasonLinks(document);
+  }
+  applySeasonUI();
+
+  /* ================= PHASE DE LIGUE ================= */
+  /* teamId -> { me, opp } pour chaque match en cours de la saison chargée. */
+  function liveOpponents(){
+    var map={};
+    (lastEvents||[]).forEach(function(ev){
+      var m=ESPN.normalizeEvent(ev); if(!m || m.state!=='in') return;
+      map[String(m.home.teamId)]={ me:m.home, opp:m.away };
+      map[String(m.away.teamId)]={ me:m.away, opp:m.home };
+    });
+    return map;
+  }
+  /* Pastille « en direct » : point, score du point de vue du club, logo de
+     l'adversaire. Sans logo connu, le score seul reste affiché. */
+  function liveCell(t,map){
+    if(!t.live) return '';
+    var x=map[String(t.teamId)];
+    if(!x || !x.opp){ return '<span class="live-pill"><span class="lp-dot"></span>'+esc(I18N.t('common.live'))+'</span>'; }
+    var label=(lang()==='en'?'Live vs ':'En direct contre ')+(x.opp.name||'')+' · '+x.me.score+'–'+x.opp.score;
+    return '<span class="live-pill" title="'+esc(label)+'" aria-label="'+esc(label)+'" role="img">'+
+      '<span class="lp-dot"></span>'+x.me.score+'-'+x.opp.score+
+      (x.opp.logo?'<img src="'+esc(x.opp.logo)+'" alt="" onerror="this.remove()">':'')+'</span>';
+  }
+
+  /* ---- Fiche club : clic (ou Entrée / Espace) sur une ligne du classement ---- */
+  function clubPanelCtx(){ return { matches:(lastEvents||[]).map(ESPN.normalizeEvent).filter(Boolean), standings:lastStandings||[] }; }
+  (function bindClubPanel(){
+    var body=el('standingsBody'); if(!body || !window.LDCClubPanel) return;
+    function openFrom(tr){ if(tr) LDCClubPanel.open(tr.getAttribute('data-team'), clubPanelCtx()); }
+    body.addEventListener('click',function(e){
+      if(e.target.closest('a,button,input')) return;
+      openFrom(e.target.closest('tr[data-team]'));
+    });
+    body.addEventListener('keydown',function(e){
+      if(e.key!=='Enter' && e.key!==' ') return;
+      var tr=e.target.closest('tr[data-team]'); if(!tr || e.target!==tr) return;
+      e.preventDefault(); openFrom(tr);
+    });
+  })();
+
+  /* Repères : seuils réels des phases de ligue précédentes (thresholds.js). */
+  function renderThresholdNote(){
+    var n=el('thrNote'), TH=window.LDCThresholds; if(!n) return;
+    if(!TH || ESPN.isArchive() || !ESPN.isLeaguePhaseFormat()){ n.style.display='none'; return; }
+    n.style.display='';
+    n.textContent = lang()==='en'
+      ? 'For reference: 8th place had '+TH.trend('top8',true)+'; 24th had '+TH.trend('top24',true)+'. Click a club to see what it still needs.'
+      : 'Repères : le 8e avait '+TH.trend('top8')+' ; le 24e '+TH.trend('top24')+'. Clique sur un club pour voir ce qu’il lui manque.';
+  }
+  renderThresholdNote();
+  window.addEventListener('ldc:langchange', renderThresholdNote);
+
+  function renderStandings(rows){
+    var body=el('standingsBody');
+    if(!rows || !rows.length){
+      var msg = (!ESPN.isArchive())
+        ? esc(I18N.t('dash.notStarted'))+' <a class="souvenir-link" href="'+PAGE+'?season='+PREV_SEASON+'" style="text-decoration:underline">'+esc(I18N.t('dash.seeSouvenir'))+'</a>'
+        : esc(I18N.t('common.noMatch')||'—');
+      body.innerHTML='<tr><td colspan="11" class="empty-state">'+msg+'</td></tr>';
+      return;
+    }
+    var nf=ESPN.isLeaguePhaseFormat();
+    var fav=ESPN.getFav(), fid=fav?fav.id:null;
+    /* base de comparaison : classement réel en mode prédiction, dernière visite sinon */
+    var baseMap=null;
+    if(predictMode && lastStandings){ baseMap={}; lastStandings.forEach(function(x){ baseMap[x.teamId||x.name]=x.pos; }); }
+    else if(!predictMode && posBase){ baseMap=posBase; }
+    var pdTitle = predictMode ? (lang()==='en'?'vs real table':'vs classement réel')
+                              : (lang()==='en'?'vs last visit':'vs dernière visite');
+    var liveMap=liveOpponents();
+    body.innerHTML = rows.map(function(t){
+      var zone = nf ? (t.pos<=8?'z-q':(t.pos<=24?'z-po':'z-out')) : '';
+      var gdCls = t.gd>0?'pos-v':(t.gd<0?'neg-v':'');
+      var gd = (t.gd>0?'+':'')+t.gd;
+      var isFav = fid && t.teamId===fid;
+      var pd='';
+      if(baseMap){ var prev=baseMap[t.teamId||t.name];
+        if(prev!=null){ var dlt=prev-t.pos;
+          if(dlt>0) pd='<span class="pd up" title="'+esc(pdTitle)+'">▲'+dlt+'</span>';
+          else if(dlt<0) pd='<span class="pd dn" title="'+esc(pdTitle)+'">▼'+(-dlt)+'</span>';
+        }
+      }
+      return '<tr class="'+zone+(isFav?' is-fav':'')+' cp-row" data-team="'+esc(t.teamId)+'" tabindex="0" title="'+esc((lang()==='en'?'Open club card: ':'Ouvrir la fiche : ')+t.name)+'">'+
+        '<td class="pos">'+(t.rank||t.pos)+pd+'</td>'+
+        '<td class="club"><span class="club-cell">'+
+          (t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+
+          (isFav?'<span class="tbl-fav">★</span>':'')+
+          '<span class="nm">'+esc(t.name)+'</span>'+liveCell(t,liveMap)+
+          (function(){ var c=ESPN.clubTitlesById(t.teamId); return c?'<span class="tbl-cup" title="'+c.n+' '+esc(I18N.t('pal.titlesN'))+' — LDC">🏆'+c.n+'</span>':''; })()+
+          '</span></td>'+
+        '<td>'+t.pld+'</td><td>'+t.w+'</td><td>'+t.d+'</td><td>'+t.l+'</td>'+
+        '<td>'+t.gf+'</td><td>'+t.ga+'</td>'+
+        '<td class="gd '+gdCls+'">'+gd+'</td>'+
+        '<td class="pts">'+t.pts+'</td>'+
+        '<td class="form">'+formPills(t.form)+'</td>'+
+      '</tr>';
+    }).join('');
+    var live = rows.some(function(t){return t.live;});
+    el('liveFlag').style.display = live?'inline-flex':'none';
+    /* Horodatage de la dernière réponse de l'API ESPN, pas de l'affichage. */
+    var sync = ESPN.lastSeasonSync && ESPN.lastSeasonSync();
+    el('standingsUpdated').textContent = sync
+      ? (I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleString(lang()==='en'?'en-GB':'fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})
+      : (I18N.t('common.updated')||'')+' '+hm();
+    if(sync) el('standingsUpdated').title = sync.toISOString();
+  }
+
+  /* ================= PHASE FINALE (cartes) ================= */
+  var ROUND_LABEL = { po:'trk.round.po', r16:'trk.round.r16', qf:'trk.round.qf', sf:'trk.round.sf', final:'trk.round.final' };
+
+  function renderBracketCards(rounds){
+    var host=el('bracketCards');
+    if(!rounds || !rounds.length){
+      host.innerHTML=''; el('bracketEmpty').style.display='block'; return;
+    }
+    el('bracketEmpty').style.display='none';
+    host.innerHTML = rounds.map(function(r){
+      var ties = r.ties.map(function(tie){ return tieCard(tie); }).join('');
+      return '<div class="round-col"><h3>'+esc(I18N.t(ROUND_LABEL[r.key])||r.key)+'</h3>'+ties+'</div>';
+    }).join('');
+  }
+
+  function tieCard(tie){
+    var aWin = tie.decided && tie.winner==='A';
+    var bWin = tie.decided && tie.winner==='B';
+    var cls = 'tie'+(tie.live?' live':'')+(tie.decided?' decided':'');
+    var legNote='';
+    if(tie.penA!=null && tie.penB!=null){
+      legNote='<div class="legs"><span class="pen-note">'+esc(I18N.t('common.pen')||'tab')+' '+tie.penA+'–'+tie.penB+'</span></div>';
+    } else if(tie.twoLegs){
+      legNote='<div class="legs">'+tie.legs.length+' '+ (lang()==='en'?'legs':'manches') +'</div>';
+    } else if(!tie.started){
+      legNote='<div class="legs">'+esc(I18N.t('common.upcoming')||'À VENIR')+'</div>';
+    }
+    return '<div class="'+cls+'">'+
+      teamRow(tie.teamA, tie.aggA, aWin, bWin)+
+      teamRow(tie.teamB, tie.aggB, bWin, aWin)+
+      legNote+
+    '</div>';
+  }
+  function teamRow(team, score, win, otherWin){
+    if(!team) return '';
+    var cls='row'+(win?' win':(otherWin?' lose':''));
+    return '<div class="'+cls+'">'+
+      (team.logo?'<img class="crest" src="'+esc(team.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span class="crest"></span>')+
+      '<span class="nm">'+esc(team.name)+'</span>'+
+      '<span class="sc">'+score+'</span>'+
+    '</div>';
+  }
+
+  /* ================= PHASE FINALE (arbre brackets-viewer) ================= */
+  function renderBracketTree(rounds){
+    var host=el('bracketTree');
+    // brackets-viewer EXIGE la classe .brackets-viewer sur l'élément cible
+    if(!host.classList.contains('brackets-viewer')) host.classList.add('brackets-viewer');
+    host.innerHTML='';
+    function fallback(msg){ host.innerHTML='<div class="empty-state">'+esc(msg||I18N.t('trk.treeNote')||I18N.t('trk.noKnockout')||'—')+'</div>'; }
+
+    if(!rounds || !rounds.length || typeof window.bracketsViewer==='undefined'){ fallback(); return; }
+    var data;
+    try{ data=toViewerData(rounds); }catch(e){ data=null; }
+    if(!data || !data.matches.length){ fallback(); return; }
+
+    // render() est ASYNCHRONE (renvoie une Promise) -> on gère le rejet pour le repli
+    Promise.resolve()
+      .then(function(){ return window.bracketsViewer.render(data, { selector:'#bracketTree' }); })
+      .catch(function(){ fallback(); });
+  }
+
+  function toViewerData(rounds){
+    var participants=[], pid={}, matches=[];
+    function pIdOf(team){
+      if(!team) return null;
+      var k=team.id||team.name;
+      if(pid[k]==null){ pid[k]=participants.length+1; participants.push({id:pid[k], tournament_id:0, name:team.name}); }
+      return pid[k];
+    }
+    // L'arbre représente le tableau "propre" 8es -> finale (les barrages sont dans la vue cartes).
+    var clean = rounds.filter(function(r){ return r.key!=='po'; });
+    var roundNo=0;
+    clean.forEach(function(r){
+      roundNo++;
+      r.ties.forEach(function(tie, i){
+        var op1={ id:pIdOf(tie.teamA), score: tie.started? tie.aggA : null };
+        var op2={ id:pIdOf(tie.teamB), score: tie.started? tie.aggB : null };
+        if(tie.decided){
+          op1.result = tie.winner==='A'?'win':'loss';
+          op2.result = tie.winner==='B'?'win':'loss';
+        }
+        matches.push({
+          id:matches.length+1, stage_id:0, group_id:0, round_id:roundNo, number:i+1,
+          child_count:0,
+          status: tie.decided?4:(tie.live?3:(tie.started?3:2)),
+          opponent1:op1, opponent2:op2
+        });
+      });
+    });
+    return {
+      stages:[{ id:0, tournament_id:0, name:I18N.t('trk.knockout')||'Knockout', type:'single_elimination', number:1, settings:{} }],
+      matches:matches, matchGames:[], participants:participants
+    };
+  }
+
+  /* ================= CHAMPION + CONFETTIS ================= */
+  function handleChampion(rounds){
+    var champ = ESPN.findChampion(rounds);
+    if(!champ){
+      // Repli palmarès : vainqueur connu même si ESPN n'expose pas le flag (vieilles finales aux t.a.b.)
+      var c=ESPN.championOfSeason();
+      if(c){
+        var logo='';
+        (lastStandings||[]).forEach(function(r){ var nm=(r.name||'').toLowerCase(); for(var k=0;k<c.keys.length;k++){ if(nm.indexOf(c.keys[k])!==-1){ logo=r.logo; break; } } });
+        champ={ name:c.name, logo:logo, id:c.name };
+      }
+    }
+    var banner=el('championBanner');
+    if(champ){
+      el('championName').textContent=champ.name;
+      el('championLogo').src=champ.logo||'';
+      banner.classList.add('show');
+      var key=champ.id||champ.name;
+      if(lastChampion!==key){ lastChampion=key; if(!ESPN.isArchive()) burstConfetti(); }
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  /* ================= LIVE WIDGET ================= */
+  var widgetRotation=[], widgetIndex=0, widgetClosed=false;
+  function buildWidget(events){
+    var live=[], up=[];
+    (events||[]).forEach(function(ev){
+      var m=ESPN.normalizeEvent(ev); if(!m) return;
+      if(m.state==='in') live.push(m);
+      else if(m.state==='pre') up.push(m);
+    });
+    up.sort(function(a,b){ return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0); });
+    widgetRotation = live.concat(up);     // live d'abord, puis à venir ; PAS les terminés
+    if(widgetIndex>=widgetRotation.length) widgetIndex=0;
+    renderWidget();
+  }
+  function renderWidget(){
+    var w=el('liveWidget');
+    if(!widgetRotation.length || widgetClosed){
+      w.classList.add('hidden');
+      el('widgetReopen').style.display = (widgetRotation.length && widgetClosed)?'block':'none';
+      return;
+    }
+    w.classList.remove('hidden'); el('widgetReopen').style.display='none';
+    var m=widgetRotation[widgetIndex];
+    var live=m.state==='in';
+    var badge = live? '<span class="badge live">'+esc(I18N.t('common.live'))+'</span>'
+                    : '<span class="badge upcoming">'+esc(I18N.t('common.upcoming'))+'</span>';
+    var meta = live? esc(m.displayClock||'') : (m.dateObj? '<span class="cd" data-ko="'+m.dateObj.getTime()+'">'+countdown(m.dateObj)+'</span>' : '');
+    var dots = widgetRotation.length>1 ? '<div class="wdots">'+widgetRotation.map(function(_,i){return '<i class="'+(i===widgetIndex?'on':'')+'"></i>';}).join('')+'</div>' : '';
+    el('widgetBody').innerHTML =
+      '<div style="text-align:center;margin-bottom:8px">'+badge+'</div>'+
+      '<div class="wteams">'+
+        wteam(m.home)+
+        '<div style="text-align:center"><div class="wscore">'+(m.state==='pre'?'–':(m.home.score+' : '+m.away.score))+'</div>'+((m.home.shootout!=null&&m.away.shootout!=null)?'<div style="font-size:11px;color:var(--accent);font-weight:800;margin-top:2px">'+esc(I18N.t('common.pen'))+' '+m.home.shootout+'–'+m.away.shootout+'</div>':'')+'</div>'+
+        wteam(m.away)+
+      '</div>'+
+      '<div class="wmeta">'+meta+'</div>'+ dots;
+  }
+  function wteam(c){
+    return '<div class="wt">'+(c.logo?'<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+'<span class="ab">'+esc(c.abbr)+'</span></div>';
+  }
+  el('widgetClose').addEventListener('click',function(){ widgetClosed=true; renderWidget(); });
+  el('widgetReopen').addEventListener('click',function(){ widgetClosed=false; renderWidget(); });
+
+  /* ================= TOGGLE VUES ================= */
+  function setKnockoutView(view){  // 'cards' | 'tree' | 'run'
+    el('btnCards').classList.toggle('active', view==='cards');
+    el('btnTree').classList.toggle('active', view==='tree');
+    el('btnRun').classList.toggle('active', view==='run');
+    el('bracketCards').style.display   = view==='cards'?'flex':'none';
+    el('bracketTree').style.display    = view==='tree'?'block':'none';
+    el('bracketPredict').style.display = view==='run'?'flex':'none';
+    el('bracketEmpty').style.display   = (view==='cards' && (!lastBracket||!lastBracket.length))?'block':'none';
+    el('championBanner').style.display = view==='run'?'none':'';
+    if(view==='tree' && lastBracket) renderBracketTree(lastBracket);
+    if(view==='run') ensureRun();
+  }
+  el('btnCards').addEventListener('click',function(){ setKnockoutView('cards'); });
+  el('btnTree').addEventListener('click',function(){ setKnockoutView('tree'); });
+  el('btnRun').addEventListener('click',function(){ setKnockoutView('run'); });
+
+  /* ================= PRÉDICTEUR DE CLASSEMENT ================= */
+  function byAscDate(a,b){ return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0); }
+  function predictableMatches(){
+    if(!lastEvents) return [];
+    var arr=lastEvents.map(ESPN.normalizeEvent).filter(function(m){ return m && m.round==='league' && (replayAll || m.state==='pre'); });
+    arr.sort(byAscDate); return arr;
+  }
+  /* Mode prédiction : un pronostic 1/N/2 devient un score conventionnel
+     (1-0, 0-1 ou 1-1) — convention propre à ce mode, qui ne connaît pas de
+     score exact. Le CLASSEMENT, lui, passe par le moteur réglementaire
+     (article 18.01), comme le classement réel. */
+  function predictedStandings(){
+    var ms=predictableMatches(), predIds={};
+    ms.forEach(function(m){ predIds[m.id]=true; });
+    var base = replayAll ? [] : ESPN.leagueMatches(lastEvents).filter(function(m){ return !predIds[m.id]; });
+    var picked = ms.filter(function(m){ return predictions[m.id]; }).map(function(m){
+      var p=predictions[m.id], hg=(p==='A')?0:1, ag=(p==='H')?0:1;
+      return { id:m.id, state:'post', dateObj:m.dateObj,
+               home:Object.assign({},m.home,{score:hg}), away:Object.assign({},m.away,{score:ag}) };
+    });
+    var seed;
+    if(replayAll){ var seen={}; seed=[]; ms.forEach(function(m){ [m.home,m.away].forEach(function(c){ if(c.teamId && !seen[c.teamId]){ seen[c.teamId]=1; seed.push({id:c.teamId,name:c.name,abbr:c.abbr,logo:c.logo}); } }); }); }
+    else { seed=(lastStandings||[]).map(function(t){ return {id:t.teamId,name:t.name,abbr:t.abbr,logo:t.logo}; }); }
+    return ESPN.rankLeagueMatches(base.concat(picked), seed);
+  }
+  function renderPredictPanel(){
+    var host=el('predictPanel'); if(!host) return;
+    var ms=predictableMatches();
+    if(!ms.length){
+      var cta=(!ESPN.isArchive())?' <a class="souvenir-link" href="'+PAGE+'?season='+PREV_SEASON+'" style="text-decoration:underline">'+esc(I18N.t('dash.seeSouvenir'))+'</a>':'';
+      host.innerHTML='<div class="predict-hint">'+esc(I18N.t('trk.pred.empty'))+cta+'</div>'; return;
+    }
+    var done=ms.filter(function(m){return predictions[m.id];}).length;
+    function side(c){ return '<span class="pm-team">'+(c.logo?'<img src="'+esc(c.logo)+'" onerror="this.style.visibility=\'hidden\'">':'')+'<span class="pm-nm">'+esc(c.abbr||c.shortName||c.name)+'</span></span>'; }
+    function pk(m,v,lbl){ var p=predictions[m.id]||''; return '<button class="pm-pick'+(p===v?' active':'')+'" data-id="'+esc(m.id)+'" data-pick="'+v+'">'+lbl+'</button>'; }
+    host.innerHTML='<div class="predict-hint">'+(replayAll?esc(I18N.t('trk.pred.replay')):esc(I18N.t('trk.pred.title')))+'</div>'+
+      '<div class="predict-count">'+esc(I18N.t('trk.pred.count').replace('{done}',done).replace('{total}',ms.length))+'</div>'+
+      '<div class="pm-list">'+ms.map(function(m){ return '<div class="pm-row">'+side(m.home)+'<span class="pm-picks">'+pk(m,'H','1')+pk(m,'D','N')+pk(m,'A','2')+'</span>'+side(m.away)+'</div>'; }).join('')+'</div>';
+  }
+  function refreshPredict(){ renderStandings(predictMode?predictedStandings():lastStandings); if(predictMode) renderPredictPanel(); }
+  function applyPick(id,pick){ if(predictions[id]===pick) delete predictions[id]; else predictions[id]=pick; savePred(); refreshPredict(); }
+  function setPredictMode(on){
+    predictMode=!!on;
+    var b=el('btnPredict'); b.setAttribute('data-i18n', predictMode?'trk.pred.exit':'trk.pred.toggle'); b.innerHTML=esc(I18N.t(predictMode?'trk.pred.exit':'trk.pred.toggle'));
+    el('predictBadge').style.display=predictMode?'inline-flex':'none';
+    el('btnPredictReset').style.display=predictMode?'inline-flex':'none';
+    el('predictPanel').style.display=predictMode?'block':'none';
+    refreshPredict();
+  }
+  el('btnPredict').addEventListener('click',function(){ setPredictMode(!predictMode); });
+  el('btnPredictReset').addEventListener('click',function(){ predictions={}; savePred(); refreshPredict(); });
+  el('predictPanel').addEventListener('click',function(e){ var b=e.target.closest?e.target.closest('.pm-pick'):null; if(b) applyPick(b.getAttribute('data-id'), b.getAttribute('data-pick')); });
+
+  /* ================= PARCOURS VERS LA FINALE (bracket interactif) ================= */
+  var RUN_ROUNDS=['r16','qf','sf','final'];
+  var RUN_LABEL={ r16:'trk.round.r16', qf:'trk.round.qf', sf:'trk.round.sf', final:'trk.round.final' };
+  var RUN_KEY='ldc_run_'+NS+PRED_YEAR;
+  var runSeed=null, runPicks={}, runBuilt=false;
+  function saveRun(){ try{ localStorage.setItem(RUN_KEY, JSON.stringify(runPicks)); }catch(e){} }
+  function buildRunSeed(cb){
+    var r16=(lastBracket||[]).filter(function(r){return r.key==='r16';})[0];
+    if(r16 && r16.ties.length>=8){ runSeed={ pairs:r16.ties.slice(0,8).map(function(t){return {a:t.teamA,b:t.teamB};}), hypo:false, source:'bracket' }; if(cb)cb(); return; }
+    ESPN.fetchClubList().then(function(list){
+      var cl=(list||[]).filter(function(c){return c && (c.id||c.name);}).slice(0,16), pairs=[];
+      for(var i=0;i<8;i++){ pairs.push({ a:cl[2*i]||null, b:cl[2*i+1]||null }); }
+      runSeed={ pairs:pairs, hypo:true, source:cl.length?'clubs':'empty' }; if(cb)cb();
+    }).catch(function(){ runSeed={ pairs:[], hypo:true, source:'empty' }; if(cb)cb(); });
+  }
+  function runWinners(ties, rk){ return ties.map(function(t,i){ var p=runPicks[rk+':'+i]; return p==='A'?t.teamA:(p==='B'?t.teamB:null); }); }
+  function computeRunBracket(){
+    if(!runSeed) return [];
+    var r16=runSeed.pairs.map(function(p){ return {teamA:p.a, teamB:p.b}; });
+    var r16w=runWinners(r16,'r16'), qf=[]; for(var i=0;i<4;i++) qf.push({teamA:r16w[2*i]||null, teamB:r16w[2*i+1]||null});
+    var qfw=runWinners(qf,'qf'), sf=[]; for(var j=0;j<2;j++) sf.push({teamA:qfw[2*j]||null, teamB:qfw[2*j+1]||null});
+    var sfw=runWinners(sf,'sf'), fin=[{teamA:sfw[0]||null, teamB:sfw[1]||null}];
+    return [{key:'r16',ties:r16},{key:'qf',ties:qf},{key:'sf',ties:sf},{key:'final',ties:fin}];
+  }
+  function runRow(t, rk, i, side, picked){
+    var has=!!t, cls='run-row'+(picked?' picked':'')+(has?'':' empty');
+    var inner = has
+      ? ((t.logo?'<img class="crest" src="'+esc(t.logo)+'" onerror="this.style.visibility=\'hidden\'">':'<span class="crest"></span>')+'<span class="nm">'+esc(t.shortName||t.name||t.abbr||'')+'</span>')
+      : '<span class="crest"></span><span class="nm">'+esc(I18N.t('trk.run.empty'))+'</span>';
+    var attrs = has ? ' role="button" tabindex="0" data-r="'+rk+'" data-t="'+i+'" data-s="'+side+'"' : '';
+    return '<div class="'+cls+'"'+attrs+'>'+inner+'</div>';
+  }
+  function renderRun(){
+    var host=el('bracketPredict'); if(!host) return;
+    if(!runSeed || !runSeed.pairs.length){ host.innerHTML='<div class="empty-state">'+esc(I18N.t('trk.run.noData'))+'</div>'; return; }
+    var rounds=computeRunBracket();
+    var fin=rounds[rounds.length-1].ties[0], fp=runPicks['final:0'], champ=fp==='A'?fin.teamA:(fp==='B'?fin.teamB:null);
+    var bar='<div id="runBar">'+(runSeed.hypo?'<span class="run-hypo">'+esc(I18N.t('trk.run.hypo'))+'</span>':'')+
+      '<button class="btn star-border" id="runRandom">'+esc(I18N.t('trk.run.random'))+'</button>'+
+      '<button class="btn star-border" id="runReset">'+esc(I18N.t('trk.run.reset'))+'</button>'+
+      '<button class="btn star-border" id="runShare">'+esc(I18N.t('trk.run.share'))+'</button>'+
+      '<button class="btn star-border" id="runShareImg">📸 '+esc(lang()==='en'?'Card':'Carte')+'</button>'+
+      '<span class="run-copied" id="runCopied" style="display:none">'+esc(I18N.t('trk.run.copied'))+'</span></div>';
+    var banner='<div class="run-champion'+(champ?' show':'')+'">'+(champ?((champ.logo?'<img src="'+esc(champ.logo)+'" alt="">':'')+'<div><div class="lbl">'+esc(I18N.t('trk.run.champion'))+'</div><div class="nm">'+esc(champ.name||champ.shortName||'')+'</div></div>'):'')+'</div>';
+    var cols=rounds.map(function(r){
+      var ties=r.ties.map(function(tie,i){ var p=runPicks[r.key+':'+i];
+        return '<div class="tie run-tie">'+runRow(tie.teamA,r.key,i,'A',p==='A')+runRow(tie.teamB,r.key,i,'B',p==='B')+'</div>'; }).join('');
+      return '<div class="round-col"><h3>'+esc(I18N.t(RUN_LABEL[r.key])||r.key)+'</h3>'+ties+'</div>';
+    }).join('');
+    host.innerHTML=bar+banner+'<div class="run-hint">'+esc(I18N.t('trk.run.pick'))+'</div><div class="run-rounds">'+cols+'</div>';
+    el('runRandom').addEventListener('click',runRandom);
+    el('runReset').addEventListener('click',function(){ runPicks={}; saveRun(); writeRunUrl(); renderRun(); });
+    el('runShare').addEventListener('click',shareRun);
+    var si=el('runShareImg'); if(si) si.addEventListener('click',function(){ var d=runChampionData(); if(!d||!window.ShareCard) return; si.disabled=true; Promise.resolve(ShareCard.champion(d)).then(function(){si.disabled=false;},function(){si.disabled=false;}); });
+  }
+  function runChampionData(){
+    var rounds=computeRunBracket();
+    var fin=rounds[rounds.length-1].ties[0], fp=runPicks['final:0'];
+    var champ = fp==='A'?fin.teamA:(fp==='B'?fin.teamB:null);
+    if(!champ) return null;
+    function k(t){ return t?(t.teamId||t.name):null; }
+    var ck=k(champ), road=[];
+    rounds.forEach(function(r){
+      for(var i=0;i<r.ties.length;i++){ var tie=r.ties[i], a=k(tie.teamA), b=k(tie.teamB);
+        if(a===ck||b===ck){ var opp=(a===ck)?tie.teamB:tie.teamA; if(opp) road.push({ round:esc(I18N.t(RUN_LABEL[r.key])||r.key), opp:(opp.abbr||opp.shortName||opp.name||'') }); break; }
+      }
+    });
+    return { champ:{ name:champ.name, abbr:champ.abbr, logo:champ.logo, color:champ.color }, season:(ESPN.seasonLabel?ESPN.seasonLabel():''), road:road };
+  }
+  function invalidateRunDownstream(rk){ var idx=RUN_ROUNDS.indexOf(rk); for(var i=idx+1;i<RUN_ROUNDS.length;i++){ var d=RUN_ROUNDS[i]; Object.keys(runPicks).forEach(function(k){ if(k.indexOf(d+':')===0) delete runPicks[k]; }); } }
+  function setRunPick(rk,ti,side){ runPicks[rk+':'+ti]=side; invalidateRunDownstream(rk); saveRun(); writeRunUrl(); renderRun(); }
+  function runRandom(){ if(!runSeed) return; runPicks={}; var counts={r16:8,qf:4,sf:2,final:1}; RUN_ROUNDS.forEach(function(rk){ for(var i=0;i<counts[rk];i++) runPicks[rk+':'+i]=(Math.random()<0.5?'A':'B'); }); saveRun(); writeRunUrl(); renderRun(); }
+  function encodeRun(){ var s='', counts={r16:8,qf:4,sf:2,final:1}; RUN_ROUNDS.forEach(function(rk){ for(var i=0;i<counts[rk];i++){ var p=runPicks[rk+':'+i]; s+=(p==='A'?'0':(p==='B'?'1':'-')); } }); return s; }
+  function decodeRun(s){ if(!s) return; var counts={r16:8,qf:4,sf:2,final:1}, idx=0; RUN_ROUNDS.forEach(function(rk){ for(var i=0;i<counts[rk];i++){ var ch=s.charAt(idx++); if(ch==='0') runPicks[rk+':'+i]='A'; else if(ch==='1') runPicks[rk+':'+i]='B'; } }); }
+  function writeRunUrl(){ try{ var u=new URL(location.href); u.searchParams.set('run', encodeRun()); history.replaceState(null,'',u.toString()); }catch(e){} }
+  function shareRun(){ writeRunUrl(); var url=location.href; function ok(){ var c=el('runCopied'); if(c){ c.style.display='inline'; setTimeout(function(){ if(c) c.style.display='none'; },1800); } } if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(ok,ok); } else { try{ var ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok(); }catch(e){} } }
+  function ensureRun(){
+    if(runBuilt){ renderRun(); return; }
+    try{ var rp=new URLSearchParams(location.search).get('run'); if(rp){ decodeRun(rp); } else { var st=JSON.parse(localStorage.getItem(RUN_KEY)||'{}'); if(st&&typeof st==='object') runPicks=st; } }catch(e){}
+    el('bracketPredict').innerHTML='<div class="empty-state">'+esc(I18N.t('common.loading')||'…')+'</div>';
+    buildRunSeed(function(){ runBuilt=true; renderRun(); });
+  }
+  el('bracketPredict').addEventListener('click',function(e){ var r=e.target.closest?e.target.closest('.run-row[data-r]'):null; if(r) setRunPick(r.getAttribute('data-r'),+r.getAttribute('data-t'),r.getAttribute('data-s')); });
+  el('bracketPredict').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ var r=e.target.closest?e.target.closest('.run-row[data-r]'):null; if(r){ e.preventDefault(); setRunPick(r.getAttribute('data-r'),+r.getAttribute('data-t'),r.getAttribute('data-s')); } } });
+
+  /* ================= HELPERS ================= */
+  function formPills(form){
+    if(!form || !form.length) return '<span class="form-none">—</span>';
+    return '<span class="form-wrap">'+form.map(function(r){
+      var lbl = r==='w'?'V':(r==='d'?'N':'D');
+      return '<span class="form-pill f-'+r+'">'+lbl+'</span>';
+    }).join('')+'</span>';
+  }
+  function applyFavAccent(){ var a=ESPN.favAccent(), root=document.documentElement; if(a) root.style.setProperty('--fav-rgb',a); else root.style.removeProperty('--fav-rgb'); }
+  function lang(){ return I18N.getLang(); }
+  function hm(){ var d=new Date(); function p(n){return n<10?'0'+n:''+n;} return p(d.getHours())+':'+p(d.getMinutes()); }
+  function countdown(d){
+    var ms=d.getTime()-Date.now(); if(ms<=0) return "0:00";
+    var s=Math.floor(ms/1000),h=Math.floor(s/3600),mm=Math.floor((s%3600)/60),ss=s%60;
+    function p(n){return n<10?'0'+n:''+n;}
+    return (h>0?h+':':'')+p(mm)+':'+p(ss);
+  }
+
+  /* ================= CONFETTIS ================= */
+  var cfLast=0;
+  function stopConfetti(){
+    var cv=el('confetti'); if(!cv) return;
+    try{ cv.getContext('2d').clearRect(0,0,cv.width,cv.height); }catch(e){}
+    cv.style.display='none';
+  }
+  function burstConfetti(){
+    var cv=el('confetti'); cv.style.display='block';
+    var ctx=cv.getContext('2d'); var W=cv.width=innerWidth, H=cv.height=innerHeight;
+    var cols=['#f5b50a','#1b68ff','#6f5bff','#28c76f','#ffffff'];
+    var parts=[];
+    for(var i=0;i<160;i++){ parts.push({x:Math.random()*W,y:-20-Math.random()*H*0.4,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,s:4+Math.random()*6,c:cols[i%cols.length],a:Math.random()*Math.PI}); }
+    var t0=Date.now();
+    (function frame(){
+      if(!cv || cv.style.display==='none') return;   // stoppé par la sécurité anti-gel
+      cfLast=Date.now();
+      ctx.clearRect(0,0,W,H);
+      parts.forEach(function(p){ p.x+=p.vx; p.y+=p.vy; p.a+=.1; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a); ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s); ctx.restore(); });
+      if(Date.now()-t0<4500) requestAnimationFrame(frame);
+      else { ctx.clearRect(0,0,W,H); cv.style.display='none'; }
+    })();
+  }
+  /* auto-réparation : si la chaîne rAF meurt (onglet masqué, retour d'historique…),
+     on efface tout au lieu de laisser des confettis figés à l'écran */
+  setInterval(function(){ var cv=el('confetti'); if(cv && cv.style.display==='block' && Date.now()-cfLast>1200) stopConfetti(); }, 1500);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') stopConfetti(); });
+  window.addEventListener('pagehide', stopConfetti);
+
+  /* ================= POLLING / CHARGEMENT ================= */
+  function showOffline(on){ el('offlineNotice').style.display=on?'flex':'none'; }
+
+  function loadSeason(){
+    if(document.visibilityState==='hidden') return;
+    ESPN.fetchSeasonEvents().then(function(events){
+      showOffline(false);
+      lastEvents = events;
+      /* Les 36 clubs présents dès la 1re journée : liste officielle pour la
+         LDC, calendrier ESPN pour les autres compétitions. */
+      var seed=(!ESPN.isArchive() && ESPN.isLeaguePhaseFormat()) ? ESPN.qualifiedClubs() : null;
+      if(seed && !seed.length) seed=ESPN.leagueClubs(events);
+      lastStandings = ESPN.computeStandings(events, seed);
+      if(lastStandings && lastStandings.length) savePosSnapshot(lastStandings);   // base de la prochaine visite
+      lastBracket = ESPN.buildBracket(events);
+      (function(){ var lg=(events||[]).map(ESPN.normalizeEvent).filter(function(m){return m&&m.round==='league';}); replayAll=(lg.length>0 && lg.filter(function(m){return m.state==='pre';}).length===0); })();
+      renderStandings(predictMode?predictedStandings():lastStandings);
+      if(window.LDCClubPanel) LDCClubPanel.refresh(clubPanelCtx());   // fiche ouverte : scores à jour
+      if(predictMode) renderPredictPanel();
+      renderBracketCards(lastBracket);
+      if(el('btnTree').classList.contains('active')) renderBracketTree(lastBracket);
+      handleChampion(lastBracket);
+    }).catch(function(){
+      // garder le dernier affichage valide
+      if(!lastStandings) renderStandings(null);
+      showOffline(true);
+    });
+  }
+
+  function loadToday(){
+    if(document.visibilityState==='hidden') return;
+    ESPN.fetchScoreboard().then(function(events){ buildWidget(events); })
+      .catch(function(){ /* garder l'existant */ });
+  }
+
+  // boucles protégées
+  loadSeason(); loadToday();
+  setInterval(function(){ try{ loadSeason(); }catch(e){} }, 30000);
+  setInterval(function(){ try{ loadToday(); }catch(e){} }, 20000);
+  setInterval(function(){ try{ if(widgetRotation.length>1){ widgetIndex=(widgetIndex+1)%widgetRotation.length; renderWidget(); } }catch(e){} }, 6000);
+  setInterval(function(){ try{
+    var c=document.querySelector('#liveWidget .cd[data-ko]');
+    if(c){ var ts=parseInt(c.getAttribute('data-ko'),10); if(!isNaN(ts)) c.textContent=countdown(new Date(ts)); }
+  }catch(e){} }, 1000);
+
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'){ loadSeason(); loadToday(); } });
+  window.addEventListener('ldc:langchange',function(){
+    applySeasonUI();
+    if(lastStandings) renderStandings(predictMode?predictedStandings():lastStandings);
+    if(predictMode) renderPredictPanel();
+    if(lastBracket){ renderBracketCards(lastBracket); if(el('btnTree').classList.contains('active')) renderBracketTree(lastBracket); }
+    if(el('btnRun').classList.contains('active')) renderRun();
+    renderWidget();
+  });
+
+})();
