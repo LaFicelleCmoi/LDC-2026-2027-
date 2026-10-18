@@ -12,10 +12,19 @@
    - timeout sur CHAQUE fetch (AbortSignal.timeout + fallback AbortController)
    - cache court sur scoreboard & summary (limite le volume de requêtes)
    - parsing défensif : un match malformé est ignoré, pas de crash global
-   API globale : window.ESPN
+   API globale : window.ESPN (compétition de la page) ; ESPN.forLeague(slug)
+   donne une instance pour une AUTRE compétition (même API, caches et clés
+   locales propres), pour les pages qui en mélangent plusieurs (clubs
+   français, comparateur, alertes but).
    ========================================================================= */
 (function (global) {
   'use strict';
+
+  var INSTANCES = {};
+
+  /* Tout le module est une fabrique : une instance par compétition. Le corps
+     n'est pas réindenté, pour garder un historique lisible. */
+  function create(requestedSlug, PRIMARY) {
 
   /* ===== LA constante de compétition ===================================== */
   var COMPETITIONS = {
@@ -38,7 +47,7 @@
                         calendar: 'conference-calendrier.html',
                         historyFrom: 2021 }
   };
-  var LEAGUE_SLUG = (global.LDC_LEAGUE && COMPETITIONS[global.LDC_LEAGUE]) ? global.LDC_LEAGUE : 'uefa.champions';
+  var LEAGUE_SLUG = (requestedSlug && COMPETITIONS[requestedSlug]) ? requestedSlug : 'uefa.champions';
   var COMP = COMPETITIONS[LEAGUE_SLUG];
   var IS_UCL = LEAGUE_SLUG === 'uefa.champions';
   /* Préfixe des clés localStorage : vide pour la LDC (clés historiques
@@ -557,7 +566,7 @@
   /* Bandeau « données en cache » : affiché tant qu'ESPN est injoignable,
      retiré dès que des données fraîches reviennent. */
   function renderStaleBanner() {
-    if (typeof document === 'undefined' || !document.body) return;
+    if (!PRIMARY || typeof document === 'undefined' || !document.body) return;   // le bandeau suit la compétition de la page
     var el = document.getElementById('ldc-stale');
     if (!_staleSince) { if (el) el.parentNode.removeChild(el); return; }
     if (!document.getElementById('ldc-stale-css')) {
@@ -1472,7 +1481,8 @@
     return null;
   }
 
-  global.ESPN = {
+  return {
+    COMPETITIONS: COMPETITIONS,
     LEAGUE_SLUG: LEAGUE_SLUG,
     COMP: COMP,
     IS_UCL: IS_UCL,
@@ -1542,5 +1552,15 @@
     fetchClubList: fetchClubList,
     favAccent: favAccent
   };
+  }
+
+  var main = create(global.LDC_LEAGUE, true);
+  INSTANCES[main.LEAGUE_SLUG] = main;
+  function forLeague(slug) {
+    if (!INSTANCES[slug]) { INSTANCES[slug] = create(slug, false); INSTANCES[slug].forLeague = forLeague; }
+    return INSTANCES[slug];
+  }
+  main.forLeague = forLeague;
+  global.ESPN = main;
 
 })(window);
