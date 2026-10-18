@@ -15,7 +15,7 @@
 body{ background:var(--bg); }
 
 /* ---- En-tête ------------------------------------------------------------ */
-.brand .star{ background-image:url('europa.svg?v=1'); }
+.brand .star{ background-image:url('europa.svg?v=2'); filter:none; }
 .nav a.active, .btn.active, .lang-btn.active{ color:var(--uel-ink); }
 .lang-toggle .lt-thumb{ background:var(--uel); }
 .lang-toggle .lt-opt.active{ color:var(--uel-ink); }
