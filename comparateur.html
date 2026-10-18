@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
 <link rel="stylesheet" href="styles.css?v=21" />
-<link rel="stylesheet" href="clubpanel.css?v=6" />
+<link rel="stylesheet" href="clubpanel.css?v=7" />
 <link rel="stylesheet" href="matchpanel.css?v=1" />
 <link rel="stylesheet" href="compare.css?v=1" />
 </head>
@@ -25,6 +25,7 @@
     <a href="dashboard.html" class="nav-comp"><img src="logo.svg?v=4" alt="" width="16" height="16"><span id="navUcl">Ligue des Champions</span></a>
     <a href="europa.html" class="nav-comp"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
     <a href="conference.html" class="nav-comp"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+    <a href="soiree.html" id="navSr">Soirée européenne</a>
     <a href="france.html" id="navFr">Clubs français</a>
     <a href="comparateur.html" class="active" id="navCmp">Comparateur</a>
   </nav>
@@ -72,7 +73,8 @@
 <script src="espn.js?v=25"></script>
 <script src="schedule.js?v=2"></script>
 <script src="thresholds.js?v=3"></script>
-<script src="clubpanel.js?v=5"></script>
+<script src="chances.js?v=1"></script>
+<script src="clubpanel.js?v=6"></script>
 <script src="matchpanel.js?v=1"></script>
 <script src="goalalert.js?v=1"></script>
 <script src="compare.js?v=2"></script>
@@ -81,6 +83,7 @@
   (function(){ function s(){ var en=I18N.getLang()==='en';
     document.getElementById('navUcl').textContent=en?'Champions League':'Ligue des Champions';
     document.getElementById('navFr').textContent=en?'French clubs':'Clubs français';
+    document.getElementById('navSr').textContent=en?'European night':'Soirée européenne';
     document.getElementById('navCmp').textContent=en?'Compare clubs':'Comparateur';
     document.getElementById('cmpBrand').textContent=en?'Club comparison':'Comparateur'; }
     s(); window.addEventListener('ldc:langchange', s); })();
