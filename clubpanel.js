@@ -69,7 +69,7 @@
         opp: { id: String(opp.teamId || ''), name: opp.name || '', logo: opp.logo || '', abbr: opp.abbr || '' },
         gf: gf, ga: ga, pens: pens,
         result: m.state === 'post' ? (gf > ga ? 'w' : (gf < ga ? 'l' : 'd')) : null,
-        round: m.round, md: mds[m.id] || null, leg: m.leg || null
+        round: m.round, md: mds[m.id] || null, leg: m.leg || null, odds: m.odds || null
       };
     });
 
@@ -325,7 +325,9 @@
           '<div class="cp-next-main">' + crest(n.opp.logo, 'cp-nlogo') +
             '<div><div class="cp-next-opp"><span class="cp-prep">' + esc(prep(n.home)) + '</span> ' + esc(n.opp.name) + '</div>' +
             '<div class="cp-next-when"><time datetime="' + new Date(n.time).toISOString() + '">' + esc(longDate(n.time) + ' · ' + hour(n.time)) + '</time> · ' + esc(venue(n.home)) + '</div></div>' +
-          '</div></div></section>';
+          '</div>' + (n.odds && window.LDCMatchPanel && LDCMatchPanel.probBar ? '<div class="cp-probs">' +
+            LDCMatchPanel.probBar(n.odds, n.home ? (team.abbr || team.name) : (n.opp.abbr || n.opp.name), n.home ? (n.opp.abbr || n.opp.name) : (team.abbr || team.name), 'sm') + '</div>' : '') +
+          '</div></section>';
     }
 
     if (d.upcoming.length > 1) {
