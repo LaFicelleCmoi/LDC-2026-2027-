@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Comparateur — Tracker</title>
+<meta name="description" content="Comparateur de clubs en Ligue des Champions, Europa League et Conference League : saison en cours, confrontations directes, parcours. Projet de fan non officiel, données ESPN." />
+<link rel="icon" href="logo.svg?v=4" type="image/svg+xml" />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
+<link rel="stylesheet" href="styles.css?v=21" />
+<link rel="stylesheet" href="clubpanel.css?v=6" />
+<link rel="stylesheet" href="matchpanel.css?v=1" />
+<link rel="stylesheet" href="compare.css?v=1" />
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="dashboard.html">
+    <span class="star">★</span>
+    <span><span class="t1" id="cmpBrand">Comparateur</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="dashboard.html" class="nav-comp"><img src="logo.svg?v=4" alt="" width="16" height="16"><span id="navUcl">Ligue des Champions</span></a>
+    <a href="europa.html" class="nav-comp"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
+    <a href="conference.html" class="nav-comp"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+    <a href="france.html" id="navFr">Clubs français</a>
+    <a href="comparateur.html" class="active" id="navCmp">Comparateur</a>
+  </nav>
+  <div class="header-right"><div class="lang-switch" id="langSwitch"></div></div>
+</header>
+
+<main class="container cmp-page">
+  <h1 class="page-title"><span class="shiny" id="cmpTitle">Comparateur de clubs</span></h1>
+  <p class="page-sub" id="cmpSub"></p>
+
+  <div class="cmp-comps" id="cmpComps" role="group" aria-label="Compétition"></div>
+  <div class="cmp-pick">
+    <label><span id="cmpLA">Club 1</span><select id="cmpA"></select></label>
+    <button type="button" class="cmp-swap" id="cmpSwap" aria-label="Inverser">⇄</button>
+    <label><span id="cmpLB">Club 2</span><select id="cmpB"></select></label>
+    <button type="button" class="cmp-share" id="cmpShare">Copier le lien</button>
+  </div>
+
+  <div class="cmp-head" id="cmpHead"></div>
+
+  <section class="section" aria-labelledby="cmpSeasonT">
+    <div class="section-head"><h2 id="cmpSeasonT">Saison</h2></div>
+    <div class="card pad cmp-card" id="cmpSeason"><p class="cmp-empty" data-i18n="common.loading">Chargement…</p></div>
+  </section>
+
+  <section class="section" aria-labelledby="cmpH2hT">
+    <div class="section-head"><h2 id="cmpH2hT">Confrontations</h2></div>
+    <div class="card pad cmp-card" id="cmpH2h"></div>
+  </section>
+
+  <section class="section" aria-labelledby="cmpPathT">
+    <div class="section-head"><h2 id="cmpPathT">Parcours</h2></div>
+    <div class="card pad cmp-card" id="cmpPath"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script src="i18n.js?v=27"></script>
+<script src="standings-engine.js?v=1"></script>
+<script src="coefficients2026.js?v=1"></script>
+<script src="espn.js?v=24"></script>
+<script src="schedule.js?v=2"></script>
+<script src="thresholds.js?v=3"></script>
+<script src="clubpanel.js?v=5"></script>
+<script src="matchpanel.js?v=1"></script>
+<script src="goalalert.js?v=1"></script>
+<script src="compare.js?v=1"></script>
+<script>
+  /* Libellés du menu traduits (le reste vient de compare.js). */
+  (function(){ function s(){ var en=I18N.getLang()==='en';
+    document.getElementById('navUcl').textContent=en?'Champions League':'Ligue des Champions';
+    document.getElementById('navFr').textContent=en?'French clubs':'Clubs français';
+    document.getElementById('navCmp').textContent=en?'Compare clubs':'Comparateur';
+    document.getElementById('cmpBrand').textContent=en?'Club comparison':'Comparateur'; }
+    s(); window.addEventListener('ldc:langchange', s); })();
+</script>
+</body>
+</html>
