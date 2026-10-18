@@ -199,7 +199,63 @@
     var sync=ESPN.lastSeasonSync&&ESPN.lastSeasonSync();
     el('mdSync').textContent=sync?(I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
   }
-  function renderAll(){ renderStatic(); renderFav(); if(groups.length || matches.length){ renderDay(); renderTop(); renderStats(); } }
+  function renderAll(){ renderStatic(); renderFav(); if(groups.length || matches.length){ renderDay(); renderTop(); renderStats(); renderPlayers(); } }
+
+  /* ---- Top buteurs, passeurs et murailles (comme l'accueil LDC) ----
+     Buteurs et passeurs : agrégés depuis les résumés des matchs terminés
+     (ESPN.fetchScorerBoard), PAS depuis /statistics, faux entre deux
+     recalculs ; chaque résumé est gardé dans le navigateur, seul un match
+     nouvellement terminé coûte une requête. Murailles : matchs de phase de
+     ligue sans but encaissé (ESPN.computeCleanSheets). */
+  var TOP_N=5, board={ goals:null, assists:null }, boardKey=null, boardBusy=false;
+  function clubOf(id){
+    for(var i=0;i<matches.length;i++){ var m=matches[i];
+      if(String(m.home.teamId)===String(id)) return m.home;
+      if(String(m.away.teamId)===String(id)) return m.away; }
+    return null;
+  }
+  function wRow(rank, logo, name, sub, value, teamId){
+    var fav=teamId && String(teamId)===favId();
+    return '<div class="wrow'+(fav?' is-fav':'')+'"><span class="wrow-rk">'+rank+'</span>'+
+      '<span class="wrow-crest">'+(logo?'<img src="'+esc(logo)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'')+'</span>'+
+      '<span class="wrow-id"><span class="wrow-nm">'+esc(name)+'</span><span class="wrow-tm">'+(fav?'★ ':'')+esc(sub)+'</span></span>'+
+      '<span class="wrow-v">'+value+'</span></div>';
+  }
+  function wCard(cls, ico, title, rows, empty){
+    return '<div class="wcard '+cls+'"><div class="wcard-head"><span class="wcard-ico" aria-hidden="true">'+ico+'</span>'+esc(title)+'</div>'+
+      (rows||'<div class="wcard-empty">'+esc(empty)+'</div>')+'</div>';
+  }
+  function playerRows(list){
+    return (list||[]).slice(0,TOP_N).map(function(p,i){
+      var c=clubOf(p.teamId);
+      return wRow(i+1, c?c.logo:'', p.name, c?(c.abbr||c.name):'', p.value, p.teamId);
+    }).join('');
+  }
+  function renderPlayers(){
+    var host=el('wgrid'); if(!host) return;
+    var pending=board.goals===null;
+    var empty=pending?T('Calcul en cours…','Loading…'):I18N.t('wg.empty');
+    var cs=ESPN.computeCleanSheets(events).filter(function(x){ return x.cs>0; }).slice(0,TOP_N);
+    host.innerHTML=
+      wCard('w-goals','⚽',I18N.t('wg.scorers'), playerRows(board.goals), empty)+
+      wCard('w-assists','🅰️',I18N.t('wg.assists'), playerRows(board.assists), empty)+
+      wCard('w-cs','🧱',I18N.t('wg.cleansheets'), cs.map(function(x,i){
+        return wRow(i+1, x.logo, x.name, T('encaissés ','conceded ')+x.ga+' · '+x.pld+T(' j',' pl'), x.cs, x.teamId); }).join(''), I18N.t('wg.empty'));
+    el('wgTitle').textContent=T('Les meilleurs de la saison','Season leaders');
+    el('wgNote').textContent=T('Buts et passes relevés dans le résumé ESPN de chaque match terminé, toutes phases confondues.',
+                               'Goals and assists taken from the ESPN summary of every finished match, all rounds included.');
+  }
+  function loadPlayers(){
+    var done=matches.filter(function(m){ return m.state==='post'; });
+    var key=done.map(function(m){ return m.id; }).sort().join(',');
+    if(boardBusy || key===boardKey) return;
+    if(!done.length){ board={ goals:[], assists:[] }; boardKey=key; renderPlayers(); return; }
+    boardBusy=true;
+    function apply(b){ board={ goals:b.goals, assists:b.assists }; renderPlayers(); }
+    ESPN.fetchScorerBoard(done,{ onProgress:apply }).then(function(b){ apply(b); boardKey=key; })
+      .catch(function(){ if(board.goals===null){ board={ goals:[], assists:[] }; renderPlayers(); } })
+      .then(function(){ boardBusy=false; });
+  }
 
   /* ---- Club favori : propre à chaque compétition (clé dédiée dans espn.js) ---- */
   function favId(){ var f=ESPN.getFav(); return f?String(f.id):null; }
@@ -328,6 +384,7 @@
       el('liveFlag').style.display=live?'inline-flex':'none';
       renderAll();
       if(window.LDCClubPanel) LDCClubPanel.refresh(ctx());
+      loadPlayers();
       schedule(live?20000:60000);
     }).catch(function(){
       el('offlineNotice').style.display='flex';
