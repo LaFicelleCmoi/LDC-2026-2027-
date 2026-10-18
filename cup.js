@@ -336,6 +336,8 @@
   function renderStatic(){
     if(el('navFrance')) el('navFrance').textContent=T('Clubs français','French clubs');
     if(el('navCompare')) el('navCompare').textContent=T('Comparateur','Compare clubs');
+    if(el('navSoiree')) el('navSoiree').textContent=T('Soirée européenne','European night');
+    if(el('navOverlay')) el('navOverlay').textContent=T('Overlay OBS','OBS overlay');
     el('heroSub').textContent=T('Scores en direct, journée en cours et classement de la phase de ligue.','Live scores, current matchday and league phase table.');
     el('seasonChip').textContent=ESPN.seasonLabel();
     el('ctaTable').textContent=T('Classement complet →','Full table →');
