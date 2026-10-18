@@ -1,8 +1,8 @@
 /* =========================================================================
-   clubpanel.js — Fiche club « Ligue des Champions » (panneau latéral)
+   clubpanel.js — Fiche club (Ligue des Champions, Europa League…)
    -------------------------------------------------------------------------
    Ouverte au clic sur une équipe du classement. Reprend la fiche club de
-   LeagueHub, limitée à la Ligue des Champions : derniers matchs, bilan de la
+   LeagueHub, limitée à la compétition de la page : derniers matchs, bilan de la
    saison, prochain match et calendrier restant.
 
    Deux parties :
@@ -150,6 +150,11 @@
 
   function isEn() { try { return window.I18N && I18N.getLang() === 'en'; } catch (e) { return false; } }
   function T(fr, en) { return isEn() ? en : fr; }
+  /* Compétition de la page (espn.js) ; Ligue des Champions par défaut. */
+  function compName() {
+    var c = window.ESPN && ESPN.COMP;
+    return c ? T(c.fr, c.en) : T('Ligue des Champions', 'Champions League');
+  }
   function locale() { return isEn() ? 'en-GB' : 'fr-FR'; }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -228,7 +233,7 @@
 
     var zoneTxt = st ? { q: T('Top 8 · huitièmes directs', 'Top 8 · direct to R16'), po: T('9–24 · barrages', '9–24 · play-offs'),
                          out: T('25–36 · éliminé', '25–36 · eliminated') }[st.zone] : '';
-    var sub = T('Ligue des Champions', 'Champions League') +
+    var sub = compName() +
       (st ? ' · ' + st.rank + (isEn() ? (st.rank === 1 ? 'st' : st.rank === 2 ? 'nd' : st.rank === 3 ? 'rd' : 'th') : (st.rank === 1 ? 'er' : 'e')) +
             ' · ' + st.pts + ' pt' + (st.pts > 1 ? 's' : '') : '');
 
@@ -282,10 +287,10 @@
           '<p class="cp-obj-txt">' + esc(txt) + (note ? ' <span class="cp-obj-note">' + esc(note) + '</span>' : '') + '</p></div>';
       };
       html += '<section class="cp-sec"><h3>' + esc(T('Objectifs', 'Targets')) + '</h3>' +
-        objRow(ob.top8, T('Top 8 · huitièmes directs', 'Top 8 · direct to R16'), 'o-q', '') +
-        objRow(ob.top24, T('Top 24 · barrages', 'Top 24 · play-offs'), 'o-po', T('(9 pts ont suffi en 2025-26)', '(9 pts were enough in 2025-26)')) +
-        '<p class="cp-legend">' + esc(T('Seuils réels des deux dernières phases de ligue : le 8e avait 16 pts en 2024-25 comme en 2025-26, le 24e 11 puis 9 pts. Indicatif : ils varient d’une saison à l’autre.',
-                                        'Actual thresholds of the last two league phases: 8th place had 16 pts in both 2024-25 and 2025-26, 24th had 11 then 9. Indicative: they vary from season to season.')) + '</p>' +
+        objRow(ob.top8, T('Top 8 · huitièmes directs', 'Top 8 · direct to R16'), 'o-q', TH.lastNote('top8', isEn())) +
+        objRow(ob.top24, T('Top 24 · barrages', 'Top 24 · play-offs'), 'o-po', TH.lastNote('top24', isEn())) +
+        '<p class="cp-legend">' + esc(T('Seuils réels des deux dernières phases de ligue : le 8e avait ' + TH.trend('top8') + ', le 24e ' + TH.trend('top24') + '. Indicatif : ils varient d’une saison à l’autre.',
+                                        'Actual thresholds of the last two league phases: 8th place had ' + TH.trend('top8', true) + ', 24th had ' + TH.trend('top24', true) + '. Indicative: they vary from season to season.')) + '</p>' +
         '</section>';
     }
 
@@ -293,7 +298,7 @@
       var n = d.next;
       html += '<section class="cp-sec"><h3>' + esc(T('Prochain match', 'Next match')) + '</h3>' +
         '<div class="cp-next">' +
-          '<div class="cp-next-top"><span>★ ' + esc(T('Ligue des Champions', 'Champions League')) + ' · ' + esc(roundLabel(n)) + '</span>' +
+          '<div class="cp-next-top"><span>★ ' + esc(compName()) + ' · ' + esc(roundLabel(n)) + '</span>' +
             '<span class="cp-cd">' + esc(countdown(n.time)) + '</span></div>' +
           '<div class="cp-next-main">' + crest(n.opp.logo, 'cp-nlogo') +
             '<div><div class="cp-next-opp"><span class="cp-prep">' + esc(prep(n.home)) + '</span> ' + esc(n.opp.name) + '</div>' +
