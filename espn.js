@@ -6,7 +6,7 @@
      chargement de ce fichier (ex. 'uefa.europa'). Sans lui : Ligue des
      Champions. Les données propres à la LDC (palmarès, 36 qualifiés,
      coefficients) ne servent qu'à elle, et chaque autre compétition a ses
-     propres clés localStorage.
+     propres clés localStorage (« uel_ », « uecl_ »…).
    -------------------------------------------------------------------------
    Robustesse :
    - timeout sur CHAQUE fetch (AbortSignal.timeout + fallback AbortController)
@@ -21,10 +21,15 @@
   var COMPETITIONS = {
     'uefa.champions': { key: 'ucl', fr: 'Ligue des Champions', en: 'Champions League', earliest: 2001,
                         home: 'dashboard.html', standings: 'tracker.html' },
-    /* Europa League : seules les phases de ligue à 36 (depuis 2024-25) sont
-       proposées ; les phases de groupes antérieures n'ont pas de slug fiable. */
+    /* Europa League et Conference League : seules les phases de ligue à 36
+       (depuis 2024-25) sont proposées ; les phases de groupes antérieures
+       n'ont pas de slug fiable. */
     'uefa.europa':    { key: 'uel', fr: 'Europa League', en: 'Europa League', earliest: 2024,
-                        home: 'europa.html', standings: 'europa-classement.html' }
+                        home: 'europa.html', standings: 'europa-classement.html' },
+    /* Conference League : même format (36 clubs, top 8 / 9-24 / 25-36) mais
+       6 journées au lieu de 8. */
+    'uefa.europa.conf': { key: 'uecl', fr: 'Conference League', en: 'Conference League', earliest: 2024,
+                        home: 'conference.html', standings: 'conference-classement.html' }
   };
   var LEAGUE_SLUG = (global.LDC_LEAGUE && COMPETITIONS[global.LDC_LEAGUE]) ? global.LDC_LEAGUE : 'uefa.champions';
   var COMP = COMPETITIONS[LEAGUE_SLUG];
