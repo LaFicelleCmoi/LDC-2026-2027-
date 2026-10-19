@@ -24,6 +24,7 @@
 }
 :root{
   --gold-rgb: var(--fav-rgb, var(--cup-rgb));
+  --lc-mark:  var(--cup-logo);                 /* filigrane du badge lanière */
   --accent:   var(--cup);
   --font-d:   'Bebas Neue', Impact, sans-serif;
 }
@@ -47,14 +48,18 @@ body{ background:var(--bg); }
 .nav a.nav-cup.to-uecl{ background:rgba(25,196,79,.08); border-color:rgba(25,196,79,.36); }
 .nav a.nav-cup.to-uecl:hover{ background:rgba(25,196,79,.16); border-color:rgba(25,196,79,.65); }
 
-/* ---- Bandeau d'accueil -------------------------------------------------- */
-.cup-hero{ display:flex; align-items:center; gap:20px; margin:8px 0 24px; padding:22px 24px;
-  background:var(--card); border:1px solid var(--line-2); border-left:5px solid var(--cup); border-radius:var(--radius); }
-.cup-hero-logo{ width:72px; height:72px; flex:none; }
-.cup-hero h1{ margin:0; font-size:32px; font-weight:900; letter-spacing:.2px; line-height:1.1; }
-.cup-hero p{ margin:6px 0 0; color:var(--muted); font-size:14px; }
-.cup-hero .season-chip{ margin-left:0; margin-top:10px; }
-.cup-hero-cta{ margin-left:auto; display:flex; flex-direction:column; gap:8px; align-items:stretch; }
+/* ---- Bandeau d'accueil : titre géant à lettres animées (reactbits.css) --- */
+.cup-header{ display:grid; grid-template-columns:minmax(0,1fr) 240px; align-items:center; gap:24px; margin:8px 0 30px; position:relative; z-index:2; }
+.cup-header .rb-hero{ font-size:clamp(3em,6.4vw,5.6em); }
+.cup-tag{ margin:12px 0 0; color:var(--muted); font-weight:700; letter-spacing:.1em; text-transform:uppercase; font-size:14px; }
+.cup-header .season-chip{ margin:12px 0 0; }
+.cup-hero-cta{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.cup-header .cup-more{ display:block; margin-top:12px; text-align:inherit; }
+/* Badge « Mon club » (lanyard.css) à droite sur ordinateur ; bandeau centré
+   sans badge sous 960 px (comme l'accueil LDC). */
+@media (max-width:959px){ .cup-header{ display:block; text-align:center; } .cup-hero-cta{ justify-content:center; } }
+@media (max-width:380px){ .cup-header .rb-hero{ font-size:clamp(2.2em,12vw,3.6em); } }
+#rbStats{ margin-top:-6px; }
 .cup-cta{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 18px; border-radius:11px;
   font-weight:800; font-size:14px; background:var(--cup); color:var(--cup-ink); border:1px solid transparent; transition:filter .15s; }
 .cup-cta:hover{ filter:brightness(1.08); }
@@ -482,10 +487,8 @@ body{ background:var(--bg); }
 .cp-close:focus-visible, .cp-panel a:focus-visible, .standings tbody tr.cp-row:focus-visible{ outline-color:var(--cup); }
 
 @media (max-width:560px){
-  .cup-hero{ flex-wrap:wrap; padding:16px; gap:14px; }
-  .cup-hero-logo{ width:54px; height:54px; }
-  .cup-hero h1{ font-size:25px; }
-  .cup-hero-cta{ margin-left:0; width:100%; }
+  .cup-hero-cta .cup-cta{ flex:1 1 0; }
+  .cup-tag{ font-size:12px; letter-spacing:.07em; }
   .cup-cta{ padding:10px 12px; font-size:13.5px; }
   .md-nav{ width:100%; margin-left:0; justify-content:space-between; }
   .md-label{ min-width:0; flex:1; }
