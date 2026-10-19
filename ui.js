@@ -19,22 +19,22 @@
   try{ reduce = window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
   try{ fine   = window.matchMedia && matchMedia('(pointer:fine)').matches; }catch(e){}
 
-  /* ---- 0. CSS injecté (suit --fav-rgb : thème du club favori, or par défaut) ---- */
+  /* ---- 0. CSS injecté (suit --gold-rgb : club favori, sinon or LDC / couleur de la coupe) ---- */
   var css =
     '#uifx-progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:90;pointer-events:none;'+
-      'background:linear-gradient(90deg,rgb(var(--fav-rgb,245,181,10)),rgba(var(--fav-rgb,245,181,10),.45));'+
-      'box-shadow:0 0 12px rgba(var(--fav-rgb,245,181,10),.5);}'+
+      'background:linear-gradient(90deg,rgb(var(--gold-rgb,var(--fav-rgb,245,181,10))),rgba(var(--gold-rgb,var(--fav-rgb,245,181,10)),.45));'+
+      'box-shadow:0 0 12px rgba(var(--gold-rgb,var(--fav-rgb,245,181,10)),.5);}'+
     '.uifx-rv{opacity:0;transform:translateY(14px);}'+
     '.uifx-rv.uifx-in{opacity:1;transform:none;transition:opacity .55s ease,transform .55s cubic-bezier(.22,1,.36,1);}'+
     '.uifx-spot{position:relative;}'+
     '.uifx-spot::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;'+
       'opacity:0;transition:opacity .25s;z-index:1;'+
-      'background:radial-gradient(240px circle at var(--uifx-mx,50%) var(--uifx-my,50%),rgba(var(--fav-rgb,245,181,10),.11),transparent 65%);}'+
+      'background:radial-gradient(240px circle at var(--uifx-mx,50%) var(--uifx-my,50%),rgba(var(--gold-rgb,var(--fav-rgb,245,181,10)),.11),transparent 65%);}'+
     '.uifx-spot:hover::after{opacity:1;}'+
     '.uifx-ripple{position:absolute;border-radius:50%;pointer-events:none;transform:scale(0);'+
       'background:rgba(255,255,255,.35);animation:uifxRip .55s ease-out forwards;}'+
     '@keyframes uifxRip{to{transform:scale(1);opacity:0;}}'+
-    ':where(a,button,[role="button"],input,select,textarea):focus-visible{outline:2px solid rgba(var(--fav-rgb,245,181,10),.85);outline-offset:2px;}';
+    ':where(a,button,[role="button"],input,select,textarea):focus-visible{outline:2px solid rgba(var(--gold-rgb,var(--fav-rgb,245,181,10)),.85);outline-offset:2px;}';
   if(!reduce) css += 'html{scroll-behavior:smooth;}';
   var tag = d.createElement('style'); tag.id = 'uifx-css'; tag.textContent = css;
   (d.head || d.documentElement).appendChild(tag);
@@ -56,7 +56,7 @@
   })();
 
   /* ---- 2. Révélation au défilement ---- */
-  var SEL_RV = '.card,.fav-card,.os-card,.live-card,.zone-card,.stat-card,.quiz-card,.game-modes,.score-bar,.mc-hero,.mc-camp,.podium';
+  var SEL_RV = '.card,.fav-card,.os-card,.live-card,.zone-card,.stat-card,.quiz-card,.game-modes,.score-bar,.mc-hero,.mc-camp,.podium,.uf-card,.wcard,.rb-stat';
   var io = null, batch = 0;
   function markReveal(){
     if(reduce || !('IntersectionObserver' in window)) return;
@@ -87,7 +87,7 @@
   }
 
   /* ---- 3. Spotlight au survol des cartes ---- */
-  var SEL_SPOT = '.card,.fav-card,.os-card,.live-card,.zone-card,.stat-card,.quiz-card,.mc-hero';
+  var SEL_SPOT = '.card,.fav-card,.os-card,.live-card,.zone-card,.stat-card,.quiz-card,.mc-hero,.uf-card,.wcard,.rb-stat';
   if(fine && !reduce){
     d.addEventListener('pointermove', function(e){
       var t = e.target && e.target.closest ? e.target.closest(SEL_SPOT) : null;
@@ -100,7 +100,7 @@
   }
 
   /* ---- 4. Ripple au clic des boutons ---- */
-  var SEL_RIP = '.btn,.gm-btn,.opt,.fav-btn,.quiz-next,.pm-pick,.run-row';
+  var SEL_RIP = '.btn,.gm-btn,.opt,.fav-btn,.quiz-next,.pm-pick,.run-row,.uf-btn,.cup-cta,.rb-refresh,.sr-chip';
   if(!reduce){
     d.addEventListener('click', function(e){
       var t = e.target && e.target.closest ? e.target.closest(SEL_RIP) : null;
