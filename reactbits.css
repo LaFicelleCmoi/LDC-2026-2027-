@@ -1,0 +1,59 @@
+/* =========================================================================
+   reactbits.css — Styles des composants partagés (reactbits.js) : fond
+   étoilé, titre à lettres animées, badge « EN DIRECT » glitch, bandeau de
+   chiffres CountUp, ballon de chargement, confettis. Couleur d'accent :
+   --gold-rgb de la page (or LDC, orange Europa, vert Conference, ou club).
+   ========================================================================= */
+#starfield{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+.rb-confetti{ position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:999; }
+
+/* Titre : lettres qui se dressent */
+.rb-hero{ font-family:'Bebas Neue', Impact, sans-serif; font-weight:400; line-height:.9; letter-spacing:.01em; margin:0; color:#fff;
+  font-size:clamp(3em, 7vw, 5.6em); text-shadow:0 10px 30px rgba(0,0,0,.5); }
+.rb-word{ display:inline-block; white-space:nowrap; }
+.rb-word.gap{ margin-left:.3em; }
+.rb-letter{ display:inline-block; opacity:0; transform:translateY(40px) rotateX(-90deg); transform-origin:50% 100%;
+  animation:rbLetterIn .7s cubic-bezier(.34,1.56,.64,1) forwards; }
+.rb-letter.gold{ color:rgb(var(--gold-rgb, 245, 181, 10)); }
+@keyframes rbLetterIn{ to{ opacity:1; transform:none; } }
+
+/* Badge « EN DIRECT » glitch */
+.rb-glitch-badge{ display:inline-flex; align-items:center; gap:8px; padding:5px 12px; border-radius:8px; background:rgba(255,71,87,.1); border:1px solid rgba(255,71,87,.35); position:relative; overflow:hidden; vertical-align:middle; }
+.rb-glitch-badge .rb-dot{ width:8px; height:8px; border-radius:50%; background:#ff4757; animation:rbPulse 1.2s infinite; }
+.rb-glitch{ position:relative; font-family:'Bebas Neue', Impact, sans-serif; font-size:20px; letter-spacing:.08em; color:#fff; line-height:1; text-shadow:0 0 6px rgba(255,71,87,.4); }
+.rb-glitch::before, .rb-glitch::after{ content:attr(data-text); position:absolute; top:0; left:0; width:100%; }
+.rb-glitch::before{ color:#00fff9; z-index:-1; animation:rbGlT 2.5s infinite linear alternate-reverse; }
+.rb-glitch::after{ color:#ff4757; z-index:-2; animation:rbGlB 2s infinite linear alternate-reverse; }
+@keyframes rbGlT{ 0%{ clip-path:inset(0 0 70% 0); transform:translate(-2px,-1px); } 50%{ clip-path:inset(30% 0 40% 0); transform:translate(2px,1px); } 100%{ clip-path:inset(60% 0 10% 0); transform:translate(-1px,0); } }
+@keyframes rbGlB{ 0%{ clip-path:inset(70% 0 0 0); transform:translate(2px,1px); } 50%{ clip-path:inset(40% 0 30% 0); transform:translate(-2px,-1px); } 100%{ clip-path:inset(10% 0 60% 0); transform:translate(1px,0); } }
+@keyframes rbPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,71,87,.4); } 50%{ box-shadow:0 0 0 8px rgba(255,71,87,0); } }
+
+/* Bandeau de chiffres (CountUp) */
+.rb-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.rb-stat{ background:#111a36; border:1px solid rgba(255,255,255,.10); border-radius:14px; padding:16px 18px; text-align:center; }
+.rb-stat-num{ font-family:'Bebas Neue', Impact, sans-serif; font-size:2.6em; line-height:1; color:rgb(var(--gold-rgb, 245, 181, 10)); font-variant-numeric:tabular-nums; }
+.rb-stat-num.txt{ font-size:1.5em; color:#fff; padding-top:.35em; }
+.rb-stat-lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--muted, #9aa3c4); margin-top:6px; }
+@media (max-width:700px){ .rb-stats{ grid-template-columns:repeat(2,1fr); } }
+
+/* Ballon de chargement (Uiverse) */
+.rb-loader{ grid-column:1 / -1; display:flex; flex-direction:column; align-items:center; gap:14px; padding:32px; color:var(--muted, #9aa3c4); font-size:13px; }
+.rb-ball{ width:46px; height:46px; border-radius:50%; position:relative; background:radial-gradient(circle at 38% 32%, #fff, #d7deec 58%, #aab6cd);
+  box-shadow:inset -7px -7px 14px rgba(0,0,0,.18), 0 8px 12px rgba(0,0,0,.45); animation:rbSpin 1.1s linear infinite; }
+.rb-ball::before{ content:''; position:absolute; top:50%; left:50%; width:16px; height:16px; transform:translate(-50%,-50%); background:#0b1020; clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%); }
+.rb-ball::after{ content:''; position:absolute; top:5px; left:50%; width:8px; height:8px; transform:translateX(-50%); background:#0b1020; clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%); }
+@keyframes rbSpin{ to{ transform:rotate(360deg); } }
+
+/* Bouton « Rafraîchir » (glass) */
+.rb-refresh{ display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:10px; font:inherit; font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; cursor:pointer;
+  color:rgb(var(--gold-rgb, 245, 181, 10)); background:rgba(var(--gold-rgb, 245, 181, 10), .10); border:1px solid rgba(var(--gold-rgb, 245, 181, 10), .35); transition:.15s; }
+.rb-refresh:hover{ background:rgba(var(--gold-rgb, 245, 181, 10), .18); color:#fff; }
+.rb-refresh.spinning i{ animation:rbSpin .8s linear infinite; }
+.rb-refresh i{ font-style:normal; display:inline-block; }
+
+@media (prefers-reduced-motion:reduce){
+  .rb-letter{ animation:none; opacity:1; transform:none; }
+  .rb-glitch::before, .rb-glitch::after{ display:none; }
+  .rb-glitch-badge .rb-dot, .rb-ball, .rb-refresh.spinning i{ animation:none; }
+}
+.rb-stats[hidden], .rb-glitch-badge[hidden]{ display:none; }
