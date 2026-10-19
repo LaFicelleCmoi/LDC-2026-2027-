@@ -90,6 +90,10 @@
     var fid=favId(), hasFav=fid && (String(m.home.teamId)===fid || String(m.away.teamId)===fid);
     var pen=(m.home.shootout!=null && m.away.shootout!=null);
     var key=m.home.score+'-'+m.away.score, bump=st==='in' && lastScores[m.id] && lastScores[m.id]!==key;
+    /* But : salve de confettis du côté de l'équipe qui a marqué (reactbits.js). */
+    if(bump && window.RB){ var pv=lastScores[m.id].split('-');
+      if(m.home.score>+pv[0]) RB.confetti.goal('home', m.home.color);
+      if(m.away.score>+pv[1]) RB.confetti.goal('away', m.away.color); }
     lastScores[m.id]=key;
     function row(c){
       var win=st==='post' && c.winner, fav=fid && String(c.teamId)===fid;
@@ -333,12 +337,34 @@
     el('statsNote').textContent=T('Calculé sur les matchs terminés du calendrier ESPN, toutes phases confondues.','Computed from the finished matches in the ESPN schedule, all rounds included.');
   }
 
+  /* Titre géant à lettres animées (une fois : le nom de la coupe ne se traduit pas). */
+  if(window.RB) RB.heroLetters(el('heroTitle'), COMP.key==='uel' ? [{ t:'EUROPA' },{ t:'LEAGUE', c:'gold', gap:true }] : [{ t:'CONFERENCE' },{ t:'LEAGUE', c:'gold', gap:true }]);
+  /* Bandeau de chiffres (CountUp), comme l'accueil LDC : rejoué seulement si
+     un chiffre change. */
+  var statsKey='';
+  function renderStatsStrip(){
+    var host=el('rbStats'); if(!host) return;
+    var played=standings.filter(function(r){ return r.pld>0; });
+    if(!played.length){ host.hidden=true; return; }
+    var nMatches=matches.filter(function(m){ return m.state==='post' && m.round!=='qualifying'; }).length;
+    var goals=matches.filter(function(m){ return m.state==='post' && m.round!=='qualifying'; }).reduce(function(s,m){ return s+m.home.score+m.away.score; },0);
+    var leader=standings[0]?(standings[0].abbr||standings[0].name):'—';
+    var key=standings.length+'|'+nMatches+'|'+goals+'|'+leader+'|'+(en()?'en':'fr');
+    host.hidden=false;
+    if(key===statsKey) return; statsKey=key;
+    function card(n,l){ return '<div class="rb-stat"><div class="rb-stat-num" data-count="'+n+'">0</div><div class="rb-stat-lbl">'+esc(l)+'</div></div>'; }
+    host.innerHTML=card(standings.length,T('Clubs','Clubs'))+card(nMatches,T('Matchs joués','Matches played'))+card(goals,T('Buts','Goals'))+
+      '<div class="rb-stat"><div class="rb-stat-num txt">'+esc(leader)+'</div><div class="rb-stat-lbl">'+esc(T('En tête','Top of the table'))+'</div></div>';
+    if(window.RB) RB.countUpAll(host); else Array.prototype.forEach.call(host.querySelectorAll('[data-count]'),function(n){ n.textContent=n.getAttribute('data-count'); });
+  }
   function renderStatic(){
+    if(el('mdRefresh')) el('mdRefresh').lastChild.textContent=T('Rafraîchir','Refresh');
+    if(el('liveGlitch')){ var lv=T('EN DIRECT','LIVE'); el('liveGlitch').textContent=lv; el('liveGlitch').setAttribute('data-text',lv); }
     if(el('navFrance')) el('navFrance').textContent=T('Clubs français','French clubs');
     if(el('navCompare')) el('navCompare').textContent=T('Comparateur','Compare clubs');
     if(el('navSoiree')) el('navSoiree').textContent=T('Soirée européenne','European night');
     if(el('navOverlay')) el('navOverlay').textContent=T('Overlay OBS','OBS overlay');
-    el('heroSub').textContent=T('Scores en direct, journée en cours et classement de la phase de ligue.','Live scores, current matchday and league phase table.');
+    el('heroSub').textContent=T('Scores en direct · Classement · Phase finale','Live scores · Standings · Knockout stage');
     el('seasonChip').textContent=ESPN.seasonLabel();
     el('ctaTable').textContent=T('Classement complet →','Full table →');
     el('ctaUcl').textContent=T('← Ligue des Champions','← Champions League');
@@ -349,7 +375,7 @@
     var sync=ESPN.lastSeasonSync&&ESPN.lastSeasonSync();
     el('mdSync').textContent=sync?(I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
   }
-  function renderAll(){ renderStatic(); renderFav(); if(groups.length || matches.length){ renderDay(); buildCountrySelect(); renderSimBar(); renderZones(); renderStats(); renderPlayers(); renderMarquee(); } }
+  function renderAll(){ renderStatic(); renderFav(); if(groups.length || matches.length){ renderDay(); renderStatsStrip(); buildCountrySelect(); renderSimBar(); renderZones(); renderStats(); renderPlayers(); renderMarquee(); } }
 
   /* ---- Top buteurs, passeurs et murailles (comme l'accueil LDC) ----
      Buteurs et passeurs : agrégés depuis les résumés des matchs terminés
@@ -429,6 +455,7 @@
   }
   function renderFav(){
     applyFavAccent();
+    if(window.LDCLanyard) LDCLanyard.refresh();     // badge « Mon club » du bandeau
     var host=el('favSection'), f=ESPN.getFav();
     host.setAttribute('aria-label',T('Club favori','Favourite club'));
     if(!f){
@@ -512,6 +539,7 @@
   setInterval(function(){
     Array.prototype.forEach.call(document.querySelectorAll('.live-countdown[data-kickoff]'),function(x){ x.textContent=upcomingWhen(new Date(+x.getAttribute('data-kickoff'))); });
   },1000);
+  if(el('mdRefresh')) el('mdRefresh').addEventListener('click',function(){ this.classList.add('spinning'); load(); var b=this; setTimeout(function(){ b.classList.remove('spinning'); },4000); });
   el('mdPrev').addEventListener('click',function(){ if(cur>0){ cur--; picked=true; renderDay(); } });
   el('mdNext').addEventListener('click',function(){ if(cur<groups.length-1){ cur++; picked=true; renderDay(); } });
 
@@ -528,6 +556,8 @@
       if(!picked || cur==null || cur>=groups.length) cur=defaultGroup();
       var live=matches.some(function(m){ return m.state==='in'; });
       el('liveFlag').style.display=live?'inline-flex':'none';
+      if(el('liveBadge')) el('liveBadge').hidden=!live;
+      if(el('mdRefresh')) setTimeout(function(){ el('mdRefresh').classList.remove('spinning'); },700);   // tour de roue visible même si le cache répond tout de suite
       renderAll();
       if(window.LDCClubPanel) LDCClubPanel.refresh(ctx());
       loadPlayers();
