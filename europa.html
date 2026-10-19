@@ -13,9 +13,12 @@
 <link rel="stylesheet" href="styles.css?v=21" />
 <link rel="stylesheet" href="clubpanel.css?v=8" />
 <link rel="stylesheet" href="matchpanel.css?v=3" />
-<link rel="stylesheet" href="cup.css?v=8" />
+<link rel="stylesheet" href="reactbits.css?v=1" />
+<link rel="stylesheet" href="lanyard.css?v=1" />
+<link rel="stylesheet" href="cup.css?v=9" />
 </head>
 <body>
+<canvas id="starfield" data-rb aria-hidden="true"></canvas>
 <header class="site-header">
   <a class="brand" href="europa.html">
     <span class="star">★</span>
@@ -37,17 +40,24 @@
 </header>
 
 <main class="container">
-  <section class="cup-hero">
-    <img class="cup-hero-logo" src="europa.svg?v=2" alt="" width="72" height="72">
-    <div>
-      <h1>Europa League</h1>
-      <p id="heroSub">Scores en direct, journée en cours et classement de la phase de ligue.</p>
+  <!-- Bandeau façon accueil LDC : titre géant animé (reactbits.js), badge
+       « Mon club » à lanière à droite (lanyard.js, ≥ 960 px). -->
+  <section class="header has-badge cup-header">
+    <div class="header-txt">
+      <h1 class="rb-hero" id="heroTitle">Europa League</h1>
+      <p class="cup-tag" id="heroSub">Scores en direct · Classement · Phase finale</p>
       <span class="season-chip" id="seasonChip">2026–27</span>
-    </div>
-    <div class="cup-hero-cta">
-      <a class="cup-cta" href="europa-classement.html" id="ctaTable">Classement complet →</a>
-      <a class="cup-cta ghost" href="dashboard.html" id="ctaUcl">← Ligue des Champions</a>
+      <div class="cup-hero-cta">
+        <a class="cup-cta" href="europa-classement.html" id="ctaTable">Classement complet →</a>
+        <a class="cup-cta ghost" href="dashboard.html" id="ctaUcl">← Ligue des Champions</a>
+      </div>
       <span class="cup-more"><a href="soiree.html?f=uel" id="navSoiree">Soirée européenne</a> · <a href="france.html" id="navFrance">Clubs français</a> · <a href="comparateur.html?c=uel" id="navCompare">Comparateur</a> · <a href="overlay.html?c=uel" id="navOverlay">Overlay OBS</a></span>
+    </div>
+    <div id="lanyard" aria-hidden="true">
+      <div class="ly-stage">
+        <canvas id="lanyardCanvas"></canvas>
+        <div class="lanyard-card" id="lanyardCard"></div>
+      </div>
     </div>
   </section>
 
@@ -61,15 +71,20 @@
   <section class="section" aria-labelledby="mdTitle">
     <div class="section-head">
       <h2 id="mdTitle">Matchs</h2>
+      <span class="rb-glitch-badge" id="liveBadge" hidden><i class="rb-dot"></i><span class="rb-glitch" id="liveGlitch" data-text="EN DIRECT">EN DIRECT</span></span>
       <span class="sub" id="mdSync"></span>
+      <button type="button" class="rb-refresh" id="mdRefresh"><i aria-hidden="true">↻</i> <span>Rafraîchir</span></button>
       <div class="md-nav">
         <button class="btn" type="button" id="mdPrev" aria-label="Journée précédente">‹</button>
         <span class="md-label" id="mdLabel" aria-live="polite">—</span>
         <button class="btn" type="button" id="mdNext" aria-label="Journée suivante">›</button>
       </div>
     </div>
-    <div class="live-cards-grid" id="mdGrid"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
+    <div class="live-cards-grid" id="mdGrid"><div class="rb-loader"><div class="rb-ball"></div><span data-i18n="common.loading">Chargement…</span></div></div>
   </section>
+
+  <!-- ====== Chiffres clés (CountUp) ====== -->
+  <section class="section rb-stats" id="rbStats" hidden></section>
 
   <!-- ====== Classement par zones (dynamique, comme l'accueil LDC) ====== -->
   <section class="section zones" aria-labelledby="zonesTitle">
@@ -88,14 +103,14 @@
       <select class="zcountry" id="zco" aria-label="Filtrer par pays"></select>
       <span class="zbar-hits" id="zhits"></span>
     </div>
-    <div class="zones-grid" id="zonesGrid"><div class="empty-state" style="grid-column:1/-1" data-i18n="common.loading">Chargement…</div></div>
+    <div class="zones-grid" id="zonesGrid"><div class="rb-loader"><div class="rb-ball"></div><span data-i18n="common.loading">Chargement…</span></div></div>
     <p class="cup-note" id="zonesNote"></p>
   </section>
 
   <!-- ====== Joueurs ====== -->
   <section class="section" aria-labelledby="wgTitle">
     <div class="section-head"><h2 id="wgTitle">Les meilleurs de la saison</h2></div>
-    <div class="wgrid" id="wgrid"><div class="empty-state" data-i18n="common.loading">Chargement…</div></div>
+    <div class="wgrid" id="wgrid"><div class="rb-loader"><div class="rb-ball"></div><span data-i18n="common.loading">Chargement…</span></div></div>
     <p class="cup-note" id="wgNote"></p>
   </section>
 
@@ -143,6 +158,9 @@
 <script src="cupclubs2026.js?v=1"></script>
 <script src="chances.js?v=1"></script>
 <script src="clubpanel.js?v=7"></script>
-<script src="cup.js?v=8"></script>
+<script src="reactbits.js?v=1"></script>
+<script src="ui.js?v=2"></script>
+<script src="cup.js?v=9"></script>
+<script src="lanyard.js?v=1"></script>
 </body>
 </html>
