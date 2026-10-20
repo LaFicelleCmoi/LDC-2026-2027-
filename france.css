@@ -66,10 +66,14 @@ body{ background:var(--bg); }
 .fr-livesc:focus-visible{ outline:2px solid var(--fr-blue); outline-offset:2px; }
 .fr-livesc.live{ color:#ffd0d5; background:rgba(255,59,70,.14); border-color:rgba(255,59,70,.45); }
 .fr-livesc.live b{ color:#ff5d6c; }
-.fr-livesc.win{ color:#b7f5d2; background:rgba(46,213,115,.12); border-color:rgba(46,213,115,.45); }
-.fr-livesc.win b{ color:#5fdc97; }
-.fr-livesc.loss{ color:#ffc2c8; background:rgba(255,59,70,.10); border-color:rgba(255,59,70,.40); }
-.fr-livesc.loss b{ color:#ff8a95; }
+/* Score final en aplat franc : vert victoire, rouge défaite, blanc nul. */
+.fr-livesc.win{ color:#fff; background:#15a050; border-color:#2ed573; }
+.fr-livesc.win b{ color:#fff; }
+.fr-livesc.loss{ color:#fff; background:#d42a3c; border-color:#ff5d6c; }
+.fr-livesc.loss b{ color:#fff; }
+.fr-livesc.draw{ color:#0b1020; background:#f0f4f8; border-color:#fff; }
+.fr-livesc.draw b{ color:#0b1020; }
+.fr-livesc.win:hover, .fr-livesc.loss:hover, .fr-livesc.draw:hover{ filter:brightness(1.1); }
 .fr-ldot{ width:7px; height:7px; border-radius:50%; background:#ff3b46; animation:frPulse 1.4s ease-in-out infinite; }
 /* Carte étroite : score (+ minute) seul, l'adversaire est sur la ligne du bas. */
 .fr-card{ container-type:inline-size; }
