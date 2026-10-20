@@ -69,7 +69,9 @@
       var op=esc(sm.opp.abbr||sm.opp.name), lv=!!d.live;
       var sc='<b>'+sm.gf+'–'+sm.ga+'</b><i>'+op+'</i>';
       var min=lv?(/HT|Half/i.test(sm.detail||'')?T('MT','HT'):(sm.clock||'')):'';
-      mid='<span class="fr-livesc'+(lv?' live':'')+'" data-mp-open="'+esc(sm.id)+'" data-mp-league="'+c.slug+'" tabindex="0" role="button" title="'+esc(lv?T('En direct — fiche du match','Live — match details'):T('Dernier résultat — fiche du match','Last result — match details'))+'">'+
+      /* Score final : vert si le club a gagné, rouge s'il a perdu (nul neutre). */
+      var res=lv?'':(sm.result==='w'?' win':sm.result==='l'?' loss':'');
+      mid='<span class="fr-livesc'+(lv?' live':res)+'" data-mp-open="'+esc(sm.id)+'" data-mp-league="'+c.slug+'" tabindex="0" role="button" title="'+esc(lv?T('En direct — fiche du match','Live — match details'):T('Dernier résultat — fiche du match','Last result — match details'))+'">'+
         (lv?'<span class="fr-ldot" aria-hidden="true"></span>':'')+sc+(min?'<small>'+esc(min)+'</small>':'')+'</span>';
     }
     var form=d.played.filter(function(x){ return x.result; }).slice(0,5).reverse().map(function(x){ return '<span class="cp-badge '+x.result+'">'+(x.result==='w'?T('V','W'):x.result==='d'?T('N','D'):T('D','L'))+'</span>'; }).join('');
