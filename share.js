@@ -111,7 +111,7 @@
     drawBg(ctx, rgb); brandTop(ctx, rgb);
     ctx.textAlign='center'; ctx.textBaseline='alphabetic';
     ctx.fillStyle='#fff'; ctx.font='700 84px '+DISP; ctx.fillText(T('MES SCORES','MY SCORES'), W/2, 320);
-    ctx.fillStyle='rgb('+rgb+')'; ctx.font='600 30px '+BODY; ctx.fillText(T('Quiz Ligue des Champions','Champions League Quiz'), W/2, 370);
+    ctx.fillStyle='rgb('+rgb+')'; ctx.font='600 30px '+BODY; var qc=window.ESPN&&ESPN.COMP; ctx.fillText(qc&&!ESPN.IS_UCL?T('Quiz '+qc.fr,qc.en+' Quiz'):T('Quiz Ligue des Champions','Champions League Quiz'), W/2, 370);
     var rows=(data.rows||[]);
     var y=470, rowH=118, x0=120, x1=W-120;
     rows.slice(0,6).forEach(function(r){
@@ -122,7 +122,7 @@
     });
     if(data.total!=null){ ctx.textAlign='center'; ctx.fillStyle='rgba(255,255,255,.6)'; ctx.font='600 30px '+BODY; ctx.fillText(T('Meilleure série','Best streak')+' : '+data.total, W/2, y+50); }
     brandBottom(ctx);
-    finish(cv, 'ldc-quiz.png');
+    finish(cv, (window.ESPN&&!ESPN.IS_UCL?ESPN.COMP.key:'ldc')+'-quiz.png');
     return cv;
   }
 
