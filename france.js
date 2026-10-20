@@ -61,6 +61,17 @@
     if(d.live) line='<span class="fr-pill live"><i></i>'+esc(T('En direct','Live'))+'</span> <b>'+d.live.gf+'–'+d.live.ga+'</b> '+esc((d.live.home?T('vs ','vs '):T('à ','at '))+d.live.opp.name)+' · '+esc(d.live.clock||'');
     else if(d.next) line='<span class="fr-pill">'+esc(T('Prochain','Next'))+'</span> '+esc((d.next.home?T('vs ','vs '):T('à ','at '))+d.next.opp.name)+' · '+esc(new Date(d.next.time).toLocaleDateString(loc(),{weekday:'short',day:'numeric',month:'short'})+' '+hm(new Date(d.next.time)));
     else if(d.last[0]) line='<span class="fr-pill post">'+esc(T('Dernier','Last'))+'</span> <b>'+d.last[0].gf+'–'+d.last[0].ga+'</b> '+esc((d.last[0].home?T('vs ','vs '):T('à ','at '))+d.last[0].opp.name);
+    /* Score en direct (sinon dernier résultat) entre le bilan et la forme :
+       buts du club d'abord, puis l'adversaire (domicile / extérieur : voir
+       la ligne du bas de carte). */
+    var sm=d.live||d.last[0], mid='';
+    if(sm){
+      var op=esc(sm.opp.abbr||sm.opp.name), lv=!!d.live;
+      var sc='<b>'+sm.gf+'–'+sm.ga+'</b><i>'+op+'</i>';
+      var min=lv?(/HT|Half/i.test(sm.detail||'')?T('MT','HT'):(sm.clock||'')):'';
+      mid='<span class="fr-livesc'+(lv?' live':'')+'" data-mp-open="'+esc(sm.id)+'" data-mp-league="'+c.slug+'" tabindex="0" role="button" title="'+esc(lv?T('En direct — fiche du match','Live — match details'):T('Dernier résultat — fiche du match','Last result — match details'))+'">'+
+        (lv?'<span class="fr-ldot" aria-hidden="true"></span>':'')+sc+(min?'<small>'+esc(min)+'</small>':'')+'</span>';
+    }
     var form=d.played.filter(function(x){ return x.result; }).slice(0,5).reverse().map(function(x){ return '<span class="cp-badge '+x.result+'">'+(x.result==='w'?T('V','W'):x.result==='d'?T('N','D'):T('D','L'))+'</span>'; }).join('');
     return '<article class="fr-card" style="--c:'+c.color+'">'+
       '<button type="button" class="fr-card-main" data-club="'+esc(id)+'" data-comp="'+c.key+'" aria-label="'+esc(T('Fiche du club : ','Club card: ')+team.name)+'">'+
@@ -69,7 +80,7 @@
           '<span class="fr-ccomp"><img src="'+c.icon+'" alt="">'+esc(compName(c))+'</span></span>'+
         (st?'<span class="fr-rank"><b>'+st.rank+'<sup>'+esc(ordinal(st.rank).replace(/^\d+/,''))+'</sup></b><small>'+st.pts+' pts · '+esc(zone)+'</small></span>':'')+
       '</button>'+
-      '<div class="fr-rec"><span>'+s.pld+' '+esc(T('j.','pl'))+'</span><span class="w">'+s.w+' '+esc(T('V','W'))+'</span><span>'+s.d+' '+esc(T('N','D'))+'</span><span class="l">'+s.l+' '+esc(T('D','L'))+'</span><span>'+s.gf+'–'+s.ga+'</span><span class="fr-form">'+form+'</span></div>'+
+      '<div class="fr-rec"><span>'+s.pld+' '+esc(T('j.','pl'))+'</span><span class="w">'+s.w+' '+esc(T('V','W'))+'</span><span>'+s.d+' '+esc(T('N','D'))+'</span><span class="l">'+s.l+' '+esc(T('D','L'))+'</span><span>'+s.gf+'–'+s.ga+'</span>'+mid+'<span class="fr-form">'+form+'</span></div>'+
       (line?'<div class="fr-next"'+(r?' data-mp-open="'+esc(r.id)+'" data-mp-league="'+c.slug+'" tabindex="0" role="button"':'')+'>'+line+'</div>':'')+
     '</article>';
   }
