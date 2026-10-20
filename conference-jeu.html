@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr" data-comp="uecl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jeu — Conference League</title>
+<meta name="description" content="Quiz Conference League : champion de l'année, devine le club, le score ou l'année, défi du jour. Projet de fan non officiel, données ESPN." />
+<link rel="icon" href="conference.svg?v=1" type="image/svg+xml" />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
+<link rel="stylesheet" href="styles.css?v=21" />
+<link rel="stylesheet" href="reactbits.css?v=1" />
+<link rel="stylesheet" href="jeu.css?v=1" />
+<link rel="stylesheet" href="cup.css?v=10" />
+</head>
+<body>
+<canvas id="starfield" data-rb aria-hidden="true"></canvas>
+<header class="site-header">
+  <a class="brand" href="conference.html">
+    <span class="star">★</span>
+    <span><span class="t1" data-i18n="uecl.title">Tracker Conference League</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
+  </a>
+  <nav class="nav">
+    <a href="conference.html" data-i18n="nav.dashboard">Accueil</a>
+    <a href="conference-classement.html" data-i18n="nav.tracker">Classement</a>
+    <a href="conference-calendrier.html" data-i18n="nav.calendar">Calendrier</a>
+    <a href="conference-palmares.html" data-i18n="nav.palmares">Palmarès</a>
+    <a href="conference-jeu.html" class="active" data-i18n="nav.game">Jeu</a>
+    <a href="conference-monclub.html" data-i18n="nav.myclub">Mon club</a>
+    <a href="europa.html" class="nav-cup to-uel"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
+    <a href="dashboard.html" class="nav-ucl" title="Ligue des Champions" aria-label="Ligue des Champions"><img src="logo.svg?v=4" alt="" width="16" height="16"><span>LDC</span></a>
+  </nav>
+  <div class="header-right">
+    <div class="lang-switch" id="langSwitch"></div>
+  </div>
+</header>
+
+<main class="container">
+  <h1 class="page-title"><span class="shiny" id="gameTitle">Jeu</span></h1>
+  <p class="page-sub" id="gameSub">Teste tes connaissances sur la Conference League : palmarès, blasons, scores.</p>
+
+  <div class="game-wrap">
+    <div class="game-modes" id="gameModes">
+      <button class="gm-btn active" data-mode="champion" id="modeChampion">🏆 Champion de l’année</button>
+      <button class="gm-btn" data-mode="crest" id="modeCrest">🛡️ Devine le club</button>
+      <button class="gm-btn" data-mode="score" id="modeScore">⚽ Devine le score</button>
+      <button class="gm-btn" data-mode="year" id="modeYear">📅 Devine l’année</button>
+      <button class="gm-btn" data-mode="daily" id="modeDaily">🔥 Défi du jour</button>
+    </div>
+
+    <div class="score-bar">
+      <span class="score-pill"><span class="v" id="scVal">0</span><span class="l" id="scLbl">Score</span></span>
+      <span class="score-pill streak"><span class="v" id="stVal">0</span><span class="l" id="stLbl">Série</span></span>
+      <span class="score-pill best"><span class="v" id="beVal">0</span><span class="l" id="beLbl">Record</span></span>
+    </div>
+    <div style="text-align:center;margin:2px 0 6px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="gm-btn" id="achBtn" style="flex:none;min-width:0">🏅 <span id="achBtnLbl">Récompenses</span> <span id="achCount" class="ach-frac"></span></button>
+      <button class="gm-btn" id="quizShare" style="flex:none;min-width:0">📸 <span id="quizShareLbl">Partager mes scores</span></button>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-q" id="quizQ"></div>
+      <div class="quiz-opts" id="quizOpts"></div>
+      <div class="quiz-foot">
+        <span class="quiz-msg" id="quizMsg"></span>
+        <button class="quiz-next" id="quizNext" hidden>Suivante →</button>
+      </div>
+      <div class="kbd-hint" id="kbdHint"></div>
+    </div>
+  </div>
+</main>
+
+<div id="achModal" class="ach-modal"></div>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="dashboard.html" data-i18n="uel.toUcl">← Ligue des Champions</a>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script>window.LDC_LEAGUE = 'uefa.europa.conf';</script>
+<script src="i18n.js?v=27"></script>
+<script src="espn.js?v=28"></script>
+<script src="share.js?v=3"></script>
+<script src="ui.js?v=2"></script>
+<script src="reactbits.js?v=1"></script>
+<script src="jeu.js?v=1"></script>
+</body>
+</html>
