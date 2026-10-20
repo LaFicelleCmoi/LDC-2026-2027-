@@ -16,7 +16,7 @@
   filter:drop-shadow(0 2px 6px rgba(0,0,0,.45)); transition:transform .15s; }
 .dash-brand:hover .db-logo{ transform:scale(1.06); }
 /* Pages sans coupe : drapeau (Clubs français) ou pictogramme (Soirée, Comparateur). */
-.dash-brand .db-logo.db-flag{ width:46px; height:32px; border-radius:6px; background:linear-gradient(90deg,#1f4fbf 0 33.3%,#fff 33.3% 66.6%,#e3263a 66.6%);
+.dash-brand .db-logo.db-flag{ width:46px; height:32px; border-radius:6px; background:var(--flag-tile, linear-gradient(90deg,#1f4fbf 0 33.3%,#fff 33.3% 66.6%,#e3263a 66.6%));
   box-shadow:0 0 0 1px rgba(255,255,255,.25), 0 2px 6px rgba(0,0,0,.45); filter:none; }
 .dash-brand .db-logo.db-pict{ display:inline-flex; align-items:center; justify-content:center; font-size:22px; line-height:1; border-radius:11px;
   background:#141c3a; border:1px solid rgba(255,255,255,.14); filter:none; }
@@ -38,6 +38,11 @@
 .nav-ghost.nav-uecl{ background:rgba(25,196,79,.10); border-color:rgba(25,196,79,.42); }
 .nav-ghost.nav-uecl:hover{ color:#fff; background:rgba(25,196,79,.18); border-color:rgba(25,196,79,.7); }
 .fr-mini{ width:18px; height:12px; border-radius:2px; flex:none; background:linear-gradient(90deg,#1f4fbf 0 33.3%,#fff 33.3% 66.6%,#e3263a 66.6%); }
+/* Mini-drapeaux des pages pays */
+.fr-mini.flag-de{ background:linear-gradient(180deg,#000 0 33.3%,#dd0000 33.3% 66.6%,#ffce00 66.6%); }
+.fr-mini.flag-en{ background:linear-gradient(90deg,transparent 40%,#ce1124 40% 60%,transparent 60%), linear-gradient(180deg,transparent 36%,#ce1124 36% 64%,transparent 64%), #fff; }
+.fr-mini.flag-es{ background:linear-gradient(180deg,#aa151b 0 25%,#f1bf00 25% 75%,#aa151b 75%); }
+.fr-mini.flag-it{ background:linear-gradient(90deg,#009246 0 33.3%,#fff 33.3% 66.6%,#ce2b37 66.6%); }
 .topbar #liveFlag{ align-items:center; }
 
 /* StarBorder (ReactBits) : anneau lumineux qui tourne autour du bouton principal */
