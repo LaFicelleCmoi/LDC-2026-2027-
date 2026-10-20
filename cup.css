@@ -14,6 +14,9 @@
   --cup-ink:  #1a0b00;
   --cup-head: #2b1a14;                         /* teinte de l'en-tête de la fiche club */
   --cup-logo: url('europa.svg?v=2');
+  --cup-ball: url('europaball.svg?v=1');       /* grand ballon lumineux du fond */
+  --cup-bg-top: #1d1426;                       /* dégradé du fond (nuit teintée) */
+  --cup-bg-mid: #100c19;
 }
 :root[data-comp="uecl"]{
   --cup:      #19c44f;
@@ -21,6 +24,9 @@
   --cup-ink:  #00210c;
   --cup-head: #10261b;
   --cup-logo: url('conference.svg?v=1');
+  --cup-ball: url('confball.svg?v=1');
+  --cup-bg-top: #0d1d26;
+  --cup-bg-mid: #09121c;
 }
 :root{
   --gold-rgb: var(--fav-rgb, var(--cup-rgb));
@@ -28,7 +34,21 @@
   --accent:   var(--cup);
   --font-d:   'Bebas Neue', Impact, sans-serif;
 }
-body{ background:var(--bg); }
+/* Fond façon accueil LDC : dégradé de nuit teinté par la coupe, halo de sa
+   couleur en haut à droite et grand ballon lumineux (europaball.svg /
+   confball.svg, pendant du starball.svg de la LDC) en mix-blend screen. */
+body{ background:#0a1024;
+  background-image:
+    radial-gradient(130% 92% at 50% 36%, transparent 52%, rgba(2,4,12,.5) 100%),
+    radial-gradient(70% 55% at 88% 6%, rgba(var(--cup-rgb),.10), transparent 70%),
+    linear-gradient(180deg, var(--cup-bg-top) 0%, var(--cup-bg-mid) 58%, #05070f 100%);
+  background-attachment:fixed; }
+body::before{ content:""; position:fixed; top:-20%; right:-14%; width:min(92vw,960px); height:min(92vw,960px); z-index:0; pointer-events:none;
+  background:var(--cup-ball) center/contain no-repeat; opacity:.34; mix-blend-mode:screen;
+  -webkit-mask-image:radial-gradient(closest-side, #000 30%, rgba(0,0,0,.35) 62%, transparent 100%);
+  mask-image:radial-gradient(closest-side, #000 30%, rgba(0,0,0,.35) 62%, transparent 100%); }
+@media (max-width:700px){ body::before{ width:150vw; height:150vw; right:-40%; top:-8%; opacity:.26; } }
+.loop-section{ position:relative; z-index:1; }
 
 /* ---- En-tête ------------------------------------------------------------ */
 .brand .star{ background-image:var(--cup-logo); filter:none; }
