@@ -66,6 +66,10 @@ body{ background:var(--bg); }
 .fr-livesc:focus-visible{ outline:2px solid var(--fr-blue); outline-offset:2px; }
 .fr-livesc.live{ color:#ffd0d5; background:rgba(255,59,70,.14); border-color:rgba(255,59,70,.45); }
 .fr-livesc.live b{ color:#ff5d6c; }
+.fr-livesc.win{ color:#b7f5d2; background:rgba(46,213,115,.12); border-color:rgba(46,213,115,.45); }
+.fr-livesc.win b{ color:#5fdc97; }
+.fr-livesc.loss{ color:#ffc2c8; background:rgba(255,59,70,.10); border-color:rgba(255,59,70,.40); }
+.fr-livesc.loss b{ color:#ff8a95; }
 .fr-ldot{ width:7px; height:7px; border-radius:50%; background:#ff3b46; animation:frPulse 1.4s ease-in-out infinite; }
 /* Carte étroite : score (+ minute) seul, l'adversaire est sur la ligne du bas. */
 .fr-card{ container-type:inline-size; }
