@@ -52,9 +52,24 @@ body{ background:var(--bg); }
 .fr-rank b{ font-family:var(--font-d); font-weight:400; font-size:28px; line-height:1; color:var(--c); }
 .fr-rank sup{ font-family:system-ui, sans-serif; font-size:11px; font-weight:800; margin-left:1px; vertical-align:12px; }
 .fr-rank small{ font-size:11px; font-weight:700; color:var(--muted); white-space:nowrap; }
-.fr-rec{ display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; padding:0 14px 10px; font-size:12.5px; font-weight:700; color:var(--muted); }
+.fr-rec{ display:flex; align-items:center; flex-wrap:nowrap; gap:4px 9px; white-space:nowrap; padding:0 14px 10px; font-size:12.5px; font-weight:700; color:var(--muted); }
 .fr-rec .w{ color:#5fdc97; } .fr-rec .l{ color:#ff8a95; }
 .fr-form{ display:inline-flex; gap:3px; margin-left:auto; }
+/* Score du match en cours (rouge, pulsant) ou du dernier match (discret),
+   centré dans l'espace entre le bilan et la forme. */
+.fr-livesc{ display:inline-flex; align-items:center; gap:5px; margin-left:auto; min-width:0; padding:2px 9px; border-radius:999px; cursor:pointer;
+  font-size:12px; font-weight:800; color:var(--muted); background:rgba(255,255,255,.04); border:1px solid var(--line-2); white-space:nowrap; transition:border-color .15s; }
+.fr-livesc i{ font-style:normal; letter-spacing:.02em; }
+.fr-livesc b{ font-family:var(--font-d); font-weight:400; font-size:16px; line-height:1; color:#fff; font-variant-numeric:tabular-nums; flex:none; }
+.fr-livesc small{ font-size:11px; font-weight:800; color:#ff8a95; }
+.fr-livesc:hover{ border-color:rgba(var(--gold-rgb),.55); }
+.fr-livesc:focus-visible{ outline:2px solid var(--fr-blue); outline-offset:2px; }
+.fr-livesc.live{ color:#ffd0d5; background:rgba(255,59,70,.14); border-color:rgba(255,59,70,.45); }
+.fr-livesc.live b{ color:#ff5d6c; }
+.fr-ldot{ width:7px; height:7px; border-radius:50%; background:#ff3b46; animation:frPulse 1.4s ease-in-out infinite; }
+/* Carte étroite : score (+ minute) seul, l'adversaire est sur la ligne du bas. */
+.fr-card{ container-type:inline-size; }
+@container (max-width:350px){ .fr-livesc i, .fr-livesc .fr-ldot{ display:none; } }
 .fr-form .cp-badge{ width:20px; height:20px; font-size:10px; border-radius:5px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:800; }
 .fr-form .cp-badge.w{ background:#15803d; } .fr-form .cp-badge.d{ background:#64748b; } .fr-form .cp-badge.l{ background:#b91c1c; }
 .fr-next{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; padding:10px 14px; border-top:1px solid var(--line); font-size:13px; color:var(--txt); }
@@ -83,4 +98,4 @@ body{ background:var(--bg); }
   .fr-mid{ min-width:58px; }
   .fr-grid{ grid-template-columns:1fr; }
 }
-@media (prefers-reduced-motion:reduce){ .fr-pill.live i{ animation:none; } }
+@media (prefers-reduced-motion:reduce){ .fr-pill.live i, .fr-ldot{ animation:none; } }
