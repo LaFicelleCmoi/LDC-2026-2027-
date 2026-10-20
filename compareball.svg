@@ -1,0 +1,42 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Fond du Comparateur : deux ballons lumineux face à face, or (club 1)
+       et bleu (club 2), un éclair dans la zone où ils se croisent. Affiché
+       en mix-blend-mode screen par pagebg.css. -->
+  <defs>
+    <radialGradient id="ga" cx="44%" cy="38%" r="68%">
+      <stop offset="0%" stop-color="#ffd76a" stop-opacity="0.62"/>
+      <stop offset="42%" stop-color="#f5b50a" stop-opacity="0.38"/>
+      <stop offset="76%" stop-color="#6b4a00" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#1a1300" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gb" cx="56%" cy="38%" r="68%">
+      <stop offset="0%" stop-color="#a9c2ff" stop-opacity="0.62"/>
+      <stop offset="42%" stop-color="#6f9bff" stop-opacity="0.38"/>
+      <stop offset="76%" stop-color="#1c3577" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#0a1430" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#ffe8a8"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="204" cy="300" r="200" fill="url(#ga)"/>
+  <circle cx="396" cy="300" r="200" fill="url(#gb)"/>
+
+  <g fill="none" stroke-width="1.4">
+    <g stroke="#ffd76a" stroke-opacity="0.2">
+      <circle cx="204" cy="300" r="198"/>
+      <ellipse cx="204" cy="300" rx="198" ry="82"/>
+      <ellipse cx="204" cy="300" rx="82" ry="198"/>
+    </g>
+    <g stroke="#a9c2ff" stroke-opacity="0.2">
+      <circle cx="396" cy="300" r="198"/>
+      <ellipse cx="396" cy="300" rx="198" ry="82"/>
+      <ellipse cx="396" cy="300" rx="82" ry="198"/>
+    </g>
+  </g>
+
+  <!-- éclair du face-à-face -->
+  <path d="M318 150 L262 312 L300 312 L274 452 L346 268 L306 268 L338 150 Z" fill="url(#bolt)" opacity="0.85"/>
+</svg>
