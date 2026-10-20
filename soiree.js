@@ -91,7 +91,7 @@
   function writeUrl(){ try{ history.replaceState(null,'',location.pathname+'?d='+day+(filter!=='all'?'&f='+filter:'')); }catch(e){} }
   function renderStatic(){
     var X={ srTitle:['Soirée européenne','European night'], srSub:['Tous les matchs du jour en Ligue des Champions, Europa League et Conference League.','Every match of the day in the Champions League, Europa League and Conference League.'],
-      navSr:['Soirée européenne','European night'], navFr:['Clubs français','French clubs'], navCmp:['Comparateur','Compare clubs'], navUcl:['Ligue des Champions','Champions League'] };
+      navSr:['Soirée européenne','European night'], navFr:['France','France'], navDe:['Allemagne','Germany'], navEn:['Angleterre','England'], navEs:['Espagne','Spain'], navIt:['Italie','Italy'], navCmp:['Comparateur','Compare clubs'], navUcl:['Ligue des Champions','Champions League'] };
     Object.keys(X).forEach(function(k){ var n=el(k); if(n) n.textContent=T(X[k][0],X[k][1]); });
     var lab={ all:T('Toutes','All'), ucl:'LDC', uel:'Europa League', uecl:'Conference League', fr:T('Clubs français','French clubs') };
     Array.prototype.forEach.call(document.querySelectorAll('.sr-chip'),function(b){ b.querySelector('span').textContent=lab[b.getAttribute('data-f')]; });
