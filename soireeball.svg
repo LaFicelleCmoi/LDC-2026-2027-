@@ -1,0 +1,45 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Fond de la page Soirée européenne : grand croissant de lune dans les
+       halos des trois coupes (or LDC, orange Europa, vert Conference) et
+       quelques étoiles. Affiché en mix-blend-mode screen par pagebg.css. -->
+  <defs>
+    <radialGradient id="hg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f5b50a" stop-opacity="0.55"/><stop offset="100%" stop-color="#f5b50a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ho" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff7a1a" stop-opacity="0.50"/><stop offset="100%" stop-color="#ff7a1a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hv" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#19c44f" stop-opacity="0.48"/><stop offset="100%" stop-color="#19c44f" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="moon" cx="38%" cy="34%" r="75%">
+      <stop offset="0%" stop-color="#fffaf0"/>
+      <stop offset="55%" stop-color="#ffe7b8"/>
+      <stop offset="100%" stop-color="#e8b85a"/>
+    </radialGradient>
+    <mask id="crescent">
+      <rect width="600" height="600" fill="#000"/>
+      <circle cx="292" cy="300" r="190" fill="#fff"/>
+      <circle cx="380" cy="246" r="168" fill="#000"/>
+    </mask>
+    <path id="s" d="M0,-50 L12.3,-17 L47.6,-15.5 L20,6.5 L29.4,40.5 L0,21 L-29.4,40.5 L-20,6.5 L-47.6,-15.5 L-12.3,-17 Z"/>
+  </defs>
+
+  <!-- halos des trois coupes -->
+  <circle cx="230" cy="220" r="250" fill="url(#hg)"/>
+  <circle cx="400" cy="300" r="230" fill="url(#ho)"/>
+  <circle cx="270" cy="420" r="230" fill="url(#hv)"/>
+
+  <!-- croissant de lune -->
+  <rect width="600" height="600" fill="url(#moon)" mask="url(#crescent)" opacity="0.9"/>
+  <circle cx="292" cy="300" r="196" fill="none" stroke="#ffe7b8" stroke-opacity="0.18" stroke-width="2"/>
+
+  <!-- étoiles -->
+  <g fill="#fff6e0">
+    <use href="#s" transform="translate(452,150) scale(0.62)" opacity="0.85"/>
+    <use href="#s" transform="translate(500,330) scale(0.38)" opacity="0.7"/>
+    <use href="#s" transform="translate(410,452) scale(0.5)" opacity="0.75"/>
+    <use href="#s" transform="translate(120,110) scale(0.34)" opacity="0.6"/>
+    <use href="#s" transform="translate(540,220) scale(0.26)" opacity="0.6"/>
+  </g>
+</svg>
