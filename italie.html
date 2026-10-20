@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clubs italiens en Europe — Tracker</title>
+<meta name="description" content="Les clubs italiens en Ligue des Champions, Europa League et Conference League : matchs du jour en direct, classements, forme, prochaines affiches. Projet de fan non officiel, données ESPN." />
+<link rel="icon" href="logo.svg?v=4" type="image/svg+xml" />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800;900&display=swap" />
+<link rel="stylesheet" href="styles.css?v=21" />
+<link rel="stylesheet" href="clubpanel.css?v=8" />
+<link rel="stylesheet" href="matchpanel.css?v=3" />
+<link rel="stylesheet" href="reactbits.css?v=1" />
+<link rel="stylesheet" href="france.css?v=7" />
+<link rel="stylesheet" href="topnav.css?v=3" />
+<link rel="stylesheet" href="pagebg.css?v=1" />
+<style>:root{ --pg-ball:url('italyball.svg?v=1'); --pg-rgb:0,166,81; --pg-top:#0e1a1c; --pg-mid:#0b1118; --tn-accent:rgb(0, 166, 81); --tn-ink:#ffffff;
+  --ct-rgb:46, 196, 110; --flag-bar:linear-gradient(180deg,#009246 0 33.3%,#fff 33.3% 66.6%,#ce2b37 66.6%); --flag-tile:linear-gradient(90deg,#009246 0 33.3%,#fff 33.3% 66.6%,#ce2b37 66.6%); }
+/* Fond aux couleurs du drapeau (Italie : vert à gauche, blanc au centre,
+   rouge à droite), sur la nuit de pagebg.css ; liseré tricolore en haut. */
+body{ background-image:
+    radial-gradient(130% 92% at 50% 36%, transparent 52%, rgba(2,4,12,.55) 100%),
+    radial-gradient(55% 75% at 0% 28%, rgba(0,146,70,.40), transparent 72%),
+    radial-gradient(55% 75% at 100% 28%, rgba(206,43,55,.34), transparent 72%),
+    radial-gradient(38% 46% at 50% 6%, rgba(255,255,255,.08), transparent 72%),
+    linear-gradient(90deg, rgba(0,146,70,.10) 0 33.3%, rgba(255,255,255,.035) 33.3% 66.6%, rgba(206,43,55,.09) 66.6%),
+    linear-gradient(180deg, #0e1a1c 0%, #0b1118 58%, #05070f 100%); }
+body::after{ content:""; position:fixed; left:0; right:0; top:0; height:4px; z-index:60; pointer-events:none;
+  background:linear-gradient(90deg,#009246 0 33.3%,#fff 33.3% 66.6%,#ce2b37 66.6%); }
+</style>
+</head>
+<body>
+<canvas id="starfield" data-rb aria-hidden="true"></canvas>
+
+<main class="container">
+  <!-- Barre de navigation des trois coupes (topnav.css) -->
+  <div class="topbar">
+    <div class="tb-left">
+      <a class="dash-brand" href="italie.html" aria-label="Clubs italiens en Europe"><span class="db-logo db-flag" aria-hidden="true"></span></a>
+      <div class="lang-switch" id="langSwitch"></div>
+    </div>
+    <nav class="top-nav" aria-label="Navigation">
+      <a href="dashboard.html" class="nav-ghost nav-ucl"><img src="logo.svg?v=4" alt="" width="16" height="16"><span id="navUcl">Ligue des Champions</span></a>
+      <a href="europa.html" class="nav-ghost nav-uel"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
+      <a href="conference.html" class="nav-ghost nav-uecl"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+      <a href="soiree.html" class="nav-ghost">🌙 <span id="navSr">Soirée européenne</span></a>
+      <a href="france.html" class="nav-ghost"><span class="fr-mini" aria-hidden="true"></span><span id="navFr">France</span></a>
+      <a href="allemagne.html" class="nav-ghost"><span class="fr-mini flag-de" aria-hidden="true"></span><span id="navDe">Allemagne</span></a>
+      <a href="angleterre.html" class="nav-ghost"><span class="fr-mini flag-en" aria-hidden="true"></span><span id="navEn">Angleterre</span></a>
+      <a href="espagne.html" class="nav-ghost"><span class="fr-mini flag-es" aria-hidden="true"></span><span id="navEs">Espagne</span></a>
+      <a href="italie.html" class="nav-forward star-border" aria-current="page"><span class="fr-mini flag-it" aria-hidden="true"></span><span id="navIt">Italie</span></a>
+      <a href="comparateur.html" class="nav-ghost">⚖ <span id="navCmp">Comparateur</span></a>
+    </nav>
+  </div>
+
+  <section class="fr-hero">
+    <h1 id="frTitle">Clubs italiens en Europe</h1>
+    <p id="frSub">Les clubs italiens des trois coupes d’Europe, en direct.</p>
+    <span class="fr-sync" id="frSync"></span>
+  </section>
+
+  <section class="section" aria-labelledby="frTodayT">
+    <div class="section-head"><h2 id="frTodayT">Aujourd’hui</h2></div>
+    <div class="fr-list" id="frToday"><p class="fr-empty" data-i18n="common.loading">Chargement…</p></div>
+  </section>
+
+  <section class="section" aria-labelledby="frClubsT">
+    <div class="section-head"><h2 id="frClubsT">Les clubs</h2><span class="sub" id="frClubsSub"></span></div>
+    <div class="fr-grid" id="frClubs"><p class="fr-empty" data-i18n="common.loading">Chargement…</p></div>
+  </section>
+
+  <section class="section" aria-labelledby="frTotT">
+    <div class="section-head"><h2 id="frTotT">La saison des clubs italiens</h2></div>
+    <div class="fr-tots" id="frTotals"></div>
+  </section>
+
+  <div class="fr-cols">
+    <section class="section" aria-labelledby="frRecT">
+      <div class="section-head"><h2 id="frRecT">Résultats des 7 derniers jours</h2></div>
+      <div class="fr-list" id="frRecent"></div>
+    </section>
+    <section class="section" aria-labelledby="frUpT">
+      <div class="section-head"><h2 id="frUpT">Prochaines affiches</h2></div>
+      <div class="fr-list" id="frUpcoming"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script src="i18n.js?v=27"></script>
+<script src="standings-engine.js?v=1"></script>
+<script src="coefficients2026.js?v=1"></script>
+<script src="espn.js?v=28"></script>
+<script src="schedule.js?v=2"></script>
+<script src="thresholds.js?v=3"></script>
+<script src="cupclubs2026.js?v=1"></script>
+<script src="chances.js?v=1"></script>
+<script src="clubpanel.js?v=7"></script>
+<script src="matchpanel.js?v=4"></script>
+<script src="goalalert.js?v=1"></script>
+<script src="reactbits.js?v=1"></script>
+<script src="ui.js?v=2"></script>
+<script>window.LDC_COUNTRY = {"code": "ITA", "fr": {"title": "Clubs italiens en Europe", "clubs": "clubs italiens", "club": "club italien"}, "en": {"title": "Italian clubs in Europe", "clubs": "Italian clubs", "club": "Italian club"}};</script>
+<script src="france.js?v=8"></script>
+</body>
+</html>
