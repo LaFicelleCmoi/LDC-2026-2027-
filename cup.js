@@ -365,9 +365,9 @@
     if(el('navSoiree')) el('navSoiree').textContent=T('Soirée européenne','European night');
     if(el('navOverlay')) el('navOverlay').textContent=T('Overlay OBS','OBS overlay');
     el('heroSub').textContent=T('Scores en direct · Classement · Phase finale','Live scores · Standings · Knockout stage');
-    el('seasonChip').textContent=ESPN.seasonLabel();
-    el('ctaTable').textContent=T('Classement complet →','Full table →');
-    el('ctaUcl').textContent=T('← Ligue des Champions','← Champions League');
+    el('seasonChip').textContent=T('Saison ','Season ')+ESPN.seasonLabel();
+    if(el('ctaTable')) el('ctaTable').textContent=T('Classement →','Standings →');
+    if(el('ctaUcl')) el('ctaUcl').textContent=T('Ligue des Champions','Champions League');
     el('mdTitle').textContent=T('Matchs','Matches');
     el('statsTitle').textContent=T('La saison en chiffres','The season in numbers');
     el('mdPrev').setAttribute('aria-label',T('Journée précédente','Previous matchday'));
