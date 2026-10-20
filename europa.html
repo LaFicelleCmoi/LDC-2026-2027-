@@ -9,38 +9,41 @@
 <link rel="preconnect" href="https://site.api.espn.com" />
 <link rel="preconnect" href="https://a.espncdn.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800;900&display=swap" />
 <link rel="stylesheet" href="styles.css?v=21" />
 <link rel="stylesheet" href="clubpanel.css?v=8" />
 <link rel="stylesheet" href="matchpanel.css?v=3" />
 <link rel="stylesheet" href="reactbits.css?v=1" />
 <link rel="stylesheet" href="lanyard.css?v=1" />
 <link rel="stylesheet" href="cup.css?v=11" />
+<link rel="stylesheet" href="topnav.css?v=1" />
 </head>
 <body>
 <canvas id="starfield" data-rb aria-hidden="true"></canvas>
-<header class="site-header">
-  <a class="brand" href="europa.html">
-    <span class="star">★</span>
-    <span><span class="t1" data-i18n="uel.title">Tracker Europa League</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
-  </a>
-  <nav class="nav">
-    <a href="europa.html" class="active" data-i18n="nav.dashboard">Accueil</a>
-    <a href="europa-classement.html" data-i18n="nav.tracker">Classement</a>
-    <a href="europa-calendrier.html" data-i18n="nav.calendar">Calendrier</a>
-    <a href="europa-palmares.html" data-i18n="nav.palmares">Palmarès</a>
-    <a href="europa-jeu.html" data-noseason data-i18n="nav.game">Jeu</a>
-    <a href="europa-monclub.html" data-i18n="nav.myclub">Mon club</a>
-    <a href="conference.html" class="nav-cup to-uecl"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
-    <a href="dashboard.html" class="nav-ucl" title="Ligue des Champions" aria-label="Ligue des Champions"><img src="logo.svg?v=4" alt="" width="16" height="16"><span>LDC</span></a>
-  </nav>
-  <div class="header-right">
-    <span id="liveFlag" style="display:none"><span class="dot live"></span></span>
-    <div class="lang-switch" id="langSwitch"></div>
-  </div>
-</header>
 
 <main class="container">
+  <!-- Barre façon accueil LDC (topnav.css) -->
+  <div class="topbar">
+    <div class="tb-left">
+      <a class="dash-brand" href="europa.html" aria-label="Europa League"><span class="db-logo"></span></a>
+      <div class="lang-switch" id="langSwitch"></div>
+      <span id="liveFlag" style="display:none"><span class="dot live"></span></span>
+    </div>
+    <nav class="top-nav" aria-label="Navigation">
+      <a href="europa-classement.html" class="nav-forward star-border" id="ctaTable" data-i18n="dash.toTracker">Classement →</a>
+      <a href="dashboard.html" class="nav-ghost nav-ucl" title="Ligue des Champions"><img src="logo.svg?v=4" alt="" width="16" height="16"><span id="ctaUcl">Ligue des Champions</span></a>
+      <a href="conference.html" class="nav-ghost nav-uecl"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+      <a href="soiree.html?f=uel" class="nav-ghost">🌙 <span id="navSoiree">Soirée européenne</span></a>
+      <a href="france.html" class="nav-ghost"><span class="fr-mini" aria-hidden="true"></span><span id="navFrance">Clubs français</span></a>
+      <a href="comparateur.html?c=uel" class="nav-ghost">⚖ <span id="navCompare">Comparateur</span></a>
+      <a href="europa-palmares.html" class="nav-ghost" data-i18n="nav.palmares">Palmarès</a>
+      <a href="europa-calendrier.html" class="nav-ghost" data-i18n="nav.calendar">Calendrier</a>
+      <a href="europa-jeu.html" class="nav-ghost" data-i18n="nav.game">Jeu</a>
+      <a href="europa-monclub.html" class="nav-ghost" data-i18n="nav.myclub">Mon club</a>
+      <a href="overlay.html?c=uel" class="nav-ghost"><span id="navOverlay">Overlay OBS</span></a>
+    </nav>
+  </div>
+
   <!-- Bandeau façon accueil LDC : titre géant animé (reactbits.js), badge
        « Mon club » à lanière à droite (lanyard.js, ≥ 960 px). -->
   <section class="header has-badge cup-header">
@@ -48,11 +51,6 @@
       <h1 class="rb-hero" id="heroTitle">Europa League</h1>
       <p class="cup-tag" id="heroSub">Scores en direct · Classement · Phase finale</p>
       <span class="season-chip" id="seasonChip">2026–27</span>
-      <div class="cup-hero-cta">
-        <a class="cup-cta" href="europa-classement.html" id="ctaTable">Classement complet →</a>
-        <a class="cup-cta ghost" href="dashboard.html" id="ctaUcl">← Ligue des Champions</a>
-      </div>
-      <span class="cup-more"><a href="soiree.html?f=uel" id="navSoiree">Soirée européenne</a> · <a href="france.html" id="navFrance">Clubs français</a> · <a href="comparateur.html?c=uel" id="navCompare">Comparateur</a> · <a href="overlay.html?c=uel" id="navOverlay">Overlay OBS</a></span>
     </div>
     <div id="lanyard" aria-hidden="true">
       <div class="ly-stage">
@@ -161,7 +159,7 @@
 <script src="clubpanel.js?v=7"></script>
 <script src="reactbits.js?v=1"></script>
 <script src="ui.js?v=2"></script>
-<script src="cup.js?v=9"></script>
+<script src="cup.js?v=10"></script>
 <script src="lanyard.js?v=1"></script>
 </body>
 </html>
