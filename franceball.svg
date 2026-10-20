@@ -1,0 +1,45 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Fond de la page Clubs français : ballon lumineux drapé du drapeau
+       tricolore, l'Hexagone en clair au centre. Affiché en mix-blend-mode
+       screen par pagebg.css (pendant du starball.svg de la LDC). -->
+  <defs>
+    <radialGradient id="glow" cx="44%" cy="38%" r="68%">
+      <stop offset="0%"  stop-color="#8fb6ff" stop-opacity="0.62"/>
+      <stop offset="40%" stop-color="#3b6fe0" stop-opacity="0.40"/>
+      <stop offset="74%" stop-color="#16327e" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0a1430" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="rim" cx="50%" cy="50%" r="50%">
+      <stop offset="80%" stop-color="#c9dbff" stop-opacity="0"/>
+      <stop offset="93%" stop-color="#c9dbff" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#c9dbff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="st" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#d8e5ff"/>
+      <stop offset="100%" stop-color="#9dbcff"/>
+    </linearGradient>
+    <clipPath id="ball"><circle cx="300" cy="292" r="286"/></clipPath>
+  </defs>
+
+  <circle cx="300" cy="292" r="288" fill="url(#glow)"/>
+
+  <!-- drapeau drapé sur la sphère : trois bandes qui suivent sa courbure -->
+  <g clip-path="url(#ball)">
+    <path d="M14 0 L214 0 Q170 292 214 600 L14 600 Z" fill="#2f63e0" opacity="0.48"/>
+    <path d="M214 0 L386 0 Q430 292 386 600 L214 600 Q170 292 214 0 Z" fill="#ffffff" opacity="0.2"/>
+    <path d="M386 0 L586 0 L586 600 L386 600 Q430 292 386 0 Z" fill="#e3263a" opacity="0.5"/>
+  </g>
+  <circle cx="300" cy="292" r="286" fill="url(#rim)"/>
+
+  <!-- méridiens, très discrets -->
+  <g fill="none" stroke="#c9dbff" stroke-opacity="0.16" stroke-width="1.4">
+    <ellipse cx="300" cy="292" rx="286" ry="118"/>
+    <path d="M22 292 Q300 96 578 292"/>
+    <path d="M22 292 Q300 488 578 292"/>
+  </g>
+
+  <!-- l'Hexagone -->
+  <path d="M300 128 L436 206 L436 372 L300 452 L164 372 L164 206 Z" fill="none" stroke="url(#st)" stroke-width="9" stroke-linejoin="round" opacity="0.85"/>
+  <path d="M300 168 L402 226 L402 352 L300 412 L198 352 L198 226 Z" fill="none" stroke="url(#st)" stroke-width="2.2" stroke-dasharray="4 11" stroke-linecap="round" opacity="0.6"/>
+</svg>
