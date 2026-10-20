@@ -1,0 +1,18 @@
+/* =========================================================================
+   pagebg.css — Fond des pages communes aux trois coupes (Clubs français,
+   Soirée européenne, Comparateur), façon accueil LDC : dégradé de nuit
+   teinté, halo de la couleur de la page en haut à droite et grand motif
+   lumineux en mix-blend screen. Chaque page règle --pg-ball, --pg-rgb,
+   --pg-top et --pg-mid. À charger après la feuille de la page.
+   ========================================================================= */
+body{ background:#0a1024;
+  background-image:
+    radial-gradient(130% 92% at 50% 36%, transparent 52%, rgba(2,4,12,.5) 100%),
+    radial-gradient(70% 55% at 88% 6%, rgba(var(--pg-rgb, 79, 143, 232),.10), transparent 70%),
+    linear-gradient(180deg, var(--pg-top, #0e1736) 0%, var(--pg-mid, #0a1024) 58%, #05070f 100%);
+  background-attachment:fixed; }
+body::before{ content:""; position:fixed; top:-20%; right:-14%; width:min(92vw,960px); height:min(92vw,960px); z-index:0; pointer-events:none;
+  background:var(--pg-ball) center/contain no-repeat; opacity:.32; mix-blend-mode:screen;
+  -webkit-mask-image:radial-gradient(closest-side, #000 30%, rgba(0,0,0,.35) 62%, transparent 100%);
+  mask-image:radial-gradient(closest-side, #000 30%, rgba(0,0,0,.35) 62%, transparent 100%); }
+@media (max-width:700px){ body::before{ width:150vw; height:150vw; right:-40%; top:-8%; opacity:.24; } }
