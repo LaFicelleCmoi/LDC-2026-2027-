@@ -360,7 +360,7 @@
   function renderStatic(){
     if(el('mdRefresh')) el('mdRefresh').lastChild.textContent=T('Rafraîchir','Refresh');
     if(el('liveGlitch')){ var lv=T('EN DIRECT','LIVE'); el('liveGlitch').textContent=lv; el('liveGlitch').setAttribute('data-text',lv); }
-    if(el('navFrance')) el('navFrance').textContent=T('Clubs français','French clubs');
+    if(el('navFrance')) el('navFrance').textContent=T('Club des Nations','Club of Nations');
     if(el('navCompare')) el('navCompare').textContent=T('Comparateur','Compare clubs');
     if(el('navSoiree')) el('navSoiree').textContent=T('Soirée européenne','European night');
     if(el('navOverlay')) el('navOverlay').textContent=T('Overlay OBS','OBS overlay');
