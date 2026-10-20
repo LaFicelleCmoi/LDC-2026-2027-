@@ -17,7 +17,19 @@
 <link rel="stylesheet" href="france.css?v=3" />
 <link rel="stylesheet" href="topnav.css?v=2" />
 <link rel="stylesheet" href="pagebg.css?v=1" />
-<style>:root{ --pg-ball:url('franceball.svg?v=1'); --pg-rgb:79,143,232; --pg-top:#0f1b3d; --pg-mid:#0a1128; --tn-accent:#4f8fe8; --tn-ink:#06142e; }</style>
+<style>:root{ --pg-ball:url('franceball.svg?v=1'); --pg-rgb:79,143,232; --pg-top:#0f1b3d; --pg-mid:#0a1128; --tn-accent:#4f8fe8; --tn-ink:#06142e; }
+/* Fond aux couleurs de la France : bleu à gauche, blanc au centre, rouge à
+   droite, sur la nuit de pagebg.css ; liseré tricolore en haut de l'écran. */
+body{ background-image:
+    radial-gradient(130% 92% at 50% 36%, transparent 52%, rgba(2,4,12,.55) 100%),
+    radial-gradient(55% 75% at 0% 28%, rgba(31,79,191,.42), transparent 72%),
+    radial-gradient(55% 75% at 100% 28%, rgba(227,38,58,.34), transparent 72%),
+    radial-gradient(38% 46% at 50% 6%, rgba(255,255,255,.08), transparent 72%),
+    linear-gradient(90deg, rgba(31,79,191,.10) 0 33.3%, rgba(255,255,255,.035) 33.3% 66.6%, rgba(227,38,58,.09) 66.6%),
+    linear-gradient(180deg, #0f1b3d 0%, #0b1129 58%, #05070f 100%); }
+body::after{ content:""; position:fixed; left:0; right:0; top:0; height:4px; z-index:60; pointer-events:none;
+  background:linear-gradient(90deg,#1f4fbf 0 33.3%,#fff 33.3% 66.6%,#e3263a 66.6%); }
+</style>
 </head>
 <body>
 <canvas id="starfield" data-rb aria-hidden="true"></canvas>
