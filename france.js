@@ -69,8 +69,8 @@
       var op=esc(sm.opp.abbr||sm.opp.name), lv=!!d.live;
       var sc='<b>'+sm.gf+'–'+sm.ga+'</b><i>'+op+'</i>';
       var min=lv?(/HT|Half/i.test(sm.detail||'')?T('MT','HT'):(sm.clock||'')):'';
-      /* Score final : vert si le club a gagné, rouge s'il a perdu (nul neutre). */
-      var res=lv?'':(sm.result==='w'?' win':sm.result==='l'?' loss':'');
+      /* Score final : vert si le club a gagné, rouge s'il a perdu, blanc si nul. */
+      var res=lv?'':(sm.result==='w'?' win':sm.result==='l'?' loss':sm.result==='d'?' draw':'');
       mid='<span class="fr-livesc'+(lv?' live':res)+'" data-mp-open="'+esc(sm.id)+'" data-mp-league="'+c.slug+'" tabindex="0" role="button" title="'+esc(lv?T('En direct — fiche du match','Live — match details'):T('Dernier résultat — fiche du match','Last result — match details'))+'">'+
         (lv?'<span class="fr-ldot" aria-hidden="true"></span>':'')+sc+(min?'<small>'+esc(min)+'</small>':'')+'</span>';
     }
