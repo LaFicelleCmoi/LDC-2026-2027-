@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="matchpanel.css?v=3" />
 <link rel="stylesheet" href="reactbits.css?v=1" />
 <link rel="stylesheet" href="compare.css?v=1" />
-<link rel="stylesheet" href="topnav.css?v=2" />
+<link rel="stylesheet" href="topnav.css?v=3" />
 <link rel="stylesheet" href="pagebg.css?v=1" />
 <style>:root{ --pg-ball:url('compareball.svg?v=1'); --pg-rgb:245,181,10; --pg-top:#161a36; --pg-mid:#0b1024; --tn-accent:#f5b50a; --tn-ink:#1a1300; }</style>
 </head>
@@ -34,7 +34,11 @@
       <a href="europa.html" class="nav-ghost nav-uel"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
       <a href="conference.html" class="nav-ghost nav-uecl"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
       <a href="soiree.html" class="nav-ghost">🌙 <span id="navSr">Soirée européenne</span></a>
-      <a href="france.html" class="nav-ghost"><span class="fr-mini" aria-hidden="true"></span><span id="navFr">Clubs français</span></a>
+      <a href="france.html" class="nav-ghost"><span class="fr-mini" aria-hidden="true"></span><span id="navFr">France</span></a>
+      <a href="allemagne.html" class="nav-ghost"><span class="fr-mini flag-de" aria-hidden="true"></span><span id="navDe">Allemagne</span></a>
+      <a href="angleterre.html" class="nav-ghost"><span class="fr-mini flag-en" aria-hidden="true"></span><span id="navEn">Angleterre</span></a>
+      <a href="espagne.html" class="nav-ghost"><span class="fr-mini flag-es" aria-hidden="true"></span><span id="navEs">Espagne</span></a>
+      <a href="italie.html" class="nav-ghost"><span class="fr-mini flag-it" aria-hidden="true"></span><span id="navIt">Italie</span></a>
       <a href="comparateur.html" class="nav-forward star-border" aria-current="page">⚖ <span id="navCmp">Comparateur</span></a>
     </nav>
   </div>
@@ -90,7 +94,8 @@
   /* Libellés du menu traduits (le reste vient de compare.js). */
   (function(){ function s(){ var en=I18N.getLang()==='en';
     document.getElementById('navUcl').textContent=en?'Champions League':'Ligue des Champions';
-    document.getElementById('navFr').textContent=en?'French clubs':'Clubs français';
+    document.getElementById('navFr').textContent='France';
+    [['navDe','Germany','Allemagne'],['navEn','England','Angleterre'],['navEs','Spain','Espagne'],['navIt','Italy','Italie']].forEach(function(x){ var n=document.getElementById(x[0]); if(n) n.textContent=en?x[1]:x[2]; });
     document.getElementById('navSr').textContent=en?'European night':'Soirée européenne';
     document.getElementById('navCmp').textContent=en?'Compare clubs':'Comparateur';
     }
