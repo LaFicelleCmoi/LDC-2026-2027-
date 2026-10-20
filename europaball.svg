@@ -1,0 +1,49 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Fond des pages Europa League : ballon lumineux orange (pendant du
+       starball.svg de la LDC), trophée de l'emblème en clair au centre et
+       coutures du ballon. Affiché en mix-blend-mode:screen par cup.css. -->
+  <defs>
+    <radialGradient id="glow" cx="44%" cy="38%" r="68%">
+      <stop offset="0%"  stop-color="#ffb070" stop-opacity="0.66"/>
+      <stop offset="38%" stop-color="#f37321" stop-opacity="0.42"/>
+      <stop offset="72%" stop-color="#7a2c08" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#1a0b04" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="st" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff3e6"/>
+      <stop offset="55%" stop-color="#ffc08a"/>
+      <stop offset="100%" stop-color="#ff8a3a"/>
+    </linearGradient>
+    <radialGradient id="rim" cx="50%" cy="50%" r="50%">
+      <stop offset="80%" stop-color="#ffc79a" stop-opacity="0"/>
+      <stop offset="93%" stop-color="#ffc79a" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#ffc79a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- volume du ballon -->
+  <circle cx="300" cy="292" r="288" fill="url(#glow)"/>
+  <circle cx="300" cy="292" r="286" fill="url(#rim)"/>
+
+  <!-- méridiens, très discrets -->
+  <g fill="none" stroke="#ffc08a" stroke-opacity="0.16" stroke-width="1.4">
+    <ellipse cx="300" cy="292" rx="286" ry="118"/>
+    <ellipse cx="300" cy="292" rx="118" ry="286"/>
+    <path d="M22 292 Q300 96 578 292"/>
+    <path d="M22 292 Q300 488 578 292"/>
+  </g>
+
+  <!-- coutures du ballon de l'emblème (doubles arcs, pointillés) -->
+  <g fill="none" stroke="url(#st)" stroke-linecap="round">
+    <path d="M118 120 C30 230 36 420 196 548" stroke-width="7" opacity="0.75"/>
+    <path d="M482 120 C570 230 564 420 404 548" stroke-width="7" opacity="0.75"/>
+    <path d="M150 104 C70 214 76 398 222 530" stroke-width="2.2" stroke-dasharray="3 11" opacity="0.6"/>
+    <path d="M450 104 C530 214 524 398 378 530" stroke-width="2.2" stroke-dasharray="3 11" opacity="0.6"/>
+  </g>
+
+  <!-- trophée : deux voiles qui s'effilent vers le pied (repris de europa.svg) -->
+  <g fill="url(#st)" transform="translate(300,300) scale(0.98) translate(-611,-262)">
+    <path d="M512 84 C545 72 578 66 606 64 C596 190 590 330 598 474 L570 470 C556 330 540 190 512 84 Z" opacity="0.92"/>
+    <path d="M640 48 C664 54 686 64 708 80 C670 190 634 330 616 474 L606 474 C614 330 624 190 640 48 Z" opacity="0.92"/>
+  </g>
+</svg>
