@@ -1,0 +1,55 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Fond des pages Conference League : ballon lumineux vert (pendant du
+       starball.svg de la LDC), trophée de l'emblème entre ses deux arcs,
+       échos d'arcs concentriques. Affiché en mix-blend-mode:screen par cup.css. -->
+  <defs>
+    <radialGradient id="glow" cx="44%" cy="38%" r="68%">
+      <stop offset="0%"  stop-color="#7dffab" stop-opacity="0.60"/>
+      <stop offset="38%" stop-color="#19c44f" stop-opacity="0.40"/>
+      <stop offset="72%" stop-color="#0b5a26" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#03170a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="st" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ecfff2"/>
+      <stop offset="55%" stop-color="#9ff0bb"/>
+      <stop offset="100%" stop-color="#3fdc74"/>
+    </linearGradient>
+    <radialGradient id="rim" cx="50%" cy="50%" r="50%">
+      <stop offset="80%" stop-color="#a6f5c2" stop-opacity="0"/>
+      <stop offset="93%" stop-color="#a6f5c2" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#a6f5c2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- volume du ballon -->
+  <circle cx="300" cy="292" r="288" fill="url(#glow)"/>
+  <circle cx="300" cy="292" r="286" fill="url(#rim)"/>
+
+  <!-- méridiens, très discrets -->
+  <g fill="none" stroke="#9ff0bb" stroke-opacity="0.16" stroke-width="1.4">
+    <ellipse cx="300" cy="292" rx="286" ry="118"/>
+    <ellipse cx="300" cy="292" rx="118" ry="286"/>
+    <path d="M300 6 Q120 292 300 578"/>
+    <path d="M300 6 Q480 292 300 578"/>
+  </g>
+
+  <!-- échos des arcs de l'emblème -->
+  <g fill="none" stroke="url(#st)" stroke-linecap="round">
+    <path d="M150 62 A262 262 0 0 0 150 522" stroke-width="3" opacity="0.4"/>
+    <path d="M450 62 A262 262 0 0 1 450 522" stroke-width="3" opacity="0.4"/>
+    <path d="M178 112 A206 206 0 0 0 178 472" stroke-width="2" stroke-dasharray="4 12" opacity="0.45"/>
+    <path d="M422 112 A206 206 0 0 1 422 472" stroke-width="2" stroke-dasharray="4 12" opacity="0.45"/>
+  </g>
+
+  <!-- emblème agrandi (repris de conference.svg) : deux arcs + trophée -->
+  <g transform="translate(300,296) scale(1.72) translate(-271,-157)">
+    <g fill="none" stroke="url(#st)" stroke-width="15" stroke-linecap="round" opacity="0.85">
+      <path d="M214 96 A92 92 0 0 0 214 240"/>
+      <path d="M328 96 A92 92 0 0 1 328 240"/>
+    </g>
+    <g fill="url(#st)">
+      <path d="M224 62 L319 62 C316 108 301 150 289 180 L254 180 C242 150 227 108 224 62 Z" opacity="0.85"/>
+      <path d="M259 186 L284 186 C285 212 292 234 304 248 L239 248 C251 234 258 212 259 186 Z" opacity="0.55"/>
+    </g>
+  </g>
+</svg>
