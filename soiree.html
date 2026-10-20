@@ -9,36 +9,37 @@
 <link rel="preconnect" href="https://site.api.espn.com" />
 <link rel="preconnect" href="https://a.espncdn.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800;900&display=swap" />
 <link rel="stylesheet" href="styles.css?v=21" />
 <link rel="stylesheet" href="clubpanel.css?v=8" />
 <link rel="stylesheet" href="matchpanel.css?v=3" />
 <link rel="stylesheet" href="reactbits.css?v=1" />
 <link rel="stylesheet" href="france.css?v=3" />
 <link rel="stylesheet" href="soiree.css?v=1" />
+<link rel="stylesheet" href="topnav.css?v=2" />
+<style>:root{ --tn-accent:#4f8fe8; --tn-ink:#06142e; }</style>
 </head>
 <body>
 <canvas id="starfield" data-rb aria-hidden="true"></canvas>
-<header class="site-header">
-  <a class="brand" href="soiree.html">
-    <span class="sr-logo" aria-hidden="true">🌙</span>
-    <span><span class="t1" id="srBrand">Soirée européenne</span><br><span class="t2" data-i18n="app.subtitle">Suivi live non officiel — données ESPN</span></span>
-  </a>
-  <nav class="nav">
-    <a href="soiree.html" class="active" id="navSr">Soirée européenne</a>
-    <a href="france.html" id="navFr">Clubs français</a>
-    <a href="dashboard.html" class="nav-comp"><img src="logo.svg?v=4" alt="" width="16" height="16"><span id="navUcl">Ligue des Champions</span></a>
-    <a href="europa.html" class="nav-comp"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
-    <a href="conference.html" class="nav-comp"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
-    <a href="comparateur.html" id="navCmp">Comparateur</a>
-  </nav>
-  <div class="header-right">
-    <span id="liveFlag" style="display:none"><span class="dot live"></span></span>
-    <div class="lang-switch" id="langSwitch"></div>
-  </div>
-</header>
 
 <main class="container sr-page">
+  <!-- Barre de navigation des trois coupes (topnav.css) -->
+  <div class="topbar">
+    <div class="tb-left">
+      <a class="dash-brand" href="soiree.html" aria-label="Soirée européenne"><span class="db-logo db-pict" aria-hidden="true">🌙</span></a>
+      <div class="lang-switch" id="langSwitch"></div>
+      <span id="liveFlag" style="display:none"><span class="dot live"></span></span>
+    </div>
+    <nav class="top-nav" aria-label="Navigation">
+      <a href="dashboard.html" class="nav-ghost nav-ucl"><img src="logo.svg?v=4" alt="" width="16" height="16"><span id="navUcl">Ligue des Champions</span></a>
+      <a href="europa.html" class="nav-ghost nav-uel"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
+      <a href="conference.html" class="nav-ghost nav-uecl"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+      <a href="soiree.html" class="nav-forward star-border" aria-current="page">🌙 <span id="navSr">Soirée européenne</span></a>
+      <a href="france.html" class="nav-ghost"><span class="fr-mini" aria-hidden="true"></span><span id="navFr">Clubs français</span></a>
+      <a href="comparateur.html" class="nav-ghost">⚖ <span id="navCmp">Comparateur</span></a>
+    </nav>
+  </div>
+
   <section class="fr-hero sr-hero">
     <h1 id="srTitle">Soirée européenne</h1>
     <p id="srSub">Tous les matchs du jour en Ligue des Champions, Europa League et Conference League.</p>
