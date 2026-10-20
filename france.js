@@ -1,11 +1,12 @@
 /* =========================================================================
-   france.js — Page « Clubs français en Europe » (france.html)
+   france.js — Pages « Clubs d'un pays en Europe » : france.html, et
+   allemagne.html, angleterre.html, espagne.html (window.LDC_COUNTRY).
    -------------------------------------------------------------------------
-   Les clubs français des trois coupes sur une page : matchs du jour (en
-   direct), carte de chaque club (place, bilan, forme, match en cours,
-   prochain ou dernier match), bilan commun de la saison, résultats récents
-   et prochaines affiches.
-   Clubs français : 36 qualifiés LDC (espn.js, pays UEFA) et pays des clubs
+   Les clubs du pays dans les trois coupes sur une page : matchs du jour (en
+   direct), carte de chaque club (place, bilan, score en direct ou dernier
+   résultat, forme, prochain match), bilan commun de la saison, résultats
+   récents et prochaines affiches.
+   Clubs du pays : 36 qualifiés LDC (espn.js, pays UEFA) et pays des clubs
    Europa / Conference League (cupclubs2026.js). Données : une instance ESPN
    par compétition (ESPN.forLeague). Clic : fiche club ou fiche de match.
    ========================================================================= */
@@ -26,15 +27,21 @@
     { slug:'uefa.europa', key:'uel', icon:'europa.svg?v=2', color:'#ff7a1a', page:'europa.html' },
     { slug:'uefa.europa.conf', key:'uecl', icon:'conference.svg?v=1', color:'#19c44f', page:'conference.html' }
   ];
+  /* Pays de la page (France par défaut) : code UEFA et libellés. */
+  var CY=window.LDC_COUNTRY||{ code:'FRA',
+    fr:{ title:'Clubs français en Europe', clubs:'clubs français', club:'club français' },
+    en:{ title:'French clubs in Europe', clubs:'French clubs', club:'French club' } };
+  function L(k){ return T(CY.fr[k], CY.en[k]); }
+  function cap(x){ return x.charAt(0).toUpperCase()+x.slice(1); }
   var DAY=86400000, timer=null;
   COMPS.forEach(function(c){ c.E=ESPN.forLeague(c.slug); c.matches=[]; c.standings=[]; c.ok=false; });
   function compName(c){ return T(c.E.COMP.fr,c.E.COMP.en); }
 
-  /* Ids des clubs français d'une compétition. */
+  /* Ids des clubs du pays dans une compétition. */
   function frenchIds(c){
-    if(c.key==='ucl') return c.E.qualifiedClubs().filter(function(x){ return x.country==='FRA'; }).map(function(x){ return String(x.id); });
+    if(c.key==='ucl') return c.E.qualifiedClubs().filter(function(x){ return x.country===CY.code; }).map(function(x){ return String(x.id); });
     var m=(window.LDCCupClubs2026||{})[c.slug]||{};
-    return Object.keys(m).filter(function(id){ return m[id]==='FRA'; });
+    return Object.keys(m).filter(function(id){ return m[id]===CY.code; });
   }
   function isFr(c,id){ return c.fr.indexOf(String(id))!==-1; }
   function frMatches(c){ return c.matches.filter(function(m){ return m.round!=='qualifying' && (isFr(c,m.home.teamId)||isFr(c,m.away.teamId)); }); }
@@ -88,17 +95,18 @@
   }
 
   function renderStatic(){
-    var X={ frBrand:['Clubs français en Europe','French clubs in Europe'], frTitle:['Clubs français en Europe','French clubs in Europe'],
-      navFr:['Clubs français','French clubs'], navSr:['Soirée européenne','European night'], navUcl:['Ligue des Champions','Champions League'], navCmp:['Comparateur','Compare clubs'],
-      frClubsT:['Les clubs','The clubs'], frTotT:['La saison des clubs français','The French clubs’ season'],
+    var X={ frTitle:[CY.fr.title,CY.en.title],
+      navFr:['France','France'], navDe:['Allemagne','Germany'], navEn:['Angleterre','England'], navEs:['Espagne','Spain'], navIt:['Italie','Italy'],
+      navSr:['Soirée européenne','European night'], navUcl:['Ligue des Champions','Champions League'], navCmp:['Comparateur','Compare clubs'],
+      frClubsT:['Les clubs','The clubs'], frTotT:['La saison des '+CY.fr.clubs,'The '+CY.en.clubs+'’ season'],
       frRecT:['Résultats des 7 derniers jours','Results, last 7 days'], frUpT:['Prochaines affiches','Coming up'] };
     Object.keys(X).forEach(function(id){ var n=el(id); if(n) n.textContent=T(X[id][0],X[id][1]); });
-    document.title=T('Clubs français en Europe','French clubs in Europe')+' — Tracker';
+    document.title=L('title')+' — Tracker';
   }
   function render(){
     renderStatic();
     var loaded=COMPS.filter(function(c){ return c.ok; });
-    el('frSub').textContent=T('Les clubs français des trois coupes d’Europe, en direct.','French clubs in the three European competitions, live.');
+    el('frSub').textContent=T('Les '+CY.fr.clubs+' des trois coupes d’Europe, en direct.',cap(CY.en.clubs)+' in the three European competitions, live.');
     /* Aujourd'hui (et en direct) */
     var now=Date.now(), today=new Date().toDateString(), todays=[], recent=[], upcoming=[];
     loaded.forEach(function(c){ frMatches(c).forEach(function(m){
@@ -110,7 +118,7 @@
     recent.sort(function(a,b){ return t(b[1])-t(a[1]); });
     upcoming.sort(function(a,b){ return t(a[1])-t(b[1]); });
     el('frToday').innerHTML=todays.length?todays.map(function(x){ return matchRow(x[0],x[1],false); }).join('')
-      :'<p class="fr-empty">'+esc(T('Pas de club français en coupe d’Europe aujourd’hui.','No French club in European action today.'))+(upcoming[0]?' '+esc(T('Prochain : ','Next: ')+upcoming[0][1].dateObj.toLocaleDateString(loc(),{weekday:'long',day:'numeric',month:'long'})):'')+'</p>';
+      :'<p class="fr-empty">'+esc(T('Pas de '+CY.fr.club+' en coupe d’Europe aujourd’hui.','No '+CY.en.club+' in European action today.'))+(upcoming[0]?' '+esc(T('Prochain : ','Next: ')+upcoming[0][1].dateObj.toLocaleDateString(loc(),{weekday:'long',day:'numeric',month:'long'})):'')+'</p>';
     el('frTodayT').textContent=todays.some(function(x){ return x[1].state==='in'; })?T('En direct et aujourd’hui','Live and today'):T('Aujourd’hui','Today');
     /* Clubs, par compétition */
     el('frClubs').innerHTML=COMPS.map(function(c){
