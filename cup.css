@@ -47,6 +47,12 @@ body{ background:var(--bg); }
 .nav a.nav-cup.to-uel:hover{ background:rgba(255,122,26,.16); border-color:rgba(255,122,26,.65); }
 .nav a.nav-cup.to-uecl{ background:rgba(25,196,79,.08); border-color:rgba(25,196,79,.36); }
 .nav a.nav-cup.to-uecl:hover{ background:rgba(25,196,79,.16); border-color:rgba(25,196,79,.65); }
+/* Entre 861 et 1365 px, l'autre coupe se réduit à son logo pour garder le
+   menu sur une ligne (le nom reste lu par les lecteurs d'écran). */
+@media (min-width:861px) and (max-width:1365px){
+  .nav a.nav-cup span{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .nav a.nav-cup{ padding-left:10px; padding-right:10px; }
+}
 
 /* ---- Bandeau d'accueil : titre géant à lettres animées (reactbits.css) --- */
 .cup-header{ display:grid; grid-template-columns:minmax(0,1fr) 240px; align-items:center; gap:24px; margin:8px 0 30px; position:relative; z-index:2; }
