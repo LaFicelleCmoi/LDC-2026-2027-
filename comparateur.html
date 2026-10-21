@@ -34,6 +34,7 @@
       <a href="europa.html" class="nav-ghost nav-uel"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
       <a href="conference.html" class="nav-ghost nav-uecl"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
       <a href="soiree.html" class="nav-ghost">🌙 <span id="navSr">Soirée européenne</span></a>
+      <a href="nations.html" class="nav-ghost">🌍 <span id="navNt">Club des Nations</span></a>
       <a href="france.html" class="nav-ghost"><span class="fr-mini" aria-hidden="true"></span><span id="navFr">France</span></a>
       <a href="allemagne.html" class="nav-ghost"><span class="fr-mini flag-de" aria-hidden="true"></span><span id="navDe">Allemagne</span></a>
       <a href="angleterre.html" class="nav-ghost"><span class="fr-mini flag-en" aria-hidden="true"></span><span id="navEn">Angleterre</span></a>
@@ -95,7 +96,7 @@
   (function(){ function s(){ var en=I18N.getLang()==='en';
     document.getElementById('navUcl').textContent=en?'Champions League':'Ligue des Champions';
     document.getElementById('navFr').textContent='France';
-    [['navDe','Germany','Allemagne'],['navEn','England','Angleterre'],['navEs','Spain','Espagne'],['navIt','Italy','Italie']].forEach(function(x){ var n=document.getElementById(x[0]); if(n) n.textContent=en?x[1]:x[2]; });
+    [['navNt','Club of Nations','Club des Nations'],['navDe','Germany','Allemagne'],['navEn','England','Angleterre'],['navEs','Spain','Espagne'],['navIt','Italy','Italie']].forEach(function(x){ var n=document.getElementById(x[0]); if(n) n.textContent=en?x[1]:x[2]; });
     document.getElementById('navSr').textContent=en?'European night':'Soirée européenne';
     document.getElementById('navCmp').textContent=en?'Compare clubs':'Comparateur';
     }
