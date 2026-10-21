@@ -1,0 +1,51 @@
+/* =========================================================================
+   nations.css — Page « Club des Nations » (nations.html), en complément de
+   france.css (bandeau, sections) : pages pays et classement des nations.
+   ========================================================================= */
+.nt-pages{ display:grid; grid-template-columns:repeat(auto-fill,minmax(205px,1fr)); gap:10px; }
+.nt-page{ position:relative; display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; text-decoration:none; color:var(--txt);
+  background:var(--card); border:1px solid var(--line-2); transition:border-color .15s, transform .15s; }
+.nt-page:hover{ border-color:rgba(var(--gold-rgb),.6); transform:translateY(-2px); }
+.nt-page:focus-visible{ outline:2px solid var(--fr-blue); outline-offset:2px; }
+.nt-pflag{ width:46px; height:46px; object-fit:contain; flex:none; filter:drop-shadow(0 3px 8px rgba(0,0,0,.45)); }
+.nt-ptxt{ display:flex; flex-direction:column; min-width:0; flex:1; }
+.nt-ptxt b{ font-size:15px; font-weight:900; color:#fff; }
+.nt-ptxt small{ font-size:11.5px; font-weight:700; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nt-pcoef{ margin-top:2px; }
+.nt-pcoef b{ font-family:var(--font-d); font-weight:400; font-size:16px; color:#fff; letter-spacing:.02em; }
+.nt-prank{ font-family:var(--font-d); font-size:30px; line-height:1; color:var(--fr-blue); }
+.nt-prank sup{ font-family:system-ui, sans-serif; font-size:11px; font-weight:800; vertical-align:12px; margin-left:1px; }
+.nt-plive{ position:absolute; top:-8px; right:10px; display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:999px;
+  font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:#fff; background:#d42a3c; }
+.nt-plive i, .nt-live{ width:6px; height:6px; border-radius:50%; background:#fff; animation:frPulse 1.4s ease-in-out infinite; }
+.nt-live{ display:inline-block; background:#ff3b46; margin-left:2px; }
+
+.nt-table-wrap{ overflow-x:auto; border-radius:14px; border:1px solid var(--line-2); background:var(--card); }
+.nt-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+.nt-table th{ padding:11px 10px; font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); text-align:left; border-bottom:1px solid var(--line-2); white-space:nowrap; }
+.nt-table td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+.nt-table tr:last-child td{ border-bottom:0; }
+.nt-table .c{ text-align:center; } .nt-table .r{ text-align:right; }
+.nt-table td.w{ color:#5fdc97; font-weight:800; } .nt-table td.l{ color:#ff8a95; font-weight:800; }
+.nt-table tbody tr:hover{ background:rgba(255,255,255,.03); }
+.nt-rk{ font-family:var(--font-d); font-size:19px; color:var(--muted); width:36px; }
+.nt-table tbody tr:nth-child(-n+3) .nt-rk{ color:var(--fr-blue); }
+.nt-name{ display:inline-flex; align-items:center; gap:9px; font-weight:800; color:#fff; white-space:nowrap; }
+.nt-table a{ color:inherit; text-decoration:none; }
+.nt-table tr.has-page a .nt-name span{ text-decoration:underline; text-decoration-color:rgba(var(--gold-rgb),.5); text-underline-offset:3px; }
+.nt-table tr.has-page a:hover .nt-name span{ color:var(--fr-blue); }
+.nt-flag{ width:26px; height:26px; object-fit:contain; flex:none; }
+.nt-clubs{ display:flex; flex-wrap:wrap; gap:4px; min-width:120px; }
+.nt-club{ width:28px; height:28px; padding:2px; border-radius:8px; border:1px solid var(--line-2); border-bottom:2px solid var(--c); background:rgba(255,255,255,.04); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+.nt-club:hover{ border-color:rgba(var(--gold-rgb),.6); border-bottom-color:var(--c); }
+.nt-club:focus-visible{ outline:2px solid var(--fr-blue); outline-offset:1px; }
+.nt-clogo{ width:20px; height:20px; object-fit:contain; }
+.nt-coef{ min-width:96px; }
+.nt-coef b{ font-family:var(--font-d); font-weight:400; font-size:20px; color:#fff; font-variant-numeric:tabular-nums; }
+.nt-bar{ display:block; height:4px; margin-top:4px; border-radius:2px; background:rgba(255,255,255,.07); overflow:hidden; }
+.nt-bar i{ display:block; height:100%; border-radius:2px; background:linear-gradient(90deg, rgba(var(--gold-rgb),.55), rgb(var(--gold-rgb))); }
+.nt-empty{ text-align:center; color:var(--muted); padding:18px; }
+.nt-note{ margin:10px 2px 0; font-size:12px; color:var(--muted-2, #6f7f96); line-height:1.5; }
+@media (max-width:860px){ .nt-table .hide-m{ display:none; } }
+@media (max-width:620px){ .nt-table .hide-s{ display:none; } .nt-table{ font-size:12.5px; } .nt-table td, .nt-table th{ padding:8px 6px; } .nt-clubs{ min-width:0; } }
+@media (prefers-reduced-motion:reduce){ .nt-plive i, .nt-live{ animation:none; } .nt-page:hover{ transform:none; } }
