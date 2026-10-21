@@ -35,6 +35,7 @@
 .nt-table tr.has-page a .nt-name span{ text-decoration:underline; text-decoration-color:rgba(var(--gold-rgb),.5); text-underline-offset:3px; }
 .nt-table tr.has-page a:hover .nt-name span{ color:var(--fr-blue); }
 .nt-flag{ width:26px; height:26px; object-fit:contain; flex:none; }
+.nt-ncount{ display:none; margin:2px 0 0 35px; font-size:11px; font-weight:700; color:var(--muted); }
 .nt-clubs{ display:flex; flex-wrap:wrap; gap:4px; min-width:120px; }
 .nt-club{ width:28px; height:28px; padding:2px; border-radius:8px; border:1px solid var(--line-2); border-bottom:2px solid var(--c); background:rgba(255,255,255,.04); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
 .nt-club:hover{ border-color:rgba(var(--gold-rgb),.6); border-bottom-color:var(--c); }
@@ -46,6 +47,29 @@
 .nt-bar i{ display:block; height:100%; border-radius:2px; background:linear-gradient(90deg, rgba(var(--gold-rgb),.55), rgb(var(--gold-rgb))); }
 .nt-empty{ text-align:center; color:var(--muted); padding:18px; }
 .nt-note{ margin:10px 2px 0; font-size:12px; color:var(--muted-2, #6f7f96); line-height:1.5; }
+/* La course des nations (bar chart race) */
+.nr-card{ padding:14px 16px 16px; border-radius:14px; border:1px solid var(--line-2); background:var(--card); }
+.nr-ctrl{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.nr-play{ width:40px; height:40px; flex:none; border-radius:50%; border:0; cursor:pointer; font-size:14px; font-weight:900; color:var(--tn-ink,#1a1300);
+  background:rgb(var(--gold-rgb)); box-shadow:0 0 0 0 rgba(var(--gold-rgb),.5); transition:transform .15s, box-shadow .3s; }
+.nr-play:hover{ transform:scale(1.07); }
+.nr-play.on{ box-shadow:0 0 0 6px rgba(var(--gold-rgb),.18); }
+.nr-play:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+.nr-range{ flex:1; min-width:0; accent-color:rgb(var(--gold-rgb)); }
+.nr-date{ flex:none; min-width:170px; text-align:right; font-family:var(--font-d); font-size:20px; letter-spacing:.03em; color:#fff; }
+.nr-race{ position:relative; overflow:hidden; }
+.nr-row{ position:absolute; left:0; right:0; top:0; height:32px; display:flex; align-items:center; gap:9px;
+  transition:transform .75s cubic-bezier(.22,1,.36,1), opacity .4s; will-change:transform; }
+.nr-row.off{ opacity:0; }
+.nr-rk{ width:22px; flex:none; text-align:right; font-family:var(--font-d); font-size:18px; color:var(--muted); }
+.nr-flag{ width:24px; height:24px; object-fit:contain; flex:none; }
+.nr-nm{ width:132px; flex:none; font-weight:800; font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nr-track{ flex:1; min-width:0; height:24px; }
+.nr-bar{ display:block; height:100%; border-radius:7px; background:linear-gradient(90deg, color-mix(in srgb, var(--nc) 45%, transparent), var(--nc));
+  box-shadow:0 0 18px color-mix(in srgb, var(--nc) 35%, transparent); transition:width .75s cubic-bezier(.22,1,.36,1); }
+.nr-val{ width:62px; flex:none; text-align:right; font-family:var(--font-d); font-weight:400; font-size:19px; color:#fff; font-variant-numeric:tabular-nums; }
+@media (max-width:560px){ .nr-nm{ width:84px; font-size:12px; } .nr-date{ min-width:0; font-size:16px; } .nr-val{ width:50px; font-size:16px; } }
+@media (prefers-reduced-motion:reduce){ .nr-row, .nr-bar{ transition:none; } }
 @media (max-width:860px){ .nt-table .hide-m{ display:none; } }
-@media (max-width:620px){ .nt-table .hide-s{ display:none; } .nt-table{ font-size:12.5px; } .nt-table td, .nt-table th{ padding:8px 6px; } .nt-clubs{ min-width:0; } }
+@media (max-width:620px){ .nt-table .hide-s{ display:none; } .nt-ncount{ display:block; } .nt-table{ font-size:12.5px; } .nt-table td, .nt-table th{ padding:8px 6px; } .nt-clubs{ min-width:0; } }
 @media (prefers-reduced-motion:reduce){ .nt-plive i, .nt-live{ animation:none; } .nt-page:hover{ transform:none; } }
