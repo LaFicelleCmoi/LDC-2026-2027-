@@ -241,3 +241,13 @@ footer.site-footer{
 .season-dd-menu a{ display:block; padding:9px 12px; border-radius:8px; font-size:13px; font-weight:600; color:var(--muted); white-space:nowrap; }
 .season-dd-menu a:hover{ background:var(--card); color:#fff; }
 .season-dd-menu a.active{ color:var(--upcoming); background:rgba(var(--gold-rgb,245,181,10),.1); }
+
+/* ===== Transitions entre les pages (View Transitions, même origine) =====
+   L'ancienne page s'efface, la nouvelle glisse en fondu ; rien si
+   prefers-reduced-motion (navigation instantanée, comme avant). */
+@view-transition{ navigation:auto; }
+::view-transition-old(root){ animation:ldcVtOut .22s ease-in both; }
+::view-transition-new(root){ animation:ldcVtIn .38s cubic-bezier(.22,1,.36,1) both; }
+@keyframes ldcVtOut{ to{ opacity:0; transform:scale(.985); } }
+@keyframes ldcVtIn{ from{ opacity:0; transform:translateY(12px); } }
+@media (prefers-reduced-motion:reduce){ @view-transition{ navigation:none; } }
