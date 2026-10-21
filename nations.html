@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="matchpanel.css?v=3" />
 <link rel="stylesheet" href="reactbits.css?v=1" />
 <link rel="stylesheet" href="france.css?v=7" />
-<link rel="stylesheet" href="nations.css?v=1" />
+<link rel="stylesheet" href="nations.css?v=2" />
 <link rel="stylesheet" href="topnav.css?v=3" />
 <link rel="stylesheet" href="pagebg.css?v=1" />
 <style>:root{ --pg-ball:url('nationsball.svg?v=1'); --pg-rgb:79,143,232; --pg-top:#101c3c; --pg-mid:#0a1128; --tn-accent:#f5b50a; --tn-ink:#1a1300;
@@ -65,12 +65,24 @@ body{ background-image:
     <div class="nt-pages" id="ntPages"></div>
   </section>
 
+  <section class="section" aria-labelledby="ntRaceT">
+    <div class="section-head"><h2 id="ntRaceT">La course des nations</h2><span class="sub" id="ntRaceSub"></span></div>
+    <div class="nr-card">
+      <div class="nr-ctrl">
+        <button type="button" class="nr-play" id="nrPlay" aria-label="Lecture"><span aria-hidden="true">▶</span></button>
+        <input type="range" class="nr-range" id="nrRange" min="0" max="0" value="0" aria-label="Journée">
+        <span class="nr-date" id="nrDate">—</span>
+      </div>
+      <div class="nr-race" id="nrRace" aria-live="off"></div>
+    </div>
+  </section>
+
   <section class="section" aria-labelledby="ntRankT">
     <div class="section-head"><h2 id="ntRankT">Classement des nations</h2></div>
     <div class="nt-table-wrap">
       <table class="nt-table">
         <thead><tr>
-          <th class="c">#</th><th id="thNation">Nation</th><th id="thClubs">Clubs</th>
+          <th class="c">#</th><th id="thNation">Nation</th><th class="hide-s" id="thClubs">Clubs</th>
           <th class="c hide-s" id="thPld">J</th><th class="c hide-s" id="thW">V</th><th class="c hide-s" id="thD">N</th><th class="c hide-s" id="thL">D</th>
           <th class="c hide-m" id="thG">Buts</th><th class="c" id="thPts">Pts</th><th class="r" id="thCoef">Coef.</th>
         </tr></thead>
@@ -99,6 +111,6 @@ body{ background-image:
 <script src="goalalert.js?v=1"></script>
 <script src="reactbits.js?v=1"></script>
 <script src="ui.js?v=2"></script>
-<script src="nations.js?v=1"></script>
+<script src="nations.js?v=2"></script>
 </body>
 </html>
