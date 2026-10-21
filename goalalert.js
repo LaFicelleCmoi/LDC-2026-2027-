@@ -93,7 +93,7 @@
     if (box) return;
     var css = document.createElement('style');
     css.textContent =
-      '.ga-box{position:fixed;left:16px;bottom:16px;z-index:130;display:flex;flex-direction:column;gap:10px;max-width:min(380px,calc(100vw - 32px));pointer-events:none}' +
+      '.ga-box{position:fixed;left:16px;bottom:74px;z-index:130;display:flex;flex-direction:column;gap:10px;max-width:min(380px,calc(100vw - 32px));pointer-events:none}' +
       '.ga-toast{pointer-events:auto;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#0d1426;color:#e6eaf5;' +
       'border:1px solid rgba(255,255,255,.14);border-left:4px solid var(--ga,#f5b50a);box-shadow:0 18px 40px rgba(0,0,0,.5);font:600 14px/1.35 system-ui,sans-serif;animation:gaIn .3s ease-out}' +
       '.ga-toast img{width:36px;height:36px;object-fit:contain;flex:none}.ga-toast b{display:block;color:#fff;font-size:15px}.ga-toast small{color:#9aa3c4;font-weight:600}' +
