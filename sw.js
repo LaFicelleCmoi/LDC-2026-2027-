@@ -7,11 +7,14 @@
      d'abord puis réseau.
    - API ESPN : réseau d'abord, copie en cache en secours (derniers scores
      hors ligne).
-   - Images ESPN (blasons, drapeaux) : cache d'abord, 400 au plus.
+   - Images ESPN (blasons, drapeaux) : NON interceptées. La CSP du site
+     (connect-src) n'autorise pas fetch() vers a.espncdn.com : les relayer
+     ici les bloquait toutes ; le navigateur les charge et les met en cache
+     lui-même (img-src l'autorise).
    Changer VERSION invalide les anciens caches.
    ========================================================================= */
-var VERSION = 'ldc-v1';
-var CORE = 'core-' + VERSION, PAGES = 'pages-' + VERSION, API = 'api-' + VERSION, IMG = 'img-' + VERSION;
+var VERSION = 'ldc-v2';
+var CORE = 'core-' + VERSION, PAGES = 'pages-' + VERSION, API = 'api-' + VERSION;
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(PAGES).then(function (c) { return c.addAll(['offline.html', 'icon-192.png']); }).then(function () { return self.skipWaiting(); }));
@@ -23,7 +26,6 @@ self.addEventListener('activate', function (e) {
 });
 
 function put(name, req, res) { if (res && (res.ok || res.type === 'opaque')) { var copy = res.clone(); caches.open(name).then(function (c) { c.put(req, copy); }); } return res; }
-function trim(name, max) { caches.open(name).then(function (c) { c.keys().then(function (ks) { if (ks.length > max) for (var i = 0; i < ks.length - max; i++) c.delete(ks[i]); }); }); }
 
 self.addEventListener('fetch', function (e) {
   var req = e.request; if (req.method !== 'GET') return;
@@ -43,8 +45,5 @@ self.addEventListener('fetch', function (e) {
   if (url.hostname === 'site.api.espn.com') {
     e.respondWith(fetch(req).then(function (res) { return put(API, req, res); }).catch(function () { return caches.match(req); }));
     return;
-  }
-  if (url.hostname === 'a.espncdn.com') {
-    e.respondWith(caches.match(req).then(function (r) { return r || fetch(req).then(function (res) { put(IMG, req, res); trim(IMG, 400); return res; }); }));
   }
 });
