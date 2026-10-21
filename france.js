@@ -96,7 +96,7 @@
 
   function renderStatic(){
     var X={ frTitle:[CY.fr.title,CY.en.title],
-      navFr:['France','France'], navDe:['Allemagne','Germany'], navEn:['Angleterre','England'], navEs:['Espagne','Spain'], navIt:['Italie','Italy'],
+      navNt:['Club des Nations','Club of Nations'], navFr:['France','France'], navDe:['Allemagne','Germany'], navEn:['Angleterre','England'], navEs:['Espagne','Spain'], navIt:['Italie','Italy'],
       navSr:['Soirée européenne','European night'], navUcl:['Ligue des Champions','Champions League'], navCmp:['Comparateur','Compare clubs'],
       frClubsT:['Les clubs','The clubs'], frTotT:['La saison des '+CY.fr.clubs,'The '+CY.en.clubs+'’ season'],
       frRecT:['Résultats des 7 derniers jours','Results, last 7 days'], frUpT:['Prochaines affiches','Coming up'] };
