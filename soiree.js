@@ -3,7 +3,8 @@
    -------------------------------------------------------------------------
    Tous les matchs d'un jour dans les trois coupes (Ligue des Champions,
    Europa League, Conference League), regroupés par heure de coup d'envoi,
-   matchs en cours en tête. Filtres : une coupe, ou les clubs français.
+   matchs en cours en tête. Filtres : une coupe, les clubs français ou mes
+   clubs (favoris des trois coupes, favs.js), qui ont aussi leur section en tête.
    Navigation de jour de match en jour de match. Rafraîchi toutes les 20 s
    pendant le direct (score qui clignote à chaque but). Clic : fiche du match.
    ========================================================================= */
@@ -36,7 +37,10 @@
   COMPS.forEach(function(c){ c.fr=french(c); });
   function all(){ var out=[]; COMPS.forEach(function(c){ c.matches.forEach(function(m){ if(m.round!=='qualifying' && m.dateObj) out.push({ c:c, m:m }); }); }); return out; }
   function isFr(x){ return x.c.fr.indexOf(String(x.m.home.teamId))!==-1 || x.c.fr.indexOf(String(x.m.away.teamId))!==-1; }
-  function keep(x){ return filter==='all' || (filter==='fr'?isFr(x):x.c.key===filter); }
+  function favSide(c,t){ return !!(window.LDCFavs && LDCFavs.isFav(c.slug, t.teamId)); }
+  function isFavM(x){ return favSide(x.c,x.m.home) || favSide(x.c,x.m.away); }
+  function hasFavs(){ return !!(window.LDCFavs && LDCFavs.list().length); }
+  function keep(x){ return filter==='all' || (filter==='fr'?isFr(x):filter==='fav'?isFavM(x):x.c.key===filter); }
 
   /* Jours de match (selon le filtre) et jour affiché par défaut : aujourd'hui
      s'il y a des matchs, sinon le prochain, sinon le dernier. */
@@ -57,9 +61,9 @@
     var mid = st==='pre' ? '<span class="fr-ko">'+hm(m.dateObj)+'</span>'
       : '<b class="fr-sc'+(st==='in'?' live':'')+(goal?' sr-goal':'')+'">'+m.home.score+' – '+m.away.score+'</b>'+
         '<span class="fr-min">'+esc(st==='in'?(/HT|Half/i.test(m.statusDetail)?T('MT','HT'):(m.displayClock||'')):(m.home.shootout!=null&&m.away.shootout!=null?T('t.a.b. ','pens ')+m.home.shootout+'–'+m.away.shootout:T('Terminé','FT')))+'</span>';
-    function side(t,cls){ var fr=c.fr.indexOf(String(t.teamId))!==-1;
-      return '<span class="fr-side '+cls+(fr?' fr':'')+'">'+(cls==='h'?'<span class="nm">'+esc(t.name)+'</span>'+crest(t.logo,'fr-mlogo'):crest(t.logo,'fr-mlogo')+'<span class="nm">'+esc(t.name)+'</span>')+'</span>'; }
-    return '<button type="button" class="fr-match sr-row'+(st==='in'?' is-live':'')+'" style="--c:'+c.color+'" data-mp-open="'+esc(m.id)+'" data-mp-league="'+c.slug+'" title="'+esc(T('Fiche du match','Match details'))+'">'+
+    function side(t,cls){ var fr=c.fr.indexOf(String(t.teamId))!==-1, fv=favSide(c,t), star=fv?LDCFavs.star():'';
+      return '<span class="fr-side '+cls+(fr||fv?' fr':'')+'">'+(cls==='h'?star+'<span class="nm">'+esc(t.name)+'</span>'+crest(t.logo,'fr-mlogo'):crest(t.logo,'fr-mlogo')+'<span class="nm">'+esc(t.name)+'</span>'+star)+'</span>'; }
+    return '<button type="button" class="fr-match sr-row'+(st==='in'?' is-live':'')+(isFavM(x)?' is-fav':'')+'" style="--c:'+c.color+'" data-mp-open="'+esc(m.id)+'" data-mp-league="'+c.slug+'" title="'+esc(T('Fiche du match','Match details'))+'">'+
       '<img class="fr-comp" src="'+c.icon+'" alt="'+esc(T(c.E.COMP.fr,c.E.COMP.en))+'" title="'+esc(T(c.E.COMP.fr,c.E.COMP.en))+'">'+side(m.home,'h')+'<span class="fr-mid">'+mid+'</span>'+side(m.away,'a')+'</button>';
   }
 
@@ -75,7 +79,11 @@
     list.sort(function(a,b){ return (a.m.dateObj-b.m.dateObj) || COMPS.indexOf(a.c)-COMPS.indexOf(b.c) || a.m.home.name.localeCompare(b.m.home.name); })
       .forEach(function(x){ var k=x.m.state==='in'?'live':hm(x.m.dateObj); if(!slots[k]){ slots[k]=[]; order.push(k); } slots[k].push(x); });
     order.sort(function(a,b){ return a==='live'?-1:(b==='live'?1:a.localeCompare(b)); });
-    el('srList').innerHTML=order.length?order.map(function(k){
+    /* Mes clubs (favoris des trois coupes) : leurs matchs du jour en tête. */
+    var mine=filter==='fav'?[]:list.filter(isFavM);
+    var favSlot=mine.length?'<section class="sr-slot sr-fav"><h2 class="sr-h"><span class="sr-favh">★ '+esc(T('Tes clubs','Your clubs'))+'</span><small>'+mine.length+' '+esc(T('match'+(mine.length>1?'s':''),'match'+(mine.length>1?'es':'')))+'</small></h2><div class="fr-list">'+mine.map(row).join('')+'</div></section>':'';
+    mine.forEach(function(x){ lastScores[x.m.id]=x.m.home.score+'-'+x.m.away.score; });
+    el('srList').innerHTML=order.length?favSlot+order.map(function(k){
       var head=k==='live'?'<span class="sr-live"><i></i>'+esc(T('En direct','Live'))+'</span>':esc(k);
       var byComp={}; slots[k].forEach(function(x){ byComp[x.c.key]=(byComp[x.c.key]||0)+1; });
       return '<section class="sr-slot"><h2 class="sr-h">'+head+'<small>'+slots[k].length+' '+esc(T('match'+(slots[k].length>1?'s':''),'match'+(slots[k].length>1?'es':'')))+'</small></h2>'+
@@ -93,7 +101,8 @@
     var X={ srTitle:['Soirée européenne','European night'], srSub:['Tous les matchs du jour en Ligue des Champions, Europa League et Conference League.','Every match of the day in the Champions League, Europa League and Conference League.'],
       navSr:['Soirée européenne','European night'], navNt:['Club des Nations','Club of Nations'], navFr:['France','France'], navDe:['Allemagne','Germany'], navEn:['Angleterre','England'], navEs:['Espagne','Spain'], navIt:['Italie','Italy'], navCmp:['Comparateur','Compare clubs'], navUcl:['Ligue des Champions','Champions League'] };
     Object.keys(X).forEach(function(k){ var n=el(k); if(n) n.textContent=T(X[k][0],X[k][1]); });
-    var lab={ all:T('Toutes','All'), ucl:'LDC', uel:'Europa League', uecl:'Conference League', fr:T('Clubs français','French clubs') };
+    var lab={ all:T('Toutes','All'), ucl:'LDC', uel:'Europa League', uecl:'Conference League', fr:T('Clubs français','French clubs'), fav:T('Mes clubs','My clubs') };
+    var fc=document.querySelector('.sr-chip-fav'); if(fc) fc.hidden=!hasFavs();
     Array.prototype.forEach.call(document.querySelectorAll('.sr-chip'),function(b){ b.querySelector('span').textContent=lab[b.getAttribute('data-f')]; });
     el('srPrev').setAttribute('aria-label',T('Jour de match précédent','Previous match day')); el('srNext').setAttribute('aria-label',T('Jour de match suivant','Next match day'));
     document.title=T('Soirée européenne','European night')+' — Tracker';
