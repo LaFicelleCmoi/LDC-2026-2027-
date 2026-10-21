@@ -38,6 +38,7 @@
   function cname(code){ var n=NAMES[code]; return n?T(n[0],n[1]):code; }
   function flag(code,cls){ return '<img class="'+cls+'" src="https://a.espncdn.com/i/teamlogos/countries/500/'+esc(code.toLowerCase())+'.png" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'; }
   function crest(src,cls){ return src?'<img class="'+cls+'" src="'+esc(src)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="'+cls+'"></span>'; }
+  function isFav(c,id){ return !!(window.LDCFavs && LDCFavs.isFav(c.slug,id)); }
   function f3(x){ return x.toLocaleString(loc(),{ minimumFractionDigits:3, maximumFractionDigits:3 }); }
 
   /* Pays de chaque club, par compétition : { teamId: code }. */
@@ -56,7 +57,7 @@
       /* clubs engagés : tous ceux du pays dans la phase de ligue */
       c.matches.forEach(function(m){ if(m.round==='qualifying') return; [m.home,m.away].forEach(function(t){
         var id=String(t.teamId), code=map[id]; if(!code || seen[id]) return; seen[id]=1;
-        var n=nat(code); n.clubs.push({ id:id, name:t.name, logo:t.logo, comp:c }); n.comps[c.key]=(n.comps[c.key]||0)+1;
+        var n=nat(code), fv=isFav(c,id); n.clubs.push({ id:id, name:t.name, logo:t.logo, comp:c, fav:fv }); n.comps[c.key]=(n.comps[c.key]||0)+1; if(fv) n.fav=true;
       }); });
       c.matches.forEach(function(m){
         if(m.round==='qualifying') return;
@@ -95,7 +96,7 @@
     /* Pages pays : drapeau, rang, coefficient, clubs, direct */
     el('ntPages').innerHTML=Object.keys(PAGES).map(function(code){
       var n=arr.filter(function(x){ return x.code===code; })[0];
-      return '<a class="nt-page" href="'+PAGES[code]+'">'+flag(code,'nt-pflag')+
+      return '<a class="nt-page" href="'+PAGES[code]+'">'+(n&&n.fav&&window.LDCFavs?LDCFavs.badge():'')+flag(code,'nt-pflag')+
         '<span class="nt-ptxt"><b>'+esc(cname(code))+'</b><small>'+(n?esc(n.clubs.length+' '+T('clubs','clubs')):'—')+'</small>'+
           (n?'<small class="nt-pcoef">'+esc(T('Coef. ','Coef. '))+'<b>'+f3(n.coef)+'</b></small>':'')+'</span>'+
         (n?'<span class="nt-prank">'+n.rank+'<sup>'+esc(en()?(n.rank===1?'st':n.rank===2?'nd':n.rank===3?'rd':'th'):(n.rank===1?'er':'e'))+'</sup></span>':'')+
@@ -106,10 +107,10 @@
     var maxCoef=arr[0].coef||1;
     el('ntBody').innerHTML=arr.map(function(n){
       var page=PAGES[n.code];
-      var clubs=n.clubs.map(function(x){ return '<button type="button" class="nt-club" data-club="'+esc(x.id)+'" data-comp="'+x.comp.key+'" title="'+esc(x.name+' · '+T(x.comp.E.COMP.fr,x.comp.E.COMP.en))+'" aria-label="'+esc(T('Fiche du club : ','Club card: ')+x.name)+'" style="--c:'+x.comp.color+'">'+crest(x.logo,'nt-clogo')+'</button>'; }).join('');
-      var name='<span class="nt-name">'+flag(n.code,'nt-flag')+'<span>'+esc(cname(n.code))+'</span>'+(n.live?'<i class="nt-live" title="'+esc(T('Match en direct','Live match'))+'"></i>':'')+'</span>'+
+      var clubs=n.clubs.slice().sort(function(a,b){ return b.fav-a.fav; }).map(function(x){ return '<button type="button" class="nt-club'+(x.fav?' is-fav':'')+'" data-club="'+esc(x.id)+'" data-comp="'+x.comp.key+'" title="'+esc(x.name+' · '+T(x.comp.E.COMP.fr,x.comp.E.COMP.en))+'" aria-label="'+esc(T('Fiche du club : ','Club card: ')+x.name)+'" style="--c:'+x.comp.color+'">'+crest(x.logo,'nt-clogo')+'</button>'; }).join('');
+      var name='<span class="nt-name">'+flag(n.code,'nt-flag')+'<span>'+esc(cname(n.code))+'</span>'+(n.fav?'<span class="fav-star" style="color:#f5b50a" title="'+esc(T('Pays de mon club','My club’s country'))+'">★</span>':'')+(n.live?'<i class="nt-live" title="'+esc(T('Match en direct','Live match'))+'"></i>':'')+'</span>'+
         '<small class="nt-ncount">'+esc(n.clubs.length+' '+T(n.clubs.length>1?'clubs':'club',n.clubs.length>1?'clubs':'club'))+'</small>';
-      return '<tr'+(page?' class="has-page"':'')+'>'+
+      return '<tr class="'+(page?'has-page':'')+(n.fav?' is-fav':'')+'">'+
         '<td class="c nt-rk">'+n.rank+'</td>'+
         '<td>'+(page?'<a href="'+page+'">'+name+'</a>':name)+'</td>'+
         '<td class="hide-s"><span class="nt-clubs">'+clubs+'</span></td>'+
