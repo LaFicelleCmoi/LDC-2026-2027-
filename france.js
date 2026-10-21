@@ -44,6 +44,8 @@
     return Object.keys(m).filter(function(id){ return m[id]===CY.code; });
   }
   function isFr(c,id){ return c.fr.indexOf(String(id))!==-1; }
+  /* Club favori de la coupe (favs.js) : carte en tête, liseré doré, badge. */
+  function isFav(c,id){ return !!(window.LDCFavs && LDCFavs.isFav(c.slug,id)); }
   function frMatches(c){ return c.matches.filter(function(m){ return m.round!=='qualifying' && (isFr(c,m.home.teamId)||isFr(c,m.away.teamId)); }); }
   function t(m){ return m.dateObj?m.dateObj.getTime():0; }
   function ordinal(n){ return n+(en()?(n===1?'st':n===2?'nd':n===3?'rd':'th'):(n===1?'er':'e')); }
@@ -54,8 +56,9 @@
     var st=m.state, score;
     if(st==='pre') score='<span class="fr-ko">'+esc(withDate?m.dateObj.toLocaleDateString(loc(),{weekday:'short',day:'numeric',month:'short'})+' · '+hm(m.dateObj):hm(m.dateObj))+'</span>';
     else score='<b class="fr-sc'+(st==='in'?' live':'')+'">'+m.home.score+' – '+m.away.score+'</b>'+(st==='in'?'<span class="fr-min">'+esc(/HT|Half/i.test(m.statusDetail)?T('MT','HT'):(m.displayClock||''))+'</span>':(withDate?'<span class="fr-min">'+esc(m.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'}))+'</span>':''));
-    function side(x,cls){ return '<span class="fr-side '+cls+(isFr(c,x.teamId)?' fr':'')+'">'+(cls==='h'?'<span class="nm">'+esc(x.name)+'</span>'+crest(x.logo,'fr-mlogo'):crest(x.logo,'fr-mlogo')+'<span class="nm">'+esc(x.name)+'</span>')+'</span>'; }
-    return '<button type="button" class="fr-match'+(st==='in'?' is-live':'')+'" data-mp-open="'+esc(m.id)+'" data-mp-league="'+c.slug+'" title="'+esc(T('Fiche du match','Match details'))+'">'+
+    function side(x,cls){ var star=isFav(c,x.teamId)?LDCFavs.star():''; return '<span class="fr-side '+cls+(isFr(c,x.teamId)?' fr':'')+'">'+(cls==='h'?star+'<span class="nm">'+esc(x.name)+'</span>'+crest(x.logo,'fr-mlogo'):crest(x.logo,'fr-mlogo')+'<span class="nm">'+esc(x.name)+'</span>'+star)+'</span>'; }
+    var fv=isFav(c,m.home.teamId)||isFav(c,m.away.teamId);
+    return '<button type="button" class="fr-match'+(st==='in'?' is-live':'')+(fv?' is-fav':'')+'" data-mp-open="'+esc(m.id)+'" data-mp-league="'+c.slug+'" title="'+esc(T('Fiche du match','Match details'))+'">'+
       '<img class="fr-comp" src="'+c.icon+'" alt="'+esc(compName(c))+'" title="'+esc(compName(c))+'">'+side(m.home,'h')+'<span class="fr-mid">'+score+'</span>'+side(m.away,'a')+'</button>';
   }
 
@@ -82,10 +85,11 @@
         (lv?'<span class="fr-ldot" aria-hidden="true"></span>':'')+sc+(min?'<small>'+esc(min)+'</small>':'')+'</span>';
     }
     var form=d.played.filter(function(x){ return x.result; }).slice(0,5).reverse().map(function(x){ return '<span class="cp-badge '+x.result+'">'+(x.result==='w'?T('V','W'):x.result==='d'?T('N','D'):T('D','L'))+'</span>'; }).join('');
-    return '<article class="fr-card" style="--c:'+c.color+'">'+
+    var fv=isFav(c,id);
+    return '<article class="fr-card'+(fv?' is-fav':'')+'" style="--c:'+c.color+'">'+
       '<button type="button" class="fr-card-main" data-club="'+esc(id)+'" data-comp="'+c.key+'" aria-label="'+esc(T('Fiche du club : ','Club card: ')+team.name)+'">'+
         crest(team.logo,'fr-crest')+
-        '<span class="fr-ctxt"><span class="fr-cname">'+esc(team.name)+'</span>'+
+        '<span class="fr-ctxt"><span class="fr-cname">'+(fv?'<span class="fav-star" title="'+esc(T('Mon club','My club'))+'">★</span> ':'')+esc(team.name)+'</span>'+
           '<span class="fr-ccomp"><img src="'+c.icon+'" alt="">'+esc(compName(c))+'</span></span>'+
         (st?'<span class="fr-rank"><b>'+st.rank+'<sup>'+esc(ordinal(st.rank).replace(/^\d+/,''))+'</sup></b><small>'+st.pts+' pts · '+esc(zone)+'</small></span>':'')+
       '</button>'+
@@ -123,7 +127,7 @@
     /* Clubs, par compétition */
     el('frClubs').innerHTML=COMPS.map(function(c){
       if(!c.ok) return '';
-      return c.fr.map(function(id){ return clubCard(c,id); }).join('');
+      return c.fr.slice().sort(function(a,b){ return isFav(c,b)-isFav(c,a); }).map(function(id){ return clubCard(c,id); }).join('');
     }).join('') || '<p class="fr-empty">'+esc(I18N.t('common.loading')||'…')+'</p>';
     /* Bilan commun */
     var tot={ pld:0, w:0, d:0, l:0, gf:0, ga:0 };
