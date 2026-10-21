@@ -105,9 +105,9 @@
     var clock = st==='pre'
       ? '<span class="live-card-clock live-countdown"'+(m.dateObj?' data-kickoff="'+m.dateObj.getTime()+'"':'')+'>'+esc(upcomingWhen(m.dateObj))+'</span>'
       : '<span class="live-card-clock">'+clockHTML(m)+'</span>';
-    return '<article class="live-card state-'+st+' '+size+(hasFav?' has-fav':'')+(st==='pre'?' can-sim':'')+(sims[m.id]?' is-simmed':'')+'" data-id="'+esc(m.id)+'" style="animation-delay:'+(0.03+Math.min(i,12)*0.04).toFixed(2)+'s">'+
+    return '<article class="live-card state-'+st+' '+size+(hasFav?' has-fav is-fav':'')+(st==='pre'?' can-sim':'')+(sims[m.id]?' is-simmed':'')+'" data-id="'+esc(m.id)+'" style="animation-delay:'+(0.03+Math.min(i,12)*0.04).toFixed(2)+'s">'+
       '<div class="live-shimmer"></div>'+
-      '<div class="live-card-status"><span class="live-status-pill state-'+st+'"><span class="live-dot"></span> '+esc(lbl)+'</span>'+clock+'</div>'+
+      '<div class="live-card-status"><span><span class="live-status-pill state-'+st+'"><span class="live-dot"></span> '+esc(lbl)+'</span>'+(hasFav?'<span class="lc-fav">★ '+esc(T('MON CLUB','MY CLUB'))+'</span>':'')+'</span>'+clock+'</div>'+
       '<div class="live-card-teams">'+row(m.home)+row(m.away)+'</div>'+
       '<div class="live-card-footer"><span class="lc-foot-l">'+(window.LDCMatchPanel?'<button type="button" class="mp-open-btn" data-mp-open="'+esc(m.id)+'">📋 '+esc(T('Fiche du match','Match details'))+'</button>':'')+
         (pen?'<span class="live-pen">'+esc(I18N.t('common.pen'))+' '+m.home.shootout+'–'+m.away.shootout+'</span>':'')+'</span>'+
@@ -129,13 +129,16 @@
       : first.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'})+' – '+last.dateObj.toLocaleDateString(loc(),{day:'numeric',month:'short'});
     el('mdLabel').innerHTML=esc(T(g.label[0],g.label[1]))+'<span class="md-dates">'+esc(range)+'</span>';
     el('mdPrev').disabled=cur<=0; el('mdNext').disabled=cur>=groups.length-1;
-    /* Un bloc par jour ; dans chaque jour, les matchs en cours d'abord (la
-       grande carte), puis l'ordre des coups d'envoi. */
+    /* Un bloc par jour ; dans chaque jour, le match du club favori d'abord
+       (la grande carte, comme sur l'accueil LDC), puis les matchs en cours,
+       puis l'ordre des coups d'envoi. */
+    var fvid=favId();
+    function isFavM(m){ return fvid && (String(m.home.teamId)===fvid || String(m.away.teamId)===fvid) ? 1 : 0; }
     var days=[], byDay={};
     ms.forEach(function(m){ var k=dayKey(m); if(!byDay[k]){ byDay[k]=[]; days.push(k); } byDay[k].push(m); });
     var html='', multi=days.length>1;
     days.forEach(function(k){
-      var list=byDay[k].slice().sort(function(a,b){ return (b.state==='in')-(a.state==='in') || t(a)-t(b) || a.home.name.localeCompare(b.home.name); });
+      var list=byDay[k].slice().sort(function(a,b){ return (isFavM(b)-isFavM(a)) || (b.state==='in')-(a.state==='in') || t(a)-t(b) || a.home.name.localeCompare(b.home.name); });
       if(multi) html+='<h3 class="lc-day">'+esc(dayTitle(list[0]))+'</h3>';
       list.forEach(function(m,i){ html+=card(m, sizeFor(i,list.length), i); });
     });
