@@ -12,11 +12,14 @@
    - plusieurs onglets ouverts : un seul prévient (dernier état connu de
      chaque match partagé dans localStorage) ;
    - à l'ouverture de la page en plein match, le score courant est noté sans
-     alerte : seules les nouveautés sont signalées.
+     alerte : seules les nouveautés sont signalées ;
+   - but du club favori, page visible : flash « BUT ! » plein écran (blason,
+     score, buteur, confettis via reactbits.js si chargé), 4 s, fermeture au
+     clic ou avec Échap ; sobre si prefers-reduced-motion.
    Rythme : toutes les 30 s pendant le match (et dans les 20 min qui le
    précèdent), sinon réveil 15 min avant le coup d'envoi, sinon toutes les
    30 min.
-   API : window.LDCGoalAlerts = { COMPS, isOn, toggle, diff, refresh }
+   API : window.LDCGoalAlerts = { COMPS, isOn, toggle, diff, refresh, splash }
    ========================================================================= */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(null);
@@ -96,7 +99,28 @@
       '.ga-toast img{width:36px;height:36px;object-fit:contain;flex:none}.ga-toast b{display:block;color:#fff;font-size:15px}.ga-toast small{color:#9aa3c4;font-weight:600}' +
       '.ga-toast button{margin-left:auto;align-self:flex-start;border:0;background:none;color:#9aa3c4;font-size:18px;cursor:pointer;line-height:1}' +
       '@keyframes gaIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}' +
-      '@media (prefers-reduced-motion:reduce){.ga-toast{animation:none}}';
+      '@media (prefers-reduced-motion:reduce){.ga-toast{animation:none}}' +
+      /* Flash « BUT ! » plein écran (sous les confettis de reactbits.js, z-index 999) */
+      '.ga-splash{position:fixed;inset:0;z-index:990;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;overflow:hidden;' +
+      'background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--ga,#f5b50a) 42%,transparent),rgba(4,7,16,.92) 62%);backdrop-filter:blur(3px);animation:gaFade .35s ease-out;font-family:system-ui,sans-serif;color:#fff;text-align:center}' +
+      '.ga-splash.out{animation:gaOut .45s ease-in forwards}' +
+      '.ga-ring{position:absolute;left:50%;top:45%;width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;border:3px solid var(--ga,#f5b50a);opacity:0;animation:gaRing 1.6s ease-out infinite}' +
+      '.ga-ring.r2{animation-delay:.5s}.ga-ring.r3{animation-delay:1s}' +
+      '.ga-crest{position:relative;width:132px;height:132px;object-fit:contain;filter:drop-shadow(0 14px 34px rgba(0,0,0,.6));animation:gaPop .7s cubic-bezier(.34,1.56,.64,1) both}' +
+      '.ga-word{position:relative;font:400 clamp(84px,19vw,210px)/.86 "Bebas Neue",Impact,sans-serif;letter-spacing:.04em;color:#fff;text-shadow:0 0 40px var(--ga,#f5b50a),0 10px 40px rgba(0,0,0,.6);animation:gaZoom .8s cubic-bezier(.34,1.56,.64,1) .08s both}' +
+      '.ga-team{position:relative;font:900 clamp(18px,3.2vw,28px)/1.1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;animation:gaUp .5s ease-out .3s both}' +
+      '.ga-score{position:relative;display:flex;align-items:center;gap:14px;margin-top:6px;padding:10px 20px;border-radius:16px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.16);animation:gaUp .5s ease-out .42s both}' +
+      '.ga-score img{width:34px;height:34px;object-fit:contain}.ga-score span{font-weight:800;font-size:15px;max-width:30vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.ga-score b{font:400 38px/1 "Bebas Neue",Impact,sans-serif;letter-spacing:.04em;color:#fff;white-space:nowrap}' +
+      '.ga-who{position:relative;font-weight:700;font-size:15px;color:rgba(255,255,255,.85);animation:gaUp .5s ease-out .55s both}' +
+      '.ga-hint{position:absolute;bottom:22px;font-size:12px;color:rgba(255,255,255,.5)}' +
+      '@keyframes gaFade{from{opacity:0}to{opacity:1}}@keyframes gaOut{to{opacity:0;transform:scale(1.04)}}' +
+      '@keyframes gaRing{0%{opacity:.7;transform:scale(.4)}100%{opacity:0;transform:scale(4.2)}}' +
+      '@keyframes gaPop{from{opacity:0;transform:scale(.2) rotate(-25deg)}to{opacity:1;transform:none}}' +
+      '@keyframes gaZoom{from{opacity:0;transform:scale(2.6);letter-spacing:.4em}to{opacity:1;transform:none}}' +
+      '@keyframes gaUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}' +
+      '@media (prefers-reduced-motion:reduce){.ga-splash,.ga-splash.out,.ga-crest,.ga-word,.ga-team,.ga-score,.ga-who{animation:none}.ga-ring{display:none}}' +
+      '@media (max-width:560px){.ga-crest{width:96px;height:96px}.ga-score b{font-size:30px}.ga-score img{width:26px;height:26px}}';
     document.head.appendChild(css);
     box = document.createElement('div');
     box.className = 'ga-box'; box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite');
@@ -113,6 +137,37 @@
     /* Onglet masqué sans notifications : le bandeau attend le retour. */
     if (!document.hidden) setTimeout(function () { el.remove(); }, 12000);
   }
+  /* Flash « BUT ! » plein écran. d : { color, crest, team, home:{name,logo,score},
+     away:{…}, who, minute, comp }. */
+  var splashEl = null;
+  function splash(d) {
+    if (!document.body) return;
+    ensureBox();
+    if (splashEl) splashEl.remove();
+    var el = document.createElement('div');
+    el.className = 'ga-splash'; el.setAttribute('role', 'alert');
+    if (d.color) el.style.setProperty('--ga', d.color);
+    var OE = ' onerror="this.style.display=\'none\'"';
+    function side(x) { return (x.logo ? '<img src="' + esc(x.logo) + '" alt=""' + OE + '>' : '') + '<span>' + esc(x.name) + '</span>'; }
+    el.innerHTML = '<i class="ga-ring"></i><i class="ga-ring r2"></i><i class="ga-ring r3"></i>' +
+      (d.crest ? '<img class="ga-crest" src="' + esc(d.crest) + '" alt=""' + OE + '>' : '') +
+      '<div class="ga-word">' + esc(T('BUT !', 'GOAL!')) + '</div>' +
+      '<div class="ga-team">' + esc(d.team || '') + '</div>' +
+      (d.home ? '<div class="ga-score">' + side(d.home) + '<b>' + esc(d.home.score + ' – ' + d.away.score) + '</b>' + side(d.away) + '</div>' : '') +
+      ((d.who || d.minute) ? '<div class="ga-who">⚽ ' + esc((d.who || '') + (d.minute ? ' · ' + d.minute : '')) + '</div>' : '') +
+      '<div class="ga-hint">' + esc((d.comp ? d.comp + ' · ' : '') + T('touchez pour fermer', 'tap to close')) + '</div>';
+    document.body.appendChild(el); splashEl = el;
+    var gone = false;
+    function close() { if (gone) return; gone = true; document.removeEventListener('keydown', onKey, true); el.classList.add('out'); setTimeout(function () { el.remove(); if (splashEl === el) splashEl = null; }, 450); }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    el.addEventListener('click', close);
+    document.addEventListener('keydown', onKey, true);
+    setTimeout(close, 4200);
+    try { if (global.RB && RB.confetti && !RB.reduce) { RB.confetti.champion(); } } catch (e) {}
+    try { if (navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch (e) {}
+  }
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
   function notify(t, color) {
     if (!document.hidden || notifState() !== 'granted') toast(t, color);
     if (notifState() === 'granted' && document.hidden) {
@@ -179,6 +234,11 @@
               return scorer(E, m.id, msg.goalTeam).then(function (s) {
                 if (s && s.who) msg.body += ' · ' + s.who + (s.own ? T(' (csc)', ' (og)') : '') + (s.minute ? ' ' + s.minute : '');
                 notify(msg, color);
+                /* But du club favori, page visible : flash plein écran. */
+                if (ev.mine && !document.hidden) splash({ color: color || null, crest: fav.logo || '', team: fav.name, comp: msg.comp,
+                  home: { name: m.home.shortName || m.home.name, logo: m.home.logo, score: m.home.score },
+                  away: { name: m.away.shortName || m.away.name, logo: m.away.logo, score: m.away.score },
+                  who: s && s.who ? s.who + (s.own ? T(' (csc)', ' (og)') : '') : '', minute: s && s.minute || (m.displayClock || '') });
               });
             });
           });
@@ -193,7 +253,7 @@
   }
   function schedule(ms) { clearTimeout(timer); timer = setTimeout(tick, ms); }
 
-  api.isOn = isOn; api.toggle = toggle; api.hint = hint; api.refresh = function () { schedule(500); };
+  api.isOn = isOn; api.toggle = toggle; api.hint = hint; api.refresh = function () { schedule(500); }; api.splash = splash;
   /* Démarrage discret, après le chargement de la page. */
   if (document.readyState === 'complete') schedule(2000); else global.addEventListener('load', function () { schedule(2000); });
   document.addEventListener('visibilitychange', function () { if (!document.hidden) schedule(1500); });
