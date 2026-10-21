@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hors ligne — Tracker</title>
+<meta name="theme-color" content="#081027">
+<link rel="icon" href="logo.svg?v=4" type="image/svg+xml" />
+<style>
+  body{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; box-sizing:border-box;
+    font-family:system-ui,"Segoe UI",Roboto,sans-serif; color:#e6eaf5; text-align:center;
+    background:radial-gradient(60% 50% at 50% 20%, rgba(59,123,255,.22), transparent 70%), linear-gradient(180deg,#0e1736,#05070f); }
+  .box{ max-width:420px; }
+  .ball{ font-size:64px; animation:b 1.6s ease-in-out infinite; }
+  @keyframes b{ 50%{ transform:translateY(-14px) rotate(180deg); } }
+  h1{ margin:16px 0 8px; font-size:26px; }
+  p{ margin:0 0 20px; color:#9aa3c4; line-height:1.5; }
+  button{ padding:12px 22px; border:0; border-radius:12px; font:800 14px system-ui,sans-serif; color:#1a1300; background:#f5b50a; cursor:pointer; }
+  @media (prefers-reduced-motion:reduce){ .ball{ animation:none; } }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="ball" aria-hidden="true">⚽</div>
+    <h1>Pas de connexion</h1>
+    <p>Cette page n'a pas encore été ouverte sur cet appareil. Les pages déjà visitées restent consultables, avec les derniers scores connus.</p>
+    <button type="button" onclick="location.reload()">Réessayer</button>
+  </div>
+</body>
+</html>
