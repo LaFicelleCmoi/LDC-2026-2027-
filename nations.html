@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Club des Nations — Tracker</title>
+<meta name="description" content="Club des Nations : le classement des pays sur la saison de Ligue des Champions, Europa League et Conference League, et leurs clubs. Projet de fan non officiel, données ESPN." />
+<link rel="icon" href="logo.svg?v=4" type="image/svg+xml" />
+<link rel="preconnect" href="https://site.api.espn.com" />
+<link rel="preconnect" href="https://a.espncdn.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800;900&display=swap" />
+<link rel="stylesheet" href="styles.css?v=21" />
+<link rel="stylesheet" href="clubpanel.css?v=8" />
+<link rel="stylesheet" href="matchpanel.css?v=3" />
+<link rel="stylesheet" href="reactbits.css?v=1" />
+<link rel="stylesheet" href="france.css?v=7" />
+<link rel="stylesheet" href="nations.css?v=1" />
+<link rel="stylesheet" href="topnav.css?v=3" />
+<link rel="stylesheet" href="pagebg.css?v=1" />
+<style>:root{ --pg-ball:url('nationsball.svg?v=1'); --pg-rgb:79,143,232; --pg-top:#101c3c; --pg-mid:#0a1128; --tn-accent:#f5b50a; --tn-ink:#1a1300;
+  --ct-rgb:245, 181, 10; --flag-bar:linear-gradient(180deg,#f5b50a 0 33.3%,#ff7a1a 33.3% 66.6%,#19c44f 66.6%); }
+/* Fond : nuit bleue de l'Europe, halo doré en haut (étoiles de l'Europe). */
+body{ background-image:
+    radial-gradient(130% 92% at 50% 36%, transparent 52%, rgba(2,4,12,.55) 100%),
+    radial-gradient(60% 45% at 50% 0%, rgba(245,181,10,.12), transparent 72%),
+    radial-gradient(55% 70% at 0% 40%, rgba(47,99,224,.28), transparent 72%),
+    radial-gradient(55% 70% at 100% 40%, rgba(47,99,224,.22), transparent 72%),
+    linear-gradient(180deg, #101c3c 0%, #0a1128 58%, #05070f 100%); }
+</style>
+</head>
+<body>
+<canvas id="starfield" data-rb aria-hidden="true"></canvas>
+
+<main class="container">
+  <!-- Barre de navigation des trois coupes (topnav.css) -->
+  <div class="topbar">
+    <div class="tb-left">
+      <a class="dash-brand" href="nations.html" aria-label="Club des Nations"><span class="db-logo db-pict" aria-hidden="true">🌍</span></a>
+      <div class="lang-switch" id="langSwitch"></div>
+    </div>
+    <nav class="top-nav" aria-label="Navigation">
+      <a href="dashboard.html" class="nav-ghost nav-ucl"><img src="logo.svg?v=4" alt="" width="16" height="16"><span id="navUcl">Ligue des Champions</span></a>
+      <a href="europa.html" class="nav-ghost nav-uel"><img src="europa.svg?v=2" alt="" width="16" height="16"><span data-i18n="nav.uel">Europa League</span></a>
+      <a href="conference.html" class="nav-ghost nav-uecl"><img src="conference.svg?v=1" alt="" width="16" height="16"><span data-i18n="nav.uecl">Conference League</span></a>
+      <a href="soiree.html" class="nav-ghost">🌙 <span id="navSr">Soirée européenne</span></a>
+      <a href="nations.html" class="nav-forward star-border" aria-current="page">🌍 <span id="navNt">Club des Nations</span></a>
+      <a href="france.html" class="nav-ghost"><span class="fr-mini" aria-hidden="true"></span><span id="navFr">France</span></a>
+      <a href="allemagne.html" class="nav-ghost"><span class="fr-mini flag-de" aria-hidden="true"></span><span id="navDe">Allemagne</span></a>
+      <a href="angleterre.html" class="nav-ghost"><span class="fr-mini flag-en" aria-hidden="true"></span><span id="navEn">Angleterre</span></a>
+      <a href="espagne.html" class="nav-ghost"><span class="fr-mini flag-es" aria-hidden="true"></span><span id="navEs">Espagne</span></a>
+      <a href="italie.html" class="nav-ghost"><span class="fr-mini flag-it" aria-hidden="true"></span><span id="navIt">Italie</span></a>
+      <a href="comparateur.html" class="nav-ghost">⚖ <span id="navCmp">Comparateur</span></a>
+    </nav>
+  </div>
+
+  <section class="fr-hero">
+    <h1 id="ntTitle">Club des Nations</h1>
+    <p id="ntSub">Le classement des pays sur les trois coupes d’Europe, et leurs clubs.</p>
+    <span class="fr-sync" id="ntSync"></span>
+  </section>
+
+  <section class="section" aria-labelledby="ntPagesT">
+    <div class="section-head"><h2 id="ntPagesT">Les pages pays</h2></div>
+    <div class="nt-pages" id="ntPages"></div>
+  </section>
+
+  <section class="section" aria-labelledby="ntRankT">
+    <div class="section-head"><h2 id="ntRankT">Classement des nations</h2></div>
+    <div class="nt-table-wrap">
+      <table class="nt-table">
+        <thead><tr>
+          <th class="c">#</th><th id="thNation">Nation</th><th id="thClubs">Clubs</th>
+          <th class="c hide-s" id="thPld">J</th><th class="c hide-s" id="thW">V</th><th class="c hide-s" id="thD">N</th><th class="c hide-s" id="thL">D</th>
+          <th class="c hide-m" id="thG">Buts</th><th class="c" id="thPts">Pts</th><th class="r" id="thCoef">Coef.</th>
+        </tr></thead>
+        <tbody id="ntBody"><tr><td colspan="10" class="nt-empty" data-i18n="common.loading">Chargement…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="nt-note" id="ntNote"></p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <span data-i18n="legal.intro">Projet de fan, non officiel.</span>
+  <a href="legal.html" data-i18n="nav.legal">Mentions légales</a>
+</footer>
+
+<script src="i18n.js?v=27"></script>
+<script src="standings-engine.js?v=1"></script>
+<script src="coefficients2026.js?v=1"></script>
+<script src="espn.js?v=28"></script>
+<script src="schedule.js?v=2"></script>
+<script src="thresholds.js?v=3"></script>
+<script src="cupclubs2026.js?v=1"></script>
+<script src="chances.js?v=1"></script>
+<script src="clubpanel.js?v=7"></script>
+<script src="matchpanel.js?v=4"></script>
+<script src="goalalert.js?v=1"></script>
+<script src="reactbits.js?v=1"></script>
+<script src="ui.js?v=2"></script>
+<script src="nations.js?v=1"></script>
+</body>
+</html>
