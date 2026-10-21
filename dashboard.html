@@ -298,6 +298,19 @@ a{ text-decoration:none; color:inherit; }
 .live-card.state-in, .live-card.state-post{ cursor:pointer; }
 .lc-foot-l{ display:inline-flex; align-items:center; gap:8px; }
 .live-card.is-simmed{ border-color:rgba(var(--gold-rgb,245,181,10),.65)!important; }
+/* Match du club favori : en tête de grille, halo et anneau lumineux à sa couleur. */
+.live-card.is-fav{ border-color:rgba(var(--fav-rgb,245,181,10),.85)!important;
+  background:radial-gradient(120% 90% at 0% 0%, rgba(var(--fav-rgb,245,181,10),.20), transparent 60%), #111a36;
+  box-shadow:0 0 0 1px rgba(var(--fav-rgb,245,181,10),.35), 0 18px 50px rgba(var(--fav-rgb,245,181,10),.22); }
+.live-card.is-fav::after{ content:''; position:absolute; inset:0; border-radius:inherit; padding:2px; pointer-events:none; z-index:4;
+  background:conic-gradient(from var(--sb-a,0deg), transparent 0deg 240deg, #fff 300deg, rgb(var(--fav-rgb,245,181,10)) 332deg, transparent 360deg);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; animation:sbRot 3.4s linear infinite; }
+.lc-fav{ display:inline-flex; align-items:center; gap:4px; margin-left:8px; padding:3px 9px; border-radius:999px; font-size:.95em; font-weight:900; letter-spacing:.08em;
+  color:#fff; background:rgb(var(--fav-rgb,245,181,10)); box-shadow:0 4px 14px rgba(var(--fav-rgb,245,181,10),.45); text-shadow:0 1px 2px rgba(0,0,0,.35); }
+.live-team-row.is-fav .live-team-name{ color:rgb(var(--fav-rgb,245,181,10)); font-weight:900; }
+.live-team-row.is-fav .live-team-name::before{ content:'★ '; }
+.live-team-row.is-fav .live-team-logo{ filter:drop-shadow(0 0 10px rgba(var(--fav-rgb,245,181,10),.7)); }
+@media (prefers-reduced-motion:reduce){ .live-card.is-fav::after{ animation:none; } }
 .sim-editor{ display:flex; align-items:center; justify-content:center; gap:7px; margin-top:9px; }
 .sim-editor input{ width:42px; padding:5px 0; border:1px solid var(--border); border-radius:8px; background:#0b1329;
   color:#fff; font-family:var(--font-d); font-size:1.15em; text-align:center; }
@@ -987,7 +1000,8 @@ a{ text-decoration:none; color:inherit; }
     var state=m.state, stateLbl = state==='in'?I18N.t('common.live'):(state==='pre'?I18N.t('common.upcoming'):I18N.t('common.finished'));
     if(ESPN.isInterrupted(m)) stateLbl = '⏸';
     var card=document.createElement('div');
-    card.className='live-card state-'+state+' '+size+(state==='pre'?' can-sim':'')+(sims[m.id]?' is-simmed':''); card.style.animationDelay=(0.05+idx*0.05)+'s'; card.dataset.id=m.id;
+    var fav=ESPN.getFav(), fid=fav?String(fav.id):'', hFav=fid&&String(m.home.teamId)===fid, aFav=fid&&String(m.away.teamId)===fid;
+    card.className='live-card state-'+state+' '+size+(state==='pre'?' can-sim':'')+(sims[m.id]?' is-simmed':'')+(hFav||aFav?' is-fav':''); card.style.animationDelay=(0.05+idx*0.05)+'s'; card.dataset.id=m.id;
     var hWin=state==='post' && m.home.winner, aWin=state==='post' && m.away.winner;
     var clockPart = state==='pre'
       ? '<span class="live-card-clock live-countdown" data-kickoff="'+(m.dateObj?m.dateObj.getTime():'')+'">'+upcomingWhen(m.dateObj)+'</span>'
@@ -999,12 +1013,12 @@ a{ text-decoration:none; color:inherit; }
     card.innerHTML =
       '<div class="live-shimmer"></div>'+
       '<div><div class="live-card-status">'+
-        '<span class="live-status-pill state-'+state+'"><span class="live-dot"></span> '+esc(stateLbl)+'</span>'+
+        '<span><span class="live-status-pill state-'+state+'"><span class="live-dot"></span> '+esc(stateLbl)+'</span>'+(hFav||aFav?'<span class="lc-fav">★ '+esc(lang()==='en'?'MY CLUB':'MON CLUB')+'</span>':'')+'</span>'+
         clockPart+
       '</div></div>'+
       '<div class="live-card-teams">'+
-        '<div class="live-team-row '+(hWin?'winner':'')+'">'+teamLogo(m.home)+'<span class="live-team-name">'+esc(m.home.name)+'</span><span class="live-team-score" data-side="home">'+(state==='pre'?'–':m.home.score)+homePen+'</span></div>'+
-        '<div class="live-team-row '+(aWin?'winner':'')+'">'+teamLogo(m.away)+'<span class="live-team-name">'+esc(m.away.name)+'</span><span class="live-team-score" data-side="away">'+(state==='pre'?'–':m.away.score)+awayPen+'</span></div>'+
+        '<div class="live-team-row '+(hWin?'winner':'')+(hFav?' is-fav':'')+'">'+teamLogo(m.home)+'<span class="live-team-name">'+esc(m.home.name)+'</span><span class="live-team-score" data-side="home">'+(state==='pre'?'–':m.home.score)+homePen+'</span></div>'+
+        '<div class="live-team-row '+(aWin?'winner':'')+(aFav?' is-fav':'')+'">'+teamLogo(m.away)+'<span class="live-team-name">'+esc(m.away.name)+'</span><span class="live-team-score" data-side="away">'+(state==='pre'?'–':m.away.score)+awayPen+'</span></div>'+
       '</div>'+
       '<div class="live-card-footer"><span class="lc-foot-l">'+(window.LDCMatchPanel?'<button type="button" class="mp-open-btn" data-mp-open="'+esc(m.id)+'">📋 '+esc(lang()==='en'?'Match details':'Fiche du match')+'</button>':'')+penFoot+'</span><span class="live-kickoff">'+(state==='pre'?hm(m.dateObj):(m.statusDetail||''))+'</span></div>';
 
@@ -1025,7 +1039,10 @@ a{ text-decoration:none; color:inherit; }
   function renderLive(){
     var grid=el('live-cards-grid'), titleText=el('live-title-text'), badge=el('live-badge'), glitch=el('glitch-live');
     var order={in:0,pre:1,post:2};
-    var list=todayMatches.slice().sort(function(a,b){ if(order[a.state]!==order[b.state]) return order[a.state]-order[b.state]; return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0); });
+    /* Le match du club favori passe en tête (grande carte), puis direct, à venir, terminés. */
+    var fv=ESPN.getFav(), fvid=fv?String(fv.id):'';
+    function isFavM(m){ return fvid && (String(m.home.teamId)===fvid || String(m.away.teamId)===fvid) ? 1 : 0; }
+    var list=todayMatches.slice().sort(function(a,b){ if(isFavM(a)!==isFavM(b)) return isFavM(b)-isFavM(a); if(order[a.state]!==order[b.state]) return order[a.state]-order[b.state]; return (a.dateObj?a.dateObj.getTime():0)-(b.dateObj?b.dateObj.getTime():0); });
     var liveCount=list.filter(function(m){return m.state==='in';}).length;
     var archive=ESPN.isArchive();
 
@@ -1033,7 +1050,7 @@ a{ text-decoration:none; color:inherit; }
     if(archive) titleText.textContent=I18N.t('dash.lastMatch');
     else if(liveCount>1) titleText.textContent='· '+liveCount; else if(liveCount===1) titleText.textContent=I18N.t('common.live'); else titleText.textContent=viewTitle();
 
-    var sig=list.map(function(m){return m.id+m.state+m.home.score+'-'+m.away.score+'/'+m.home.shootout+'-'+m.away.shootout;}).join('|')+'|'+lang()+'|'+archive+
+    var sig=list.map(function(m){return m.id+m.state+m.home.score+'-'+m.away.score+'/'+m.home.shootout+'-'+m.away.shootout;}).join('|')+'|'+lang()+'|'+archive+'|fav:'+fvid+
       '|'+timeView.mode+':'+timeView.day+':'+timeView.md+(list.length?'':':'+((nextMatchBlock()||{}).key||''));
     if(sig===lastRenderSig){ stamp(); return; }
     lastRenderSig=sig;
@@ -1968,7 +1985,7 @@ a{ text-decoration:none; color:inherit; }
       '</div>'+notifHintHTML()+'</div>';
     var sh=el('favShare'); if(sh) sh.addEventListener('click',function(e){ e.stopPropagation(); if(window.ShareCard){ sh.disabled=true; Promise.resolve(ShareCard.pass(ESPN.getFav())).then(function(){ sh.disabled=false; },function(){ sh.disabled=false; }); } });
     var ch=el('favChange'); if(ch) ch.addEventListener('click',function(e){ e.stopPropagation(); openFavChooser(); });
-    var rm=el('favRemove'); if(rm) rm.addEventListener('click',function(e){ e.stopPropagation(); ESPN.clearFav(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); if(window.LDCLanyard) LDCLanyard.refresh(); });
+    var rm=el('favRemove'); if(rm) rm.addEventListener('click',function(e){ e.stopPropagation(); ESPN.clearFav(); renderFav(); renderLive(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); if(window.LDCLanyard) LDCLanyard.refresh(); });
     var nb=el('favNotif'); if(nb) nb.addEventListener('click', toggleNotif);
     var gb=el('favGoal'); if(gb) gb.addEventListener('click',function(e){ e.stopPropagation(); LDCGoalAlerts.toggle('uefa.champions').then(function(){ renderFav(); var x=el('favGoal'); if(x) x.focus(); }); });
   }
@@ -2011,7 +2028,7 @@ a{ text-decoration:none; color:inherit; }
     Array.prototype.forEach.call(g.querySelectorAll('.fav-club'),function(btn){
       btn.addEventListener('click',function(){
         ESPN.setFav({ id:this.getAttribute('data-fid'), name:this.getAttribute('data-fname'), abbr:this.getAttribute('data-fabbr'), logo:this.getAttribute('data-flogo'), color:this.getAttribute('data-fcolor') });
-        closeFavChooser(); renderFav(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); if(window.LDCLanyard) LDCLanyard.refresh();
+        closeFavChooser(); renderFav(); renderLive(); renderZones(); renderMarquee(); renderOffseason(); scheduleFavNotif(); if(window.LDCLanyard) LDCLanyard.refresh();
       });
     });
   }
