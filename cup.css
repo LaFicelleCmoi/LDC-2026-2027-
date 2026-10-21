@@ -125,6 +125,21 @@ body::before{ content:""; position:fixed; top:-20%; right:-14%; width:min(92vw,9
 .live-card.state-pre{ border-color:rgba(var(--gold-rgb),.25); }
 .live-card.state-post{ border-color:rgba(46,213,115,.25); }
 .live-card.has-fav{ border-color:rgba(var(--gold-rgb),.7); }
+/* Match du club favori (comme l'accueil LDC) : en tête de grille, halo et
+   anneau lumineux à sa couleur, étiquette « Mon club », blason éclairé. */
+@property --cf-a{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+@keyframes cfRot{ to{ --cf-a:360deg; } }
+.live-card.is-fav{ border-color:rgba(var(--gold-rgb),.85);
+  background:radial-gradient(120% 90% at 0% 0%, rgba(var(--gold-rgb),.20), transparent 60%), #111a36;
+  box-shadow:0 0 0 1px rgba(var(--gold-rgb),.35), 0 18px 50px rgba(var(--gold-rgb),.22); }
+.live-card.is-fav::after{ content:''; position:absolute; inset:0; border-radius:inherit; padding:2px; pointer-events:none; z-index:4;
+  background:conic-gradient(from var(--cf-a,0deg), transparent 0deg 240deg, #fff 300deg, rgb(var(--gold-rgb)) 332deg, transparent 360deg);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; animation:cfRot 3.4s linear infinite; }
+.lc-fav{ display:inline-flex; align-items:center; gap:4px; margin-left:8px; padding:3px 9px; border-radius:999px; font-size:.95em; font-weight:900; letter-spacing:.08em;
+  color:#fff; background:rgb(var(--gold-rgb)); box-shadow:0 4px 14px rgba(var(--gold-rgb),.45); text-shadow:0 1px 2px rgba(0,0,0,.35); }
+.live-team-row.is-fav .live-team-name{ font-weight:900; }
+.live-team-row.is-fav .live-team-logo{ filter:drop-shadow(0 0 10px rgba(var(--gold-rgb),.7)); }
+@media (prefers-reduced-motion:reduce){ .live-card.is-fav::after{ animation:none; } }
 .live-card.state-in .live-shimmer{ position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--lc-red),transparent);
   transform:translateX(-100%); animation:lcShimmer 2.5s linear infinite; z-index:5; }
 @keyframes lcShimmer{ to{ transform:translateX(100%); } }
