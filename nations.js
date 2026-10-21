@@ -79,7 +79,7 @@
 
   function renderStatic(){
     var X={ ntTitle:['Club des Nations','Club of Nations'], ntSub:['Le classement des pays sur les trois coupes d’Europe, et leurs clubs.','How each country is doing across the three European competitions, and its clubs.'],
-      ntPagesT:['Les pages pays','Country pages'], ntRankT:['Classement des nations','Nations ranking'],
+      ntPagesT:['Les pages pays','Country pages'], ntRankT:['Classement des nations','Nations ranking'], ntRaceT:['La course des nations','The nations race'],
       navNt:['Club des Nations','Club of Nations'], navFr:['France','France'], navDe:['Allemagne','Germany'], navEn:['Angleterre','England'], navEs:['Espagne','Spain'], navIt:['Italie','Italy'],
       navSr:['Soirée européenne','European night'], navUcl:['Ligue des Champions','Champions League'], navCmp:['Comparateur','Compare clubs'],
       thNation:['Nation','Nation'], thClubs:['Clubs','Clubs'], thPld:['J','P'], thW:['V','W'], thD:['N','D'], thL:['D','L'], thG:['Buts','Goals'], thPts:['Pts','Pts'], thCoef:['Coef.','Coef.'] };
@@ -107,17 +107,97 @@
     el('ntBody').innerHTML=arr.map(function(n){
       var page=PAGES[n.code];
       var clubs=n.clubs.map(function(x){ return '<button type="button" class="nt-club" data-club="'+esc(x.id)+'" data-comp="'+x.comp.key+'" title="'+esc(x.name+' · '+T(x.comp.E.COMP.fr,x.comp.E.COMP.en))+'" aria-label="'+esc(T('Fiche du club : ','Club card: ')+x.name)+'" style="--c:'+x.comp.color+'">'+crest(x.logo,'nt-clogo')+'</button>'; }).join('');
-      var name='<span class="nt-name">'+flag(n.code,'nt-flag')+'<span>'+esc(cname(n.code))+'</span>'+(n.live?'<i class="nt-live" title="'+esc(T('Match en direct','Live match'))+'"></i>':'')+'</span>';
+      var name='<span class="nt-name">'+flag(n.code,'nt-flag')+'<span>'+esc(cname(n.code))+'</span>'+(n.live?'<i class="nt-live" title="'+esc(T('Match en direct','Live match'))+'"></i>':'')+'</span>'+
+        '<small class="nt-ncount">'+esc(n.clubs.length+' '+T(n.clubs.length>1?'clubs':'club',n.clubs.length>1?'clubs':'club'))+'</small>';
       return '<tr'+(page?' class="has-page"':'')+'>'+
         '<td class="c nt-rk">'+n.rank+'</td>'+
         '<td>'+(page?'<a href="'+page+'">'+name+'</a>':name)+'</td>'+
-        '<td><span class="nt-clubs">'+clubs+'</span></td>'+
+        '<td class="hide-s"><span class="nt-clubs">'+clubs+'</span></td>'+
         '<td class="c hide-s">'+n.pld+'</td><td class="c hide-s w">'+n.w+'</td><td class="c hide-s">'+n.d+'</td><td class="c hide-s l">'+n.l+'</td>'+
         '<td class="c hide-m">'+n.gf+'–'+n.ga+'</td><td class="c">'+n.pts+'</td>'+
         '<td class="r nt-coef"><b>'+f3(n.coef)+'</b><span class="nt-bar"><i style="width:'+Math.max(2,Math.round(n.coef/maxCoef*100))+'%"></i></span></td></tr>';
     }).join('');
+    renderRace(arr);
     var sync=ESPN.lastSeasonSync&&ESPN.lastSeasonSync();
     el('ntSync').textContent=sync?(I18N.t('sync.espn')||'Synchro ESPN')+' · '+sync.toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'}):'';
+  }
+
+  /* ---- La course des nations : coefficient cumulé, jour de match par jour
+     de match, top 10 animé (translation des lignes + largeur des barres). ---- */
+  var COLORS={ FRA:'#3b6fe0', GER:'#ffce00', ENG:'#e8344a', ESP:'#f1bf00', ITA:'#1fae5b', POR:'#d4202e', NED:'#ff7f1f', BEL:'#e8343f', TUR:'#e30a17',
+    GRE:'#2f6fd6', SCO:'#2b5fd0', CRO:'#e5333f', UKR:'#ffd500', HUN:'#3aa65a', SUI:'#e53935', AUT:'#ef3340', DEN:'#d61f36', NOR:'#d0283a', CZE:'#2a5bd7',
+    POL:'#e22b44', SWE:'#ffcd00', SRB:'#c6363c', CYP:'#e98a2b', ISR:'#2f6fd6', ROU:'#fcd116', BUL:'#2ea05a', AZE:'#36a2d8', KAZ:'#00afca' };
+  var race={ steps:[], idx:0, timer:null, rows:{}, played:false, sig:'' };
+  var ROW_H=38, TOP=10;
+  function dayKey(d){ return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+  function buildRace(arr){
+    var clubsN={}; arr.forEach(function(n){ clubsN[n.code]=n.clubs.length; });
+    var ev=[];
+    COMPS.forEach(function(c){ if(!c.ok) return; var map=countryMap(c);
+      c.matches.forEach(function(m){ if(m.round==='qualifying' || m.state!=='post' || !m.dateObj) return;
+        [[m.home,m.away],[m.away,m.home]].forEach(function(p){ var code=map[String(p[0].teamId)]; if(!code) return;
+          var gf=+p[0].score||0, ga=+p[1].score||0; ev.push({ t:m.dateObj, code:code, pts:gf>ga?2:(gf===ga?1:0) }); }); }); });
+    ev.sort(function(a,b){ return a.t-b.t; });
+    var steps=[], cum={}, last=null;
+    ev.forEach(function(e){ var k=dayKey(e.t); if(k!==last){ steps.push({ date:e.t, cum:null }); last=k; } cum[e.code]=(cum[e.code]||0)+e.pts; steps[steps.length-1].cum=JSON.parse(JSON.stringify(cum)); });
+    steps.forEach(function(st){ st.coef={}; Object.keys(clubsN).forEach(function(code){ st.coef[code]=clubsN[code]?(st.cum[code]||0)/clubsN[code]:0; }); });
+    return steps;
+  }
+  function raceRows(arr){
+    var host=el('nrRace'); if(!host) return;
+    host.style.height=(TOP*ROW_H)+'px';
+    arr.forEach(function(n){
+      if(race.rows[n.code]) return;
+      var r=document.createElement('div'); r.className='nr-row';
+      r.style.setProperty('--nc', COLORS[n.code]||'#8aa4d6');
+      r.innerHTML='<span class="nr-rk"></span>'+flag(n.code,'nr-flag')+'<span class="nr-nm"></span><span class="nr-track"><i class="nr-bar"></i></span><b class="nr-val">0,000</b>';
+      host.appendChild(r); race.rows[n.code]=r;
+    });
+    Object.keys(race.rows).forEach(function(code){ race.rows[code].querySelector('.nr-nm').textContent=cname(code); });
+  }
+  function paintStep(i){
+    var st=race.steps[i]; if(!st) return; race.idx=i;
+    var codes=Object.keys(race.rows).sort(function(a,b){ return (st.coef[b]||0)-(st.coef[a]||0) || cname(a).localeCompare(cname(b)); });
+    var max=st.coef[codes[0]]||1;
+    codes.forEach(function(code,k){
+      var r=race.rows[code], v=st.coef[code]||0, on=k<TOP;
+      r.style.transform='translateY('+(Math.min(k,TOP)*ROW_H)+'px)';
+      r.classList.toggle('off', !on);
+      r.querySelector('.nr-rk').textContent=k+1;
+      r.querySelector('.nr-bar').style.width=Math.max(1.5, v/max*100)+'%';
+      r.querySelector('.nr-val').textContent=f3(v);
+    });
+    el('nrRange').value=i;
+    el('nrDate').textContent=st.date.toLocaleDateString(loc(),{ weekday:'short', day:'numeric', month:'long' })+' · '+T('jour ','day ')+(i+1)+'/'+race.steps.length;
+  }
+  function setPlaying(on){
+    var b=el('nrPlay'); clearInterval(race.timer); race.timer=null;
+    b.classList.toggle('on',on); b.firstChild.textContent=on?'❚❚':'▶'; b.setAttribute('aria-label',on?T('Pause','Pause'):T('Lecture','Play'));
+    if(!on) return;
+    if(race.idx>=race.steps.length-1) paintStep(0);
+    race.timer=setInterval(function(){ if(race.idx>=race.steps.length-1){ setPlaying(false); return; } paintStep(race.idx+1); }, 1100);
+  }
+  function renderRace(arr){
+    if(!el('nrRace')) return;
+    race.steps=buildRace(arr);
+    el('ntRaceSub').textContent=T('La saison rejouée jour de match par jour de match (top 10)','The season replayed match day by match day (top 10)');
+    var sig=race.steps.length+'|'+arr.length+'|'+(en()?'en':'fr');
+    if(!race.steps.length){ el('nrRace').innerHTML='<p class="nt-empty">'+esc(T('La course démarre au premier match.','The race starts with the first match.'))+'</p>'; return; }
+    raceRows(arr);
+    el('nrRange').max=race.steps.length-1;
+    if(sig===race.sig){ paintStep(Math.min(race.idx, race.steps.length-1)); return; }
+    var first=!race.sig; race.sig=sig;
+    paintStep(race.steps.length-1);
+    /* Lecture automatique, une fois, quand la course entre à l'écran. */
+    if(first && !RB_REDUCE && 'IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){ if(es[0].isIntersecting && !race.played){ race.played=true; io.disconnect(); paintStep(0); setTimeout(function(){ setPlaying(true); }, 500); } }, { threshold:.35 });
+      io.observe(el('nrRace'));
+    }
+  }
+  var RB_REDUCE=false; try{ RB_REDUCE=matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+  if(el('nrPlay')){
+    el('nrPlay').addEventListener('click',function(){ setPlaying(!race.timer); });
+    el('nrRange').addEventListener('input',function(){ setPlaying(false); paintStep(+this.value); });
   }
 
   el('ntBody').addEventListener('click',function(e){
