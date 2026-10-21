@@ -709,6 +709,15 @@ a{ text-decoration:none; color:inherit; }
 }
 @media (max-width:380px){ .header.has-badge h1{ font-size:clamp(2.4em,13vw,4em); } }
 </style>
+<style>
+/* Transitions entre les pages (comme styles.css des autres pages) */
+@view-transition{ navigation:auto; }
+::view-transition-old(root){ animation:ldcVtOut .22s ease-in both; }
+::view-transition-new(root){ animation:ldcVtIn .38s cubic-bezier(.22,1,.36,1) both; }
+@keyframes ldcVtOut{ to{ opacity:0; transform:scale(.985); } }
+@keyframes ldcVtIn{ from{ opacity:0; transform:translateY(12px); } }
+@media (prefers-reduced-motion:reduce){ @view-transition{ navigation:none; } }
+</style>
 <link rel="stylesheet" href="footer.css?v=2">
 <link rel="stylesheet" href="lanyard.css?v=1">
 <link rel="stylesheet" href="matchpanel.css?v=3">
@@ -853,7 +862,7 @@ a{ text-decoration:none; color:inherit; }
 <script src="coefficients2026.js?v=1"></script>
 <script src="schedule.js?v=2"></script>
 <script src="espn.js?v=28"></script>
-<script src="goalalert.js?v=1"></script>
+<script src="goalalert.js?v=2"></script>
 <script src="footer.js?v=2"></script>
 <script src="simulate.js?v=2"></script>
 <script src="share.js?v=1"></script>
