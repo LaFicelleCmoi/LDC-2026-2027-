@@ -22,15 +22,15 @@
 <link rel="stylesheet" href="pagebg.css?v=1" />
 <style>:root{ --pg-ball:url('englandball.svg?v=1'); --pg-rgb:232,52,74; --pg-top:#121a33; --pg-mid:#0b1024; --tn-accent:rgb(232, 52, 74); --tn-ink:#ffffff;
   --ct-rgb:232, 52, 74; --flag-bar:linear-gradient(180deg,#fff 0 40%,#ce1124 40% 60%,#fff 60%); --flag-tile:linear-gradient(90deg,transparent 42%,#ce1124 42% 58%,transparent 58%), linear-gradient(180deg,transparent 38%,#ce1124 38% 62%,transparent 62%), #fff; }
-/* Fond aux couleurs du drapeau (Angleterre : croix de Saint-Georges, rouge sur blanc), sur la nuit de pagebg.css ;
+/* Fond : drapeau de Saint-Georges (champ blanc, grande croix rouge), assombri sur les bords ;
    liseré du drapeau en haut de l'écran. */
 body{ background-image:
-    radial-gradient(130% 92% at 50% 36%, transparent 52%, rgba(2,4,12,.55) 100%),
-    radial-gradient(60% 50% at 50% 0%, rgba(255,255,255,.12), transparent 72%),
-    radial-gradient(45% 60% at 50% 30%, rgba(206,17,36,.22), transparent 72%),
-    linear-gradient(90deg, transparent 45%, rgba(206,17,36,.13) 45% 55%, transparent 55%),
-    linear-gradient(180deg, transparent 26%, rgba(206,17,36,.11) 26% 34%, transparent 34%),
-    linear-gradient(180deg, #121a33 0%, #0b1024 58%, #05070f 100%); }
+    radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(2,4,12,.55) 100%),
+    linear-gradient(90deg, transparent calc(50% - 6.5vw), rgba(206,17,36,.78) calc(50% - 6.5vw) calc(50% + 6.5vw), transparent calc(50% + 6.5vw)),
+    linear-gradient(180deg, transparent 24vh, rgba(206,17,36,.78) 24vh 38vh, transparent 38vh),
+    linear-gradient(180deg, rgba(232,236,244,.30) 0%, rgba(232,236,244,.22) 60%, rgba(232,236,244,.12) 100%),
+    linear-gradient(180deg, #121a33 0%, #0b1024 58%, #05070f 100%);
+  background-attachment:fixed; }
 body::after{ content:""; position:fixed; left:0; right:0; top:0; height:4px; z-index:60; pointer-events:none;
   background:linear-gradient(90deg,#fff 0 44%,#ce1124 44% 56%,#fff 56%); }
 </style>
