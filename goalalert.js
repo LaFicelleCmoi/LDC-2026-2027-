@@ -15,7 +15,9 @@
      alerte : seules les nouveautés sont signalées ;
    - but du club favori, page visible : flash « BUT ! » plein écran (blason,
      score, buteur, confettis via reactbits.js si chargé), 4 s, fermeture au
-     clic ou avec Échap ; sobre si prefers-reduced-motion.
+     clic ou avec Échap ; sobre si prefers-reduced-motion. Le flash est
+     AUTOMATIQUE pour le favori de chaque coupe, alertes activées ou non :
+     seuls les bandeaux et notifications dépendent du bouton « Alertes but ».
    Rythme : toutes les 30 s pendant le match (et dans les 20 min qui le
    précèdent), sinon réveil 15 min avant le coup d'envoi, sinon toutes les
    30 min.
@@ -154,7 +156,7 @@
       '<div class="ga-word">' + esc(T('BUT !', 'GOAL!')) + '</div>' +
       '<div class="ga-team">' + esc(d.team || '') + '</div>' +
       (d.home ? '<div class="ga-score">' + side(d.home) + '<b>' + esc(d.home.score + ' – ' + d.away.score) + '</b>' + side(d.away) + '</div>' : '') +
-      ((d.who || d.minute) ? '<div class="ga-who">⚽ ' + esc((d.who || '') + (d.minute ? ' · ' + d.minute : '')) + '</div>' : '') +
+      ((d.who || d.minute) ? '<div class="ga-who">⚽ ' + esc((d.who || '') + (d.minute ? (d.who ? ' · ' : '') + d.minute : '')) + '</div>' : '') +
       '<div class="ga-hint">' + esc((d.comp ? d.comp + ' · ' : '') + T('touchez pour fermer', 'tap to close')) + '</div>';
     document.body.appendChild(el); splashEl = el;
     var gone = false;
@@ -166,6 +168,18 @@
     try { if (global.RB && RB.confetti && !RB.reduce) { RB.confetti.champion(); } } catch (e) {}
     try { if (navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch (e) {}
   }
+  /* Onglet en arrière-plan au moment du but : le flash attend le retour
+     sur l'onglet (10 min au plus). */
+  var pendingSplash = null;
+  function showSplash(d) {
+    if (!document.hidden) { splash(d); return; }
+    pendingSplash = { d: d, t: Date.now() };
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden || !pendingSplash) return;
+    var p = pendingSplash; pendingSplash = null;
+    if (Date.now() - p.t < 10 * 60000) setTimeout(function () { splash(p.d); }, 300);
+  });
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   function notify(t, color) {
@@ -205,9 +219,12 @@
     if (running) return Promise.resolve();
     running = true;
     var now = Date.now(), next = 30 * 60000, prefs = read(PREF);
-    var jobs = COMPS.filter(function (c) { return prefs[c.key]; }).map(function (c) {
+    /* Toutes les coupes où un favori est choisi : le flash « BUT ! » est
+       automatique ; bandeaux et notifications seulement si l'alerte est active. */
+    var jobs = COMPS.map(function (c) {
       var E = espnFor(c.slug); if (!E) return null;
       var fav = E.getFav(); if (!fav) return null;
+      var alertsOn = !!prefs[c.key];
       /* Après minuit, le match de la veille au soir peut encore être en cours. */
       var days = [ymd(new Date())]; if (new Date().getHours() < 3) days.unshift(ymd(new Date(now - 86400000)));
       return Promise.all(days.map(function (d) { return E.fetchDayEvents(d, { ttl: 20000 }).catch(function () { return []; }); })).then(function (lists) {
@@ -226,6 +243,7 @@
             next = Math.min(next, dt < 20 * 60000 ? 30000 : Math.max(60000, dt - 15 * 60000));
           }
           evs.forEach(function (ev) {
+            if (!alertsOn && !(ev.type === 'goal' && ev.mine)) return;
             var msg = message(ev, c, m, fav, isHome);
             msg.icon = fav.logo || c.icon; msg.tag = 'ldc-ga-' + m.id + '-' + ev.type + '-' + m.home.score + '-' + m.away.score;
             var color = fav.color ? '#' + String(fav.color).replace('#', '') : null;
@@ -233,9 +251,9 @@
               if (ev.type !== 'goal') return notify(msg, color);
               return scorer(E, m.id, msg.goalTeam).then(function (s) {
                 if (s && s.who) msg.body += ' · ' + s.who + (s.own ? T(' (csc)', ' (og)') : '') + (s.minute ? ' ' + s.minute : '');
-                notify(msg, color);
+                if (alertsOn) notify(msg, color);
                 /* But du club favori, page visible : flash plein écran. */
-                if (ev.mine && !document.hidden) splash({ color: color || null, crest: fav.logo || '', team: fav.name, comp: msg.comp,
+                if (ev.mine) showSplash({ color: color || null, crest: fav.logo || '', team: fav.name, comp: msg.comp,
                   home: { name: m.home.shortName || m.home.name, logo: m.home.logo, score: m.home.score },
                   away: { name: m.away.shortName || m.away.name, logo: m.away.logo, score: m.away.score },
                   who: s && s.who ? s.who + (s.own ? T(' (csc)', ' (og)') : '') : '', minute: s && s.minute || (m.displayClock || '') });
